@@ -1,0 +1,7 @@
+*/.vscode
+**/desktop.ini
+**/__GIT_IGNORE_*
+**/__pycache__
+*.pyc
+*.o
+*.obj

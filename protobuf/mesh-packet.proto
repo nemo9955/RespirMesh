@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+// import "nanopb.proto";
+
+// package rem;
+
+option go_package = "rem" ;
+
+enum ForwardingType {
+    TO_ROOT = 0;
+    RTN_HEADER_QUEUE = 1;
+
+    PARENT_TO_ROOT = 3;
+
+    NEIGHBOR_STOP = 10;
+    NEIGHBOR_TO_ROOT = 11;
+    NEIGHBOR_AND_BACK = 12;
+    PARENT_AND_BACK = 22;
+}
+
+enum HeaderType {
+    BASIC = 0;
+    LITTLE_BIG_ENDIAN_SYNC=15;
+}
+
+enum ProtobufType {
+    NO_PROTOBUF = 0;
+
+    PING = 1;
+    TIMESYNC = 2;
+    PONG = 3;
+    MESH_TOPOLOGY = 4;
+    INFO = 5;
+
+    SYNC_LITTLE_BIG_ENDIAN=15;
+}
+
+message RespirMeshInfo {
+    uint32 target_id = 1;
+    uint32 source_id = 2;
+    ProtobufType type = 3;
+}
+
+message RespirMeshTimeSync {
+    RespirMeshInfo info = 1 ;
+    uint32 request_sent_time = 2;
+    uint32 response_arrive_time = 3;
+    uint32 response_sent_time = 4;
+    uint32 request_arrive_time = 5;
+    uint32 server_timestamp_unix = 6;
+  }
