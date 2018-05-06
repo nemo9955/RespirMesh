@@ -1,5 +1,5 @@
 all:
-	g++ -Wall -o client_r1.o client_r1.cpp \
+	g++ -Wall -o client_t.o client_t.cpp \
 	\
 	-I../../RemCppCommon/ \
 	../../RemCppCommon/RemChannel.cpp \
