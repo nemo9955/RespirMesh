@@ -16,6 +16,9 @@
 
 using namespace std;
 
+
+#define MAXPACKETSIZE 4096
+
 class TCPClient
 {
   private:
@@ -28,9 +31,12 @@ class TCPClient
     TCPClient();
     bool setup(string address, int port);
     bool Send(void *data, int len);
-        string receive(int size = 4096);
+    void receive();
     string read();
     void exit();
+    void clean();
+    uint8_t msg[MAXPACKETSIZE];
+    int msgLen;
 };
 
 #endif

@@ -330,8 +330,8 @@ func (g *RemTopology) UpdateTopoPeriodically() {
 func New() *RemTopology {
 	remTopo := &RemTopology{
 		TopoCleanFreq:          1 * time.Second,
-		maximumOldTimeLimit:    7 * time.Second,
-		maximumDeleteTimeLimit: 13 * time.Second,
+		maximumOldTimeLimit:    5 * time.Second,
+		maximumDeleteTimeLimit: 7 * time.Second,
 		Nodes: []*Node{},
 		Edges: []*Edge{},
 	}

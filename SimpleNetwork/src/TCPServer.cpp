@@ -18,7 +18,7 @@ void *TCPServer::Task(void *arg)
             close(newsockfd);
             break;
         }
-        msg[n] = 0;
+        msg[n] = '\0';
         // send(newsockfd,msg,n,0);
         msgLen = n;
         // memccpy(outt,msg, 0, n );

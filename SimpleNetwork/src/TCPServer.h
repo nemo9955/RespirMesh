@@ -33,9 +33,9 @@ class TCPServer
     struct sockaddr_in clientAddress;
     pthread_t serverThread;
     uint8_t msg[MAXPACKETSIZE];
+    int msgLen;
     // uint8_t outt[MAXPACKETSIZE];
     string Message;
-    int msgLen;
 
     void setup(int port);
     string receive();

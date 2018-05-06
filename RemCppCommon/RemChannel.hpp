@@ -18,20 +18,21 @@ class RemChannel : public AbstractChannel
 {
 
   protected:
-    Hardware hardware_;
 
   public:
+    Hardware channel_;
     RemChannel(){};
     // ~RemChannel(){};
 
-    void init(){hardware_.init();};
-    void init(char* address, int port){hardware_.init(address, port);};
-    void update(){hardware_.update();};
+    void init(){channel_.init();};
+    void init(char* address, int port){channel_.init(address, port);};
+    void update(){channel_.update();};
 
-    void send(uint8_t *data, uint16_t size) { hardware_.send(data, size); };
+    void send(uint8_t *data, uint16_t size) { channel_.send(data, size); };
     int ch_info() { return 1; };
-    void stop() { hardware_.stop(); };
+    void stop() { channel_.stop(); };
 
+    void recv(uint8_t *data, uint16_t size) { on_recv_cb(data, size,on_recv_arg); };
     void set_recv_cb(ReceiveDataCallback cb, void *arg )
     {
         on_recv_cb = cb;
