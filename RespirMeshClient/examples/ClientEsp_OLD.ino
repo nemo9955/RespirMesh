@@ -1,6 +1,12 @@
 // #include <inttypes.h>
 #include "RemHeaderTypes.h"
 
+
+#include <pb_encode.h>
+#include <pb_decode.h>
+#include <pb.h>
+#include "mesh-packet.pb.h"
+
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
@@ -8,11 +14,6 @@
 
 #include <ESPAsyncTCP.h>
 #include <TaskScheduler.h>
-
-#include <pb_encode.h>
-#include <pb_decode.h>
-#include <pb.h>
-#include "mesh-packet.pb.h"
 
 #define MAX_AP_CLIENTS 6
 #define MICROtoSEC 1.0 / 1000000.0

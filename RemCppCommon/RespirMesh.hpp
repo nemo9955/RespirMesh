@@ -2,10 +2,10 @@
 #define RESPIRMESH_HPP_
 
 #include <RemChannel.hpp>
+#include "RemHeaderTypes.h"
 #include <list>
 #include <stdint.h>
 
-#include "RemHeaderTypes.h"
 #include <pb_encode.h>
 #include <pb_decode.h>
 #include <pb.h>
