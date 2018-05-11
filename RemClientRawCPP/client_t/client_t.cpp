@@ -37,7 +37,7 @@ class x86LinuxHardware
 
 };
 
-class LocalTcpChannel
+class LocalTcpChannel:public RemChannel
 {
   public:
     TCPClient tcpParent;
@@ -71,7 +71,7 @@ class LocalTcpChannel
 
 int action_counter = 0;
 
-RemChannel<LocalTcpChannel> lTcp;
+LocalTcpChannel lTcp;
 RespirMesh<x86LinuxHardware> mesh;
 
 
@@ -135,17 +135,17 @@ void *recvParent(void *m)
     while (1)
     {
         // RemChannel<LocalTcpChannel> *ttcp = (RemChannel<LocalTcpChannel> *)&lTcp;
-        RemChannel<LocalTcpChannel> *ttcp = (RemChannel<LocalTcpChannel> *)m;
+        LocalTcpChannel *ttcp = (LocalTcpChannel*)m;
 
         // logf(".");
 
-         ttcp->channel_.tcpParent.receive();
+         ttcp->tcpParent.receive();
         // logf(" r:%s ", rec);
-        if (ttcp->channel_.tcpParent.msgLen > 0)
+        if (ttcp->tcpParent.msgLen > 0)
         {
             // cout << "Server Response:" << rec << endl;
-            ttcp->recv((uint8_t *)ttcp->channel_.tcpParent.msg, ttcp->channel_.tcpParent.msgLen);
-            ttcp->channel_.tcpParent.clean();
+            ttcp->recv((uint8_t *)ttcp->tcpParent.msg, ttcp->tcpParent.msgLen);
+            ttcp->tcpParent.clean();
         }
         // logf(".");
     }

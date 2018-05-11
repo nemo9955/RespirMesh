@@ -11,7 +11,7 @@
 #include <pb.h>
 #include "mesh-packet.pb.h"
 
-#define INTERNAL_BUFFER_ZISE = 64
+#define INTERNAL_BUFFER_ZISE  64
 template <class Hardware >
 class RespirMesh
 {
