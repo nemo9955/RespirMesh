@@ -11,8 +11,8 @@
 #include <pb.h>
 #include "mesh-packet.pb.h"
 
-template <class Hardware,
-          int INTERNAL_BUFFER_ZISE = 64>
+#define INTERNAL_BUFFER_ZISE = 64
+template <class Hardware >
 class RespirMesh
 {
   public:
@@ -54,7 +54,7 @@ class RespirMesh
 
         action_counter++;
 
-        if (action_counter % 2 == 1)
+        if (action_counter % 4 == 1)
         {
             send_mesh_topo_to_server();
         }
