@@ -15,9 +15,13 @@
 #include "RemChannel.hpp"
 
 void sig_exit(int s);
-void *recvParent(void *m);
 
 uint32_t chipID = 0;
+
+void recvformeTest(uint8_t *data, uint16_t size, void *arg){
+     logf("Test:%d",size);
+
+}
 
 class x86LinuxHardware
 {
@@ -39,6 +43,10 @@ class x86LinuxHardware
 
 class LocalTcpChannel:public RemChannel
 {
+    private:
+    static void*recvParent(void *_this){
+        ((LocalTcpChannel*)_this)->recvParent();
+    }
   public:
     TCPClient tcpParent;
     LocalTcpChannel(){};
@@ -49,6 +57,9 @@ class LocalTcpChannel:public RemChannel
 
         tcpParent.setup(std::string(address), port);
         // tcpParent.setup("127.0.0.1", atoi(argv[1]));
+        pthread_t paren;
+        pthread_create(&paren, NULL, &LocalTcpChannel::recvParent,this);
+        pthread_detach(paren);
     }
 
     void send(uint8_t *data, uint16_t size)
@@ -57,10 +68,31 @@ class LocalTcpChannel:public RemChannel
         tcpParent.Send((void *)data, size);
     }
 
-    // void recv(uint16_t size)
-    // {
-    //     // pthread_create(&serv, NULL, recvServ, (void *)this);
-    // }
+    
+    void recvParent()
+    {
+    // pthread_detach(pthread_self());
+    // tcpServer.receive();
+    // logf("*****");
+
+        while (1)
+        {
+            // RemChannel<LocalTcpChannel> *ttcp = (RemChannel<LocalTcpChannel> *)&lTcp;
+
+            // logf(".");
+
+            tcpParent.receive();
+            // logf(" r:%s ", rec);
+            if (tcpParent.msgLen > 0)
+            {
+            // cout << "Server Response:" << rec << endl;
+            recv((uint8_t *)tcpParent.msg, tcpParent.msgLen);
+            tcpParent.clean();
+            }
+            // logf(".");
+        }
+    };
+
 
     void stop()
     {
@@ -99,16 +131,14 @@ int main(int argc, char *argv[])
     signal(SIGINT, sig_exit);
 
     lTcp.init("127.0.0.1", atoi(argv[1]));
-
+    lTcp.set_recv_cb(recvformeTest,NULL);
     // pthread_t msg;
     // pthread_t serv;
     // tcpServer.setup(atoi(argv[2]));
     // pthread_create(&serv, NULL, recvServ, (void *)0);
     // if (pthread_create(&msg, NULL, loop, (void *)0) == 0)
 
-    pthread_t paren;
-    pthread_create(&paren, 0, &recvParent, (void *)&lTcp);
-    pthread_detach(paren);
+
 
     while (1)
     {
@@ -125,31 +155,6 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-
-void *recvParent(void *m)
-{
-    // pthread_detach(pthread_self());
-    // tcpServer.receive();
-    // logf("*****");
-
-    while (1)
-    {
-        // RemChannel<LocalTcpChannel> *ttcp = (RemChannel<LocalTcpChannel> *)&lTcp;
-        LocalTcpChannel *ttcp = (LocalTcpChannel*)m;
-
-        // logf(".");
-
-         ttcp->tcpParent.receive();
-        // logf(" r:%s ", rec);
-        if (ttcp->tcpParent.msgLen > 0)
-        {
-            // cout << "Server Response:" << rec << endl;
-            ttcp->recv((uint8_t *)ttcp->tcpParent.msg, ttcp->tcpParent.msgLen);
-            ttcp->tcpParent.clean();
-        }
-        // logf(".");
-    }
-}
 
 
 // void *recvServ(void *m)

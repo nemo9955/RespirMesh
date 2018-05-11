@@ -26,7 +26,7 @@ class RespirMesh
         ((RespirMesh*)arg)->recv(data,size);
     };
 
-    void add_channel(AbstractChannel *channel)
+    void add_channel(RemChannel *channel)
     {
         channel->set_recv_cb(receive_fn, (void *)this);
         channels.push_back(channel);
@@ -34,7 +34,7 @@ class RespirMesh
 
     void send(uint8_t *data, uint16_t size)
     {
-        for (std::list<AbstractChannel *>::iterator it = channels.begin(); it != channels.end(); ++it)
+        for (std::list<RemChannel *>::iterator it = channels.begin(); it != channels.end(); ++it)
         {
             (*it)->send(data, size);
         }
@@ -42,7 +42,7 @@ class RespirMesh
 
     void recv(uint8_t *data, uint16_t size)
     {
-        for (std::list<AbstractChannel *>::iterator it = channels.begin(); it != channels.end(); ++it)
+        for (std::list<RemChannel *>::iterator it = channels.begin(); it != channels.end(); ++it)
         {
             (*it)->send(data, size);
         }
@@ -173,7 +173,7 @@ class RespirMesh
     }
 
   private:
-    std::list<AbstractChannel *> channels;
+    std::list<RemChannel *> channels;
     Hardware hardware_;
     uint8_t pb_buffer[INTERNAL_BUFFER_ZISE];
     int action_counter = 0;

@@ -2,7 +2,6 @@ all:
 	g++ -Wall -o client_r1.o client_r1.cpp \
 	\
 	-I../../RemCppCommon/ \
-	../../RemCppCommon/RemChannel.cpp \
 	\
 	-I../../protobuf/rem_nanopb_pb/ \
 	../../protobuf/rem_nanopb_pb/mesh-packet.pb.c \
