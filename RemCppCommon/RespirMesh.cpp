@@ -3,7 +3,32 @@
 void RespirMesh::receive_fn(uint8_t *data, uint16_t size, void *arg)
 {
     logf("[ REM ] Received DATA \n");
-    ((RespirMesh *)arg)->recv(data, size);
+    RemBasicHeader *header = (RemBasicHeader *)data;
+    uint16_t offsetHeader = sizeof(RemBasicHeader);
+    // memcpy(&header, data, offsetHeader);
+
+    // Serial.printf("  ForwardingType %d \n", header->ForwardingType);
+    // Serial.printf("      HeaderType %d \n", header->HeaderType);
+    // Serial.printf("    ProtobufType %d \n", header->ProtobufType);
+
+    uint8_t *packetData = ((uint8_t *)(data)) + offsetHeader;
+    uint16_t packetDataLen = size - offsetHeader;
+
+    if (header->ForwardingType == ForwardingType_TO_ROOT)
+    {
+        logf("Print shit");
+         ((RespirMesh *)arg)->recv(data, size);
+    }
+    else if (header->ForwardingType == ForwardingType_PARENT_TO_ROOT)
+    {
+        switch (header->ProtobufType)
+        {
+        case ProtobufType_MESH_TOPOLOGY:
+           // Serial.printf("putting data in  TOPO to root : \n");
+            ((RespirMesh *)arg)->handleMeshTopology( data, size);
+            break;
+        }
+    }
 }
 
 void RespirMesh::add_channel(RemChannel *channel)
@@ -30,7 +55,7 @@ void RespirMesh::recv(uint8_t *data, uint16_t size)
 
 void RespirMesh::update()
 {
-        logf(" Time: %d  \n", hardware_->time_milis());
+        //logf(" Time: %d  \n", hardware_->time_milis());
 
         action_counter++;
 
@@ -117,7 +142,6 @@ void RespirMesh::send_mesh_topo_to_server()
 {
         RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
         uint16_t offsetHeader = sizeof(RemBasicHeader);
-        header->ForwardingType = ForwardingType_TO_ROOT;
         header->HeaderType = HeaderType_BASIC;
 
         RespirMeshInfo remPingPong = RespirMeshInfo_init_default;
@@ -188,12 +212,15 @@ void RespirMesh::sendPingToNode(RemChannel* c)
 void RespirMesh::sendPongToNode(RemChannel* c, uint8_t *data, size_t len,RemBasicHeader *header)
 {
         RespirMeshTimeSync timesync;
+
+        uint16_t offsetHeader = sizeof(RemBasicHeader);
+        
         // uint32_t us_start = micros();
-        pb_istream_t stream = pb_istream_from_buffer(data, len);
-        bool pb_status = pb_decode(&stream, RespirMeshTimeSync_fields, &timesync);
+        pb_istream_t istream = pb_istream_from_buffer(data, len);
+        bool pb_status = pb_decode(&istream, RespirMeshTimeSync_fields, &timesync);
         if (!pb_status)
         {
-            printf("Decoding TimeSync failed %s with type %d\n", PB_GET_ERROR(&stream), header->ProtobufType);
+            printf("Decoding TimeSync failed %s with type %d\n", PB_GET_ERROR(&istream), header->ProtobufType);
             return;
         }
         timesync.request_arrive_time =hardware_->time_milis();
@@ -201,7 +228,7 @@ void RespirMesh::sendPongToNode(RemChannel* c, uint8_t *data, size_t len,RemBasi
         timesync.info.type = ProtobufType_PONG;
         timesync.response_sent_time =hardware_->time_milis();
         pb_ostream_t stream = pb_ostream_from_buffer(pb_buffer + offsetHeader, sizeof(pb_buffer) - offsetHeader);
-        bool pb_status = pb_encode(&stream, RespirMeshTimeSync_fields, &timesync);
+         pb_status = pb_encode(&stream, RespirMeshTimeSync_fields, &timesync);
 
         if (!pb_status)
         {
@@ -213,14 +240,14 @@ void RespirMesh::sendPongToNode(RemChannel* c, uint8_t *data, size_t len,RemBasi
 
 void RespirMesh::HandlePong(RemChannel *c, uint8_t *data, size_t len, RemBasicHeader *header)
 {
-        RespirMeshTimeSync pingpong;
+        RespirMeshTimeSync timesync;
         pb_istream_t stream = pb_istream_from_buffer(data, len);
-        bool pb_status = pb_decode(&stream, RespirMeshTimeSync_fields, &pingpong);
+        bool pb_status = pb_decode(&stream, RespirMeshTimeSync_fields, &timesync);
 
         if (!pb_status)
         {
             printf("Decoding PingPong failed %s with type %d\n", PB_GET_ERROR(&stream), header->ProtobufType);
-            return 0;
+            return ;
         }
         timesync.request_arrive_time =hardware_->time_milis();
         timesync.info.type=ProtobufType_TIMESYNC;

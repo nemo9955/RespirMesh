@@ -13,10 +13,6 @@ void sig_exit(int s);
 
 uint32_t chipID = 0;
 
-void recvformeTest(uint8_t *data, uint16_t size, void *arg){
-     logf("Test:%d",size);
-
-}
 
 class x86LinuxHardware : public Hardware
 {
@@ -103,33 +99,44 @@ class x86LinuxServerChannel:public RemChannel
         ((x86LinuxServerChannel*)_this)->recvParent();
     }
 
-  public:
+  public:     
     TCPServer tcpSrv;
     x86LinuxServerChannel(){};
 
-    void init(char *address, int port)
+    void init( int port)
     {
-        logf("Local TCP started %s:%d \n", address, port);
+        logf("Local TCP started:%d \n", port);
 
-        tcpParent.setup(std::string(address), port);
+        tcpSrv.setup( port);
         // tcpParent.setup("127.0.0.1", atoi(argv[1]));
         pthread_t paren;
         pthread_create(&paren, NULL, &x86LinuxServerChannel::recvParent,this);
         pthread_detach(paren);
+        
     }
 
     void send(uint8_t *data, uint16_t size)
     {
         logf("Local TCP sending .... \n");
-        tcpParent.Send((void *)data, size);
+        tcpSrv.Send(data, size);
     }
 
 
     void recvParent()
     {
-    // pthread_detach(pthread_self());
-    // tcpServer.receive();
-    // logf("*****");
+        while (1)
+        {
+            // logf(".");
+            tcpSrv.receive();
+            // logf(" r:%s ", rec);
+            if (tcpSrv.msgLen > 0)
+            {
+            // cout << "Server Response:" << rec << endl;
+            recv((uint8_t *)tcpSrv.msg, tcpSrv.msgLen);
+            tcpSrv.clean();
+            }
+            // logf(".");
+        }
 
     };
 
@@ -137,7 +144,7 @@ class x86LinuxServerChannel:public RemChannel
     void stop()
     {
         logf("Local TCP exiting \n");
-        tcpSrv.exit();
+        tcpSrv.detach();
     }
 };
 
@@ -153,7 +160,7 @@ int main(int argc, char *argv[])
     PRINTF("STARTING CLIENT \n");
 
     mesh.add_channel(&clientTcp);
-
+    //mesh.add_channel(&serverTcp);
     if (argc < 3)
     {
         PRINTF("First argument specify the port to connect to \n");
@@ -170,7 +177,10 @@ int main(int argc, char *argv[])
 
     signal(SIGINT, sig_exit);
     clientTcp.init("127.0.0.1", atoi(argv[1]));
-    clientTcp.set_recv_cb(recvformeTest,NULL);
+    serverTcp.init(atoi(argv[2]));
+
+    serverTcp.set_recv_cb(RespirMesh::receive_fn, &mesh);
+
     while (1)
     {
         action_counter++;

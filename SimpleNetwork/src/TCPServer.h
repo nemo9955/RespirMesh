@@ -42,6 +42,7 @@ class TCPServer
     string getMessage();
     int getMsgLen();
     void Send(string msg);
+    void Send(uint8_t* data, uint8_t len);
     void detach();
     void clean();
 

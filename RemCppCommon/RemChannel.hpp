@@ -8,7 +8,7 @@ typedef void (*ReceiveDataCallback)(uint8_t *data, uint16_t size, void *arg);
 class RemChannel
 {
   public:
-    virtual void init(char *address, int port)=0;
+    // virtual void init(char *address, int port)=0;
     virtual void send(uint8_t *data, uint16_t size)=0;
     virtual void stop()=0;
 

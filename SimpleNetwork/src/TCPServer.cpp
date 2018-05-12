@@ -69,6 +69,9 @@ void TCPServer::Send(string msg)
     send(newsockfd, msg.c_str(), msg.length(), 0);
 }
 
+void TCPServer::Send(uint8_t* data, uint8_t len){
+     send(newsockfd, data,len, 0);
+}
 void TCPServer::clean()
 {
     Message = "";
