@@ -12,7 +12,7 @@
 void sig_exit(int s);
 
 uint32_t chipID = 0;
-
+uint32_t PUFY = 0;
 
 class x86LinuxHardware : public Hardware
 {
@@ -20,7 +20,8 @@ class x86LinuxHardware : public Hardware
   public:
     x86LinuxHardware(){};
 
-    uint32_t device_id(){
+    uint32_t device_id()
+    {
         return chipID;
     }
     uint32_t time_milis()
@@ -28,44 +29,45 @@ class x86LinuxHardware : public Hardware
         unsigned long milliseconds_since_epoch = std::chrono::system_clock::now().time_since_epoch() / std::chrono::milliseconds(1);
         return milliseconds_since_epoch - 900000000;
     };
-
-
 };
 
-class x86LinuxClientChannel:public RemChannel
+class x86LinuxClientChannel : public RemChannel
 {
   private:
-    static void*recvParent(void *_this){
-        ((x86LinuxClientChannel*)_this)->recvParent();
+    static void *recvParentStat(void *_this)
+    {
+        PUFY++;
+        ((x86LinuxClientChannel *)_this)->recvParentObj();
     }
 
   public:
     TCPClient tcpParent;
     x86LinuxClientChannel(){};
 
+    int ch_info() { return 500; }
     void init(char *address, int port)
     {
         logf("Local TCP started %s:%d \n", address, port);
+        connected_to_root = true;
 
         tcpParent.setup(std::string(address), port);
         // tcpParent.setup("127.0.0.1", atoi(argv[1]));
         pthread_t paren;
-        pthread_create(&paren, NULL, &x86LinuxClientChannel::recvParent,this);
+        pthread_create(&paren, NULL, &x86LinuxClientChannel::recvParentStat, this);
         pthread_detach(paren);
     }
 
     void send(uint8_t *data, uint16_t size)
     {
-        logf("Local TCP sending .... \n");
+        logf("Client TCP sending .... \n");
         tcpParent.Send((void *)data, size);
     }
 
-
-    void recvParent()
+    void recvParentObj()
     {
-    // pthread_detach(pthread_self());
-    // tcpServer.receive();
-    // logf("*****");
+        // pthread_detach(pthread_self());
+        // tcpServer.receive();
+        // logf("*****");
 
         while (1)
         {
@@ -74,14 +76,14 @@ class x86LinuxClientChannel:public RemChannel
             // logf(" r:%s ", rec);
             if (tcpParent.msgLen > 0)
             {
-            // cout << "Server Response:" << rec << endl;
-            recv((uint8_t *)tcpParent.msg, tcpParent.msgLen);
-            tcpParent.clean();
+                logf(" r: %d ", PUFY);
+                // cout << "Server Response:" << rec << endl;
+                recv((uint8_t *)tcpParent.msg, tcpParent.msgLen);
+                tcpParent.clean();
             }
             // logf(".");
         }
     };
-
 
     void stop()
     {
@@ -90,56 +92,67 @@ class x86LinuxClientChannel:public RemChannel
     }
 };
 
-
-
-class x86LinuxServerChannel:public RemChannel
+class x86LinuxServerChannel : public RemChannel
 {
   private:
-    static void*recvParent(void *_this){
-        ((x86LinuxServerChannel*)_this)->recvParent();
+    static void *recvParent(void *_this)
+    {
+        PUFY++;
+        ((x86LinuxServerChannel *)_this)->recvParent();
     }
 
-  public:     
+  public:
     TCPServer tcpSrv;
     x86LinuxServerChannel(){};
 
-    void init( int port)
+    int ch_info() { return 100; }
+    void init(int port)
     {
         logf("Local TCP started:%d \n", port);
 
-        tcpSrv.setup( port);
+        tcpSrv.setup(port);
         // tcpParent.setup("127.0.0.1", atoi(argv[1]));
         pthread_t paren;
-        pthread_create(&paren, NULL, &x86LinuxServerChannel::recvParent,this);
+        pthread_create(&paren, NULL, &x86LinuxServerChannel::recvParent, this);
         pthread_detach(paren);
-        
     }
 
     void send(uint8_t *data, uint16_t size)
     {
-        logf("Local TCP sending .... \n");
+        logf("Server TCP sending .... \n");
         tcpSrv.Send(data, size);
     }
-
-
+    struct dirtyStruct{
+         TCPClient* c;
+         RemChannel* s;
+    };
+    static void *handleClient(void* argv){
+        dirtyStruct* ds=(dirtyStruct*)argv;
+        TCPClient* c=(TCPClient*)ds->c;
+        RemChannel* s=(RemChannel*)ds->s;
+        while(1){
+            c->receive();
+        if (c->msgLen > 0)
+            {
+            logf(" r: %d ", PUFY);
+                // cout << "Server Response:" << rec << endl;
+                s->recv((uint8_t *)c->msg, c->msgLen);
+                c->clean();
+            }}
+    }
     void recvParent()
     {
         while (1)
         {
-            // logf(".");
-            tcpSrv.receive();
-            // logf(" r:%s ", rec);
-            if (tcpSrv.msgLen > 0)
-            {
-            // cout << "Server Response:" << rec << endl;
-            recv((uint8_t *)tcpSrv.msg, tcpSrv.msgLen);
-            tcpSrv.clean();
-            }
-            // logf(".");
+            TCPClient* c=tcpSrv.receive();
+            pthread_t paren;
+            dirtyStruct ds;
+            ds.c=c;
+            ds.s=this;
+            pthread_create(&paren, NULL, &x86LinuxServerChannel::handleClient, &ds);
+            pthread_detach(paren);
         }
-
     };
-
 
     void stop()
     {
@@ -157,10 +170,9 @@ RespirMesh mesh(&hardware);
 
 int main(int argc, char *argv[])
 {
+    signal(SIGINT, sig_exit);
     PRINTF("STARTING CLIENT \n");
 
-    mesh.add_channel(&clientTcp);
-    //mesh.add_channel(&serverTcp);
     if (argc < 3)
     {
         PRINTF("First argument specify the port to connect to \n");
@@ -169,17 +181,16 @@ int main(int argc, char *argv[])
     }
 
     srand(time(NULL));
-
     if (argc > 3)
         chipID = atoi(argv[3]);
     else
         chipID = rand() % 640000;
 
-    signal(SIGINT, sig_exit);
     clientTcp.init("127.0.0.1", atoi(argv[1]));
     serverTcp.init(atoi(argv[2]));
 
-    serverTcp.set_recv_cb(RespirMesh::receive_fn, &mesh);
+    mesh.add_channel(&clientTcp);
+    mesh.add_channel(&serverTcp);
 
     while (1)
     {
@@ -191,8 +202,6 @@ int main(int argc, char *argv[])
     PRINTF("CLIENT DONE \n");
     return 0;
 }
-
-
 
 // void *recvServ(void *m)
 // {

@@ -29,6 +29,7 @@ class TCPClient
 
   public:
     TCPClient();
+    TCPClient(int sockc);
     bool setup(string address, int port);
     bool Send(void *data, int len);
     void receive();

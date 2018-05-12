@@ -14,6 +14,8 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 
+#include "TCPClient.h"
+
 using namespace std;
 
 #define MAXPACKETSIZE 4096
@@ -38,19 +40,17 @@ class TCPServer
     string Message;
 
     void setup(int port);
-    string receive();
+    TCPClient* receive();
     string getMessage();
     int getMsgLen();
     void Send(string msg);
     void Send(uint8_t* data, uint8_t len);
     void detach();
     void clean();
+    void receiveMesage();
 
   private:
-    static void *callMemberFunction(void *arg) {
-        return ((TCPServer *)arg)->Task(arg);
-        }
-    void *Task(void *arg);
+    void Task();
 };
 
 #endif

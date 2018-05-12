@@ -3,28 +3,12 @@
 
 // string TCPServer::Message;
 
-void *TCPServer::Task(void *arg)
+void TCPServer::Task()
 {
-    int n;
-    TCPServer *me = (TCPServer *)arg;
-    int newsockfd = me->newsockfd;
-    // char msg[MAXPACKETSIZE];
-    pthread_detach(pthread_self());
-    while (1)
-    {
-        n = recv(newsockfd, msg, MAXPACKETSIZE, 0);
-        if (n == 0)
-        {
-            close(newsockfd);
-            break;
-        }
-        msg[n] = '\0';
-        // send(newsockfd,msg,n,0);
-        msgLen = n;
+
         // memccpy(outt,msg, 0, n );
         // Message = string(msg);
-    }
-    return 0;
+
 }
 
 void TCPServer::setup(int port)
@@ -38,22 +22,29 @@ void TCPServer::setup(int port)
     listen(sockfd, 5);
 }
 
-string TCPServer::receive()
+TCPClient* TCPServer::receive()
 {
-    string str;
-    while (1)
-    {
+
         socklen_t sosize = sizeof(clientAddress);
         newsockfd = accept(sockfd, (struct sockaddr *)&clientAddress, &sosize);
-        str = inet_ntoa(clientAddress.sin_addr);
+        // str = inet_ntoa(clientAddress.sin_addr);
         // auto ptrFun = std::mem_fn<TCPServer>(&TCPServer::Task) ;
-
+        // receiveMesage();
         // ThreadContainer con {this,newsockfd};
-        pthread_create(&serverThread, NULL, TCPServer::callMemberFunction, (void *)this);
-    }
-    return str;
-}
 
+        return new TCPClient( newsockfd);
+
+}
+void TCPServer::receiveMesage(){
+    int n= recv(newsockfd, msg, MAXPACKETSIZE, 0);
+        if (n == 0)
+        {
+            close(newsockfd);
+        }
+        msg[n] = '\0';
+        // send(newsockfd,msg,n,0);
+        msgLen = n;
+}
 string TCPServer::getMessage()
 {
     return Message;

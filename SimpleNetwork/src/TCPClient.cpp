@@ -6,7 +6,10 @@ TCPClient::TCPClient()
     port = 0;
     address = "";
 }
-
+TCPClient::TCPClient(int sockc)
+{
+    sock =  sockc;
+}
 bool TCPClient::setup(string address, int port)
 {
     if (sock == -1)
@@ -19,7 +22,7 @@ bool TCPClient::setup(string address, int port)
     }
 
     /*
-    cast to correct warning: 
+    cast to correct warning:
     comparison between signed and unsigned integer expressions
     */
     if ((int32_t)inet_addr(address.c_str()) == -1)
@@ -76,7 +79,7 @@ void TCPClient::receive()
     // memset(&buffer[0], 0, sizeof(buffer));
     // cout << "2" << endl;
 
-    string reply;
+    // string reply;
     n = recv(sock, msg, MAXPACKETSIZE, 0);
     if (n == 0)
     {
