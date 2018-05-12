@@ -17,7 +17,12 @@ bool TCPClient::setup(string address, int port)
             cout << "Could not create socket" << endl;
         }
     }
-    if (inet_addr(address.c_str()) == -1)
+
+    /*
+    cast to correct warning: 
+    comparison between signed and unsigned integer expressions
+    */
+    if ((int32_t)inet_addr(address.c_str()) == -1)
     {
         struct hostent *he;
         struct in_addr **addr_list;

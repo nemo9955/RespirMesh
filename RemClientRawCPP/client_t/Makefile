@@ -2,6 +2,7 @@ all:
 	g++ -Wall -o client_t.o client_t.cpp \
 	\
 	-I../../RemCppCommon/ \
+	../../RemCppCommon/RespirMesh.cpp \
 	\
 	-I../../protobuf/rem_nanopb_pb/ \
 	../../protobuf/rem_nanopb_pb/mesh-packet.pb.c \

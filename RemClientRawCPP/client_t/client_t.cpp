@@ -6,11 +6,6 @@
 #include <stdio.h>
 #include <string> // std::string, std::stoi
 
-#define PRINTF printf
-#define infof printf
-#define logf printf
-
-
 #include "RespirMesh.hpp"
 #include "RemChannel.hpp"
 
@@ -23,7 +18,7 @@ void recvformeTest(uint8_t *data, uint16_t size, void *arg){
 
 }
 
-class x86LinuxHardware
+class x86LinuxHardware : public Hardware
 {
   private:
   public:
@@ -43,10 +38,11 @@ class x86LinuxHardware
 
 class LocalTcpChannel:public RemChannel
 {
-    private:
+  private:
     static void*recvParent(void *_this){
         ((LocalTcpChannel*)_this)->recvParent();
     }
+
   public:
     TCPClient tcpParent;
     LocalTcpChannel(){};
@@ -104,9 +100,8 @@ class LocalTcpChannel:public RemChannel
 int action_counter = 0;
 
 LocalTcpChannel lTcp;
-RespirMesh<x86LinuxHardware> mesh;
-
-
+x86LinuxHardware hardware;
+RespirMesh mesh(&hardware);
 
 int main(int argc, char *argv[])
 {
@@ -129,7 +124,6 @@ int main(int argc, char *argv[])
         chipID = rand() % 640000;
 
     signal(SIGINT, sig_exit);
-
     lTcp.init("127.0.0.1", atoi(argv[1]));
     lTcp.set_recv_cb(recvformeTest,NULL);
     // pthread_t msg;
