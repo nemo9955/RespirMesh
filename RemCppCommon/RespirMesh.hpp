@@ -46,6 +46,16 @@ class RespirMesh
 
     void handleMeshTopology(uint8_t *data, size_t len);
     void send_mesh_topo_to_server();
+
+    uint32_t TimePingSend;
+    void sendPing();
+
+    void sendPingToNode(RemChannel* c);
+
+    void sendPongToNode(RemChannel* c);
+
+    int32_t HandlePong(RemChannel *c, uint8_t *data, size_t len, RemBasicHeader *header);
+
 };
 
 #endif /* !RESPIRMESH_HPP_ */

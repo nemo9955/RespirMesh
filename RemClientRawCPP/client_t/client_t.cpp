@@ -73,10 +73,7 @@ class LocalTcpChannel:public RemChannel
 
         while (1)
         {
-            // RemChannel<LocalTcpChannel> *ttcp = (RemChannel<LocalTcpChannel> *)&lTcp;
-
             // logf(".");
-
             tcpParent.receive();
             // logf(" r:%s ", rec);
             if (tcpParent.msgLen > 0)
@@ -126,22 +123,10 @@ int main(int argc, char *argv[])
     signal(SIGINT, sig_exit);
     lTcp.init("127.0.0.1", atoi(argv[1]));
     lTcp.set_recv_cb(recvformeTest,NULL);
-    // pthread_t msg;
-    // pthread_t serv;
-    // tcpServer.setup(atoi(argv[2]));
-    // pthread_create(&serv, NULL, recvServ, (void *)0);
-    // if (pthread_create(&msg, NULL, loop, (void *)0) == 0)
-
-
-
     while (1)
     {
         action_counter++;
-
         mesh.update();
-
-
-
         sleep(1);
     }
 

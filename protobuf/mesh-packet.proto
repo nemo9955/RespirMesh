@@ -11,6 +11,10 @@ enum ForwardingType {
     RTN_HEADER_QUEUE = 1;
 
     PARENT_TO_ROOT = 3;
+    TO_PARENT = 4;
+    TO_CHILD = 5;
+    TO_NEIGHBOR = 6;
+    TO_NODE=7;
 
     NEIGHBOR_STOP = 10;
     NEIGHBOR_TO_ROOT = 11;

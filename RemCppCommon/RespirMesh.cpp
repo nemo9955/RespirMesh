@@ -151,3 +151,78 @@ void RespirMesh::send_mesh_topo_to_server()
         // tcpParent.Send(string(((char *)pb_buffer), ostream.bytes_written + offsetHeader + 1));
         // parClient.write((const char *)(pb_buffer), ostream.bytes_written + offsetHeader);
 }
+
+void RespirMesh::sendPing()
+{
+        TimePingSend=hardware_->time_milis();
+        for (std::list<RemChannel *>::iterator it = channels.begin(); it != channels.end(); ++it)
+        {
+             sendPingToNode((*it));
+        }
+}
+
+void RespirMesh::sendPingToNode(RemChannel* c)
+{
+        RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
+        uint16_t offsetHeader = sizeof(RemBasicHeader);
+        RespirMeshInfo pingpong =RespirMeshInfo_init_default;
+        
+	    pingpong.type = ProtobufType_PING;
+	    pingpong.target_id = 0;
+        pingpong.source_id = hardware_->device_id();
+
+	    header->ForwardingType = uint8_t(ForwardingType_TO_NODE);
+	    header->ProtobufType = uint8_t(ProtobufType_PING);
+
+
+        pb_ostream_t stream = pb_ostream_from_buffer(pb_buffer + offsetHeader, sizeof(pb_buffer) - offsetHeader);
+        bool pb_status = pb_encode(&stream, RespirMeshInfo_fields, &pingpong);
+
+        if (!pb_status)
+        {
+            printf("Encoding PingPong failed: %s\n", PB_GET_ERROR(&stream));
+            return;
+        }
+        
+        c->send(( uint8_t *)(pb_buffer), stream.bytes_written + offsetHeader);
+}
+
+void RespirMesh::sendPongToNode(RemChannel* c)
+{
+        RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
+        uint16_t offsetHeader = sizeof(RemBasicHeader);
+        RespirMeshInfo pingpong =RespirMeshInfo_init_default;
+
+	    pingpong.type = ProtobufType_PONG;
+	    pingpong.target_id = hardware_->device_id();
+
+	    header->ForwardingType = uint8_t(ForwardingType_TO_NODE);
+	    header->ProtobufType = uint8_t(ProtobufType_PONG);
+
+
+        pb_ostream_t stream = pb_ostream_from_buffer(pb_buffer + offsetHeader, sizeof(pb_buffer) - offsetHeader);
+        bool pb_status = pb_encode(&stream, RespirMeshInfo_fields, &pingpong);
+
+        if (!pb_status)
+        {
+            printf("Encoding PingPong failed: %s\n", PB_GET_ERROR(&stream));
+            return;
+        }
+        
+        c->send(( uint8_t *)(pb_buffer), stream.bytes_written + offsetHeader);
+}
+
+int32_t RespirMesh::HandlePong(RemChannel *c, uint8_t *data, size_t len, RemBasicHeader *header)
+{
+        RespirMeshInfo pingpong;
+        pb_istream_t stream = pb_istream_from_buffer(data, len);
+        bool pb_status = pb_decode(&stream, RespirMeshInfo_fields, &pingpong);
+
+        if (!pb_status)
+        {
+            printf("Decoding PingPong failed %s with type %d\n", PB_GET_ERROR(&stream), header->ProtobufType);
+            return 0;
+        }
+
+        return hardware_->time_milis()-TimePingSend;
+}
