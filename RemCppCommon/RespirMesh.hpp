@@ -67,71 +67,160 @@ class RespirMesh
         //     send_ping_to_server();
         // }
     };
+    uint32_t TimePingSend;
+    void sendPing(){
+        TimePingSend=hardware_.time_milis();
+        for (std::list<RemChannel *>::iterator it = channels.begin(); it != channels.end(); ++it)
+        {
+             sendPingToNode((*it));
+        }
+    };
+    void sendPingToNode(RemChannel* c){
+        RespirMeshInfo pingpong =RespirMeshInfo_init_default;
+        RemBasicHeader header=RemBasicHeader();
 
-    void handleMeshTopology(uint8_t *data, size_t len)
-    {
+	    pingpong.type = ProtobufType_PING;
+	    pingpong.target_id = 0;
+        pingpong.source_id = hardware_.device_id();
 
-        for (uint8_t i = 0; i < len + 10; i++)
-            printf("%d ", ((char *)data)[i]);
-        printf("\n");
-        for (uint8_t i = 0; i < len + 10; i++)
-            printf("%d ", ((char *)pb_buffer)[i]);
-        printf("\n");
+	    header.ForwardingType = uint8_t(ForwardingType_TO_NODE);
+	    header.ProtobufType = uint8_t(ProtobufType_PING);
 
-        bool pb_status = false;
-        uint16_t offsetHeader = sizeof(RemBasicHeader);
-        uint8_t *packetData = (uint8_t *)(data) + offsetHeader;
-        // uint8_t *packetData = ((uint8_t *)(data)) + offsetHeader;
-        uint16_t packetDataLen = len - offsetHeader;
-        memcpy(pb_buffer, data, offsetHeader);
-        RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
-        // header = (RemBasicHeader *)pb_buffer;
+        uint8_t headerSize=sizeof(RemBasicHeader);
+        uint8_t pingSize=RespirMeshInfo_size;
+        uint8_t packSize=headerSize+pingSize;
 
-        RespirMeshInfo meshTopo;
+        uint8_t respPacket[packSize];
+        memcpy(respPacket, &header, headerSize);
+        uint8_t pin[pingSize];
+        cmessage__pack(pingpong,pin);
+        memcpy(respPacket+headerSize+1,pin,pingSize);
+        c->send(respPacket,packSize);
+    };
+    void sendPongToNode(RemChannel* c){
+        RespirMeshInfo pingpong =RespirMeshInfo_init_default;
+        RemBasicHeader header=RemBasicHeader();
 
-        pb_istream_t istream = pb_istream_from_buffer(packetData, packetDataLen);
-        pb_status = pb_decode(&istream, RespirMeshInfo_fields, &meshTopo);
+	    pingpong.type = ProtobufType_PONG;
+	    pingpong.target_id = hardware_.device_id();
+
+	    header.ForwardingType = uint8_t(ForwardingType_TO_NODE);
+	    header.ProtobufType = uint8_t(ProtobufType_PONG);
+
+
+        uint8_t headerSize=sizeof(RemBasicHeader);
+        uint8_t pingSize=RespirMeshInfo_size;
+
+        uint8_t packSize=headerSize+pingSize;
+        uint8_t respPacket[packSize];
+        memcpy(respPacket, &header, headerSize);
+        uint8_t pin[pingSize];
+        cmessage__pack(pingpong,pin);
+        memcpy(respPacket+headerSize+1,pin,pingSize);
+        c->send(respPacket,packSize);
+    };
+    int32_t HandlePong(RemChannel *c, uint8_t *data, size_t len, RemBasicHeader *header){
+
+        RespirMeshInfo pingpong;
+        pb_istream_t stream = pb_istream_from_buffer(data, len);
+        bool pb_status = pb_decode(&stream, RespirMeshInfo_fields, &pingpong);
+
         if (!pb_status)
         {
-            printf("Decoding meshTopo failed %s with type %d\n", PB_GET_ERROR(&istream), header->ProtobufType);
-            return;
+            printf("Decoding PingPong failed %s with type %d\n", PB_GET_ERROR(&stream), header->ProtobufType);
+            return 0;
         }
 
-        for (uint8_t i = 0; i < len + 10; i++)
-            printf("%d ", ((char *)pb_buffer)[i]);
-        printf("\n");
+        return hardware_.time_milis()-TimePingSend;
+    };
+    // void HandlePing(RemChannel *c, uint8_t *data, size_t len, RemBasicHeader *header){
+    //     RespirMeshInfo pingpong;
+    //     pb_istream_t stream = pb_istream_from_buffer(data, len);
+    //     bool pb_status = pb_decode(&stream, RespirMeshInfo_fields, &pingpong);
 
-        if (header->ForwardingType == ForwardingType_PARENT_TO_ROOT)
-        {
+    //     if (!pb_status)
+    //     {
+    //         printf("Decoding PingPong failed %s with type %d\n", PB_GET_ERROR(&stream), header->ProtobufType);
+    //         return;
+    //     }
 
-            header->ForwardingType = ForwardingType_TO_ROOT;
-            meshTopo.type = ProtobufType_MESH_TOPOLOGY;
-            meshTopo.target_id = hardware_.device_id();
+    //     if (pingpong.type == ProtobufType_PONG)
+    //     {
+    //         succesfullPongFromServer++;
 
-            pb_ostream_t ostream = pb_ostream_from_buffer(pb_buffer + offsetHeader, sizeof(pb_buffer) - offsetHeader);
-            pb_status = pb_encode(&ostream, RespirMeshInfo_fields, &meshTopo);
+    //         Serial.printf("<<< Got PONG #%d size %d at %d \n", succesfullPongFromServer, len, micros());
+    //         // Serial.printf(" target_id %x \n", pingpong.target_id);
+    //         // Serial.printf("      source_id %x \n", pingpong.source_id);
+    //         return;
+    //     }
+    // }
+// 	respPacket := assembleStruct(header, pingpong)
+// 	c.SendBytes(respPacket)
+// }
+//     void handleMeshTopology(uint8_t *data, size_t len)
+//     {
 
-            if (!pb_status)
-            {
-                printf("Encoding meshTopo failed: %s\n", PB_GET_ERROR(&ostream));
-                return;
-            }
+//         for (uint8_t i = 0; i < len + 10; i++)
+//             printf("%d ", ((char *)data)[i]);
+//         printf("\n");
+//         for (uint8_t i = 0; i < len + 10; i++)
+//             printf("%d ", ((char *)pb_buffer)[i]);
+//         printf("\n");
 
-            // printf(" target_id %x \n", pingpong.target_id);
-            printf("Sending completed TOPO to root %d %d \n", ostream.bytes_written, offsetHeader);
-            printf("         src %x  tar %x \n", meshTopo.source_id, meshTopo.target_id);
-            printf("         Forward %d \n", header->ForwardingType);
-            printf("             Hea %d \n", header->HeaderType);
-            printf("           Proto %d \n", header->ProtobufType);
+//         bool pb_status = false;
+//         uint16_t offsetHeader = sizeof(RemBasicHeader);
+//         uint8_t *packetData = (uint8_t *)(data) + offsetHeader;
+//         // uint8_t *packetData = ((uint8_t *)(data)) + offsetHeader;
+//         uint16_t packetDataLen = len - offsetHeader;
+//         memcpy(pb_buffer, data, offsetHeader);
+//         RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
+//         // header = (RemBasicHeader *)pb_buffer;
 
-            for (uint8_t i = 0; i < ostream.bytes_written + offsetHeader + 3; i++)
-                printf("%d ", ((char *)pb_buffer)[i]);
-            printf("\n");
+//         RespirMeshInfo meshTopo;
 
-            // parClient.write((const char *)(pb_buffer), ostream.bytes_written + offsetHeader);
-            send(pb_buffer, ostream.bytes_written + offsetHeader);
-        }
-    }
+//         pb_istream_t istream = pb_istream_from_buffer(packetData, packetDataLen);
+//         pb_status = pb_decode(&istream, RespirMeshInfo_fields, &meshTopo);
+//         if (!pb_status)
+//         {
+//             printf("Decoding meshTopo failed %s with type %d\n", PB_GET_ERROR(&istream), header->ProtobufType);
+//             return;
+//         }
+
+//         for (uint8_t i = 0; i < len + 10; i++)
+//             printf("%d ", ((char *)pb_buffer)[i]);
+//         printf("\n");
+
+//         if (header->ForwardingType == ForwardingType_PARENT_TO_ROOT)
+//         {
+
+//             header->ForwardingType = ForwardingType_TO_ROOT;
+//             meshTopo.type = ProtobufType_MESH_TOPOLOGY;
+//             meshTopo.target_id = hardware_.device_id();
+
+//             pb_ostream_t ostream = pb_ostream_from_buffer(pb_buffer + offsetHeader, sizeof(pb_buffer) - offsetHeader);
+//             pb_status = pb_encode(&ostream, RespirMeshInfo_fields, &meshTopo);
+
+//             if (!pb_status)
+//             {
+//                 printf("Encoding meshTopo failed: %s\n", PB_GET_ERROR(&ostream));
+//                 return;
+//             }
+
+//             // printf(" target_id %x \n", pingpong.target_id);
+//             printf("Sending completed TOPO to root %d %d \n", ostream.bytes_written, offsetHeader);
+//             printf("         src %x  tar %x \n", meshTopo.source_id, meshTopo.target_id);
+//             printf("         Forward %d \n", header->ForwardingType);
+//             printf("             Hea %d \n", header->HeaderType);
+//             printf("           Proto %d \n", header->ProtobufType);
+
+//             for (uint8_t i = 0; i < ostream.bytes_written + offsetHeader + 3; i++)
+//                 printf("%d ", ((char *)pb_buffer)[i]);
+//             printf("\n");
+
+//             // parClient.write((const char *)(pb_buffer), ostream.bytes_written + offsetHeader);
+//             send(pb_buffer, ostream.bytes_written + offsetHeader);
+//         }
+    
 
     void send_mesh_topo_to_server()
     {
