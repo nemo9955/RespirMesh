@@ -36,16 +36,16 @@ class x86LinuxHardware : public Hardware
 
 };
 
-class LocalTcpChannel:public RemChannel
+class x86LinuxClientChannel:public RemChannel
 {
   private:
     static void*recvParent(void *_this){
-        ((LocalTcpChannel*)_this)->recvParent();
+        ((x86LinuxClientChannel*)_this)->recvParent();
     }
 
   public:
     TCPClient tcpParent;
-    LocalTcpChannel(){};
+    x86LinuxClientChannel(){};
 
     void init(char *address, int port)
     {
@@ -54,7 +54,7 @@ class LocalTcpChannel:public RemChannel
         tcpParent.setup(std::string(address), port);
         // tcpParent.setup("127.0.0.1", atoi(argv[1]));
         pthread_t paren;
-        pthread_create(&paren, NULL, &LocalTcpChannel::recvParent,this);
+        pthread_create(&paren, NULL, &x86LinuxClientChannel::recvParent,this);
         pthread_detach(paren);
     }
 
@@ -64,7 +64,7 @@ class LocalTcpChannel:public RemChannel
         tcpParent.Send((void *)data, size);
     }
 
-    
+
     void recvParent()
     {
     // pthread_detach(pthread_self());
@@ -94,9 +94,57 @@ class LocalTcpChannel:public RemChannel
     }
 };
 
+
+
+class x86LinuxServerChannel:public RemChannel
+{
+  private:
+    static void*recvParent(void *_this){
+        ((x86LinuxServerChannel*)_this)->recvParent();
+    }
+
+  public:
+    TCPServer tcpSrv;
+    x86LinuxServerChannel(){};
+
+    void init(char *address, int port)
+    {
+        logf("Local TCP started %s:%d \n", address, port);
+
+        tcpParent.setup(std::string(address), port);
+        // tcpParent.setup("127.0.0.1", atoi(argv[1]));
+        pthread_t paren;
+        pthread_create(&paren, NULL, &x86LinuxServerChannel::recvParent,this);
+        pthread_detach(paren);
+    }
+
+    void send(uint8_t *data, uint16_t size)
+    {
+        logf("Local TCP sending .... \n");
+        tcpParent.Send((void *)data, size);
+    }
+
+
+    void recvParent()
+    {
+    // pthread_detach(pthread_self());
+    // tcpServer.receive();
+    // logf("*****");
+
+    };
+
+
+    void stop()
+    {
+        logf("Local TCP exiting \n");
+        tcpSrv.exit();
+    }
+};
+
 int action_counter = 0;
 
-LocalTcpChannel lTcp;
+x86LinuxClientChannel clientTcp;
+x86LinuxServerChannel serverTcp;
 x86LinuxHardware hardware;
 RespirMesh mesh(&hardware);
 
@@ -104,7 +152,7 @@ int main(int argc, char *argv[])
 {
     PRINTF("STARTING CLIENT \n");
 
-    mesh.add_channel(&lTcp);
+    mesh.add_channel(&clientTcp);
 
     if (argc < 3)
     {
@@ -121,8 +169,8 @@ int main(int argc, char *argv[])
         chipID = rand() % 640000;
 
     signal(SIGINT, sig_exit);
-    lTcp.init("127.0.0.1", atoi(argv[1]));
-    lTcp.set_recv_cb(recvformeTest,NULL);
+    clientTcp.init("127.0.0.1", atoi(argv[1]));
+    clientTcp.set_recv_cb(recvformeTest,NULL);
     while (1)
     {
         action_counter++;
@@ -145,7 +193,7 @@ int main(int argc, char *argv[])
 void sig_exit(int s)
 {
     logf("CLIENT CLEANING STUFF \n");
-    lTcp.stop();
+    clientTcp.stop();
     exit(0);
 }
 
