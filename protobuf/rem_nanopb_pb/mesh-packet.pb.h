@@ -16,74 +16,81 @@ extern "C" {
 
 /* Enum definitions */
 typedef enum _ForwardingType {
-    ForwardingType_TO_ROOT = 0,
-    ForwardingType_RTN_HEADER_QUEUE = 1,
-    ForwardingType_PARENT_TO_ROOT = 3,
-    ForwardingType_TO_PARENT = 4,
-    ForwardingType_TO_CHILD = 5,
-    ForwardingType_TO_NEIGHBORS = 6,
-    ForwardingType_TO_NODE = 7,
-    ForwardingType_NEIGHBOR_STOP = 10,
-    ForwardingType_NEIGHBOR_TO_ROOT = 11,
-    ForwardingType_NEIGHBOR_AND_BACK = 12,
-    ForwardingType_PARENT_AND_BACK = 22
+  ForwardingType_TO_ROOT = 0,
+  ForwardingType_RTN_HEADER_QUEUE = 1,
+  ForwardingType_PARENT_TO_ROOT = 3,
+  ForwardingType_TO_PARENT = 4,
+  ForwardingType_TO_CHILD = 5,
+  ForwardingType_TO_NEIGHBORS = 6,
+  ForwardingType_TO_NODE = 7,
+  ForwardingType_NEIGHBOR_STOP = 10,
+  ForwardingType_NEIGHBOR_TO_ROOT = 11,
+  ForwardingType_NEIGHBOR_AND_BACK = 12,
+  ForwardingType_PARENT_AND_BACK = 22
 } ForwardingType;
 #define _ForwardingType_MIN ForwardingType_TO_ROOT
 #define _ForwardingType_MAX ForwardingType_PARENT_AND_BACK
-#define _ForwardingType_ARRAYSIZE ((ForwardingType)(ForwardingType_PARENT_AND_BACK+1))
+#define _ForwardingType_ARRAYSIZE                                              \
+  ((ForwardingType)(ForwardingType_PARENT_AND_BACK + 1))
 
 typedef enum _HeaderType {
-    HeaderType_BASIC = 0,
-    HeaderType_LITTLE_BIG_ENDIAN_SYNC = 15
+  HeaderType_BASIC = 0,
+  HeaderType_LITTLE_BIG_ENDIAN_SYNC = 15
 } HeaderType;
 #define _HeaderType_MIN HeaderType_BASIC
 #define _HeaderType_MAX HeaderType_LITTLE_BIG_ENDIAN_SYNC
-#define _HeaderType_ARRAYSIZE ((HeaderType)(HeaderType_LITTLE_BIG_ENDIAN_SYNC+1))
+#define _HeaderType_ARRAYSIZE                                                  \
+  ((HeaderType)(HeaderType_LITTLE_BIG_ENDIAN_SYNC + 1))
 
 typedef enum _ProtobufType {
-    ProtobufType_NO_PROTOBUF = 0,
-    ProtobufType_PING = 1,
-    ProtobufType_TIMESYNC = 2,
-    ProtobufType_PONG = 3,
-    ProtobufType_MESH_TOPOLOGY = 4,
-    ProtobufType_INFO = 5,
-    ProtobufType_SYNC_LITTLE_BIG_ENDIAN = 15
+  ProtobufType_NO_PROTOBUF = 0,
+  ProtobufType_PING = 1,
+  ProtobufType_TIMESYNC = 2,
+  ProtobufType_PONG = 3,
+  ProtobufType_MESH_TOPOLOGY = 4,
+  ProtobufType_INFO = 5,
+  ProtobufType_SYNC_LITTLE_BIG_ENDIAN = 15
 } ProtobufType;
 #define _ProtobufType_MIN ProtobufType_NO_PROTOBUF
 #define _ProtobufType_MAX ProtobufType_SYNC_LITTLE_BIG_ENDIAN
-#define _ProtobufType_ARRAYSIZE ((ProtobufType)(ProtobufType_SYNC_LITTLE_BIG_ENDIAN+1))
+#define _ProtobufType_ARRAYSIZE                                                \
+  ((ProtobufType)(ProtobufType_SYNC_LITTLE_BIG_ENDIAN + 1))
 
 /* Struct definitions */
 typedef struct _RespirMeshInfo {
-    uint32_t target_id;
-    uint32_t source_id;
-    ProtobufType type;
-/* @@protoc_insertion_point(struct:RespirMeshInfo) */
+  uint32_t target_id;
+  uint32_t source_id;
+  ProtobufType type;
+  /* @@protoc_insertion_point(struct:RespirMeshInfo) */
 } RespirMeshInfo;
 
 typedef struct _RespirMeshTimeSync {
-    RespirMeshInfo info;
-    uint32_t request_sent_time;
-    uint32_t response_arrive_time;
-    uint32_t response_sent_time;
-    uint32_t request_arrive_time;
-    uint32_t server_timestamp_unix;
-/* @@protoc_insertion_point(struct:RespirMeshTimeSync) */
+  RespirMeshInfo info;
+  uint32_t request_sent_time;
+  uint32_t response_arrive_time;
+  uint32_t response_sent_time;
+  uint32_t request_arrive_time;
+  uint32_t server_timestamp_unix;
+  /* @@protoc_insertion_point(struct:RespirMeshTimeSync) */
 } RespirMeshTimeSync;
 
 /* Default values for struct fields */
 
 /* Initializer values for message structs */
-#define RespirMeshInfo_init_default              {0, 0, (ProtobufType)0}
-#define RespirMeshTimeSync_init_default          {RespirMeshInfo_init_default, 0, 0, 0, 0, 0}
-#define RespirMeshInfo_init_zero                 {0, 0, (ProtobufType)0}
-#define RespirMeshTimeSync_init_zero             {RespirMeshInfo_init_zero, 0, 0, 0, 0, 0}
+#define RespirMeshInfo_init_default                                            \
+  { 0, 0, (ProtobufType)0 }
+#define RespirMeshTimeSync_init_default                                        \
+  { RespirMeshInfo_init_default, 0, 0, 0, 0, 0 }
+#define RespirMeshInfo_init_zero                                               \
+  { 0, 0, (ProtobufType)0 }
+#define RespirMeshTimeSync_init_zero                                           \
+  { RespirMeshInfo_init_zero, 0, 0, 0, 0, 0 }
 
 /* Field tags (for use in manual encoding/decoding) */
-#define RespirMeshInfo_target_id_tag             1
-#define RespirMeshInfo_source_id_tag             2
-#define RespirMeshInfo_type_tag                  3
-#define RespirMeshTimeSync_info_tag              1
+#define RespirMeshInfo_target_id_tag 1
+#define RespirMeshInfo_source_id_tag 2
+#define RespirMeshInfo_type_tag 3
+#define RespirMeshTimeSync_info_tag 1
 #define RespirMeshTimeSync_request_sent_time_tag 2
 #define RespirMeshTimeSync_response_arrive_time_tag 3
 #define RespirMeshTimeSync_response_sent_time_tag 4
@@ -95,14 +102,13 @@ extern const pb_field_t RespirMeshInfo_fields[4];
 extern const pb_field_t RespirMeshTimeSync_fields[7];
 
 /* Maximum encoded size of messages (where known) */
-#define RespirMeshInfo_size                      14
-#define RespirMeshTimeSync_size                  46
+#define RespirMeshInfo_size 14
+#define RespirMeshTimeSync_size 46
 
 /* Message IDs (where set with "msgid" option) */
 #ifdef PB_MSGID
 
-#define MESH_PACKET_MESSAGES \
-
+#define MESH_PACKET_MESSAGES
 
 #endif
 
