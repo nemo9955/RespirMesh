@@ -38,6 +38,31 @@ type RemTopology struct {
 	Edges []*Edge
 }
 
+func NodesToUintList(n1 *Node, nodes ...*Node) []uint32 {
+	T := []uint32{}
+	T = append(T, n1.ID)
+	return append(T, (NodesToUintList(nodes[0], nodes[1:]...))...)
+}
+func (g *RemTopology) GetWayTo(N1 *Node, N2 *Node) []*Node {
+	NodeArray := []*Node{}
+	NodeArray = append(NodeArray, N1)
+	if N1 == N2 {
+		return NodeArray
+	}
+	for _, n := range N1.Neighbors {
+		if N2 == n {
+			NodeArray = append(NodeArray, N2)
+			return NodeArray
+		}
+		TArray := g.GetWayTo(n, N2)
+		if TArray != nil {
+			NodeArray = append(NodeArray, TArray...)
+			return NodeArray
+		}
+	}
+	return nil
+}
+
 // GetNodeFromUUID get node from UUID, nil if none
 func (g *RemTopology) GetNodeFromUUID(nodeUUID int64) *Node {
 	var node *Node

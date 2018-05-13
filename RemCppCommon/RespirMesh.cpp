@@ -20,7 +20,7 @@ void RespirMesh::receive_fn(uint8_t *data, uint16_t size, void *arg) {
     switch (header->ProtobufType) {
     case ProtobufType_MESH_TOPOLOGY:
       // Serial.printf("putting data in  TOPO to root : \n");
-      (rm)->handleMeshTopology(data, size);
+      (rm)->handleMeshTopology(data, size,rc);
       break;
     }
     break;
@@ -87,9 +87,9 @@ void RespirMesh::update() {
 
   action_counter++;
 
-  if (action_counter % 4 == 1) {
+  if (action_counter % 5 == 1) {
     send_mesh_topo_to_server();
-  } else if (action_counter % 10 == 0) {
+  } else if (action_counter % 2 == 0) {
     Ping(ForwardingType_TO_NEIGHBORS);
   }
   // else
@@ -98,7 +98,7 @@ void RespirMesh::update() {
   // }
 }
 
-void RespirMesh::handleMeshTopology(uint8_t *data, size_t len) {
+void RespirMesh::handleMeshTopology(uint8_t *data, size_t len,RemChannel* rc) {
 
   for (uint8_t i = 0; i < len + 10; i++)
     printf("%d ", ((char *)data)[i]);
@@ -162,6 +162,9 @@ void RespirMesh::handleMeshTopology(uint8_t *data, size_t len) {
     // offsetHeader);
     send(pb_buffer, ostream.bytes_written + offsetHeader);
   }
+  else if(header->ForwardingType == ForwardingType_TO_PARENT){
+      MapedChannels.push_back(new RemChannelAndId{rc,meshTopo.source_id});
+  }
 }
 
 void RespirMesh::send_mesh_topo_to_server() {
@@ -203,40 +206,77 @@ void RespirMesh::send_mesh_topo_to_server() {
   // offsetHeader);
 }
 void RespirMesh::Ping(ForwardingType TO) {
-  RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
-  uint16_t offsetHeader = sizeof(RemBasicHeader);
+  RemDataHeaderByte *header = (RemDataHeaderByte *)pb_buffer;
+  uint16_t offsetHeader = sizeof(RemDataHeaderByte);
   uint8_t ActionSize = sizeof(action_counter);
   header->ForwardingType = uint8_t(TO);
   header->ProtobufType = uint8_t(ProtobufType_PING);
   header->HeaderType = uint8_t(HeaderType_BASIC);
-  memcpy(pb_buffer + offsetHeader + 1, &action_counter, ActionSize);
-  //action_counter++;
+  header->Data=(uint8_t)hardware_->device_id();
+  header->Checksum=0;
   tmili = hardware_->time_milis();
   logf("\tSend PING %d\n", tmili);
-  send(pb_buffer, offsetHeader + ActionSize);
+  send(pb_buffer, offsetHeader );
 }
 void RespirMesh::HandlePing(uint8_t *data, uint16_t size, RemChannel *rc) {
   logf("\tRecived PING\n");
-  RemBasicHeader *header = (RemBasicHeader *)data;
-  uint16_t offsetHeader = sizeof(RemBasicHeader);
+  RemDataHeaderByte *header = (RemDataHeaderByte *)data;
+  uint16_t offsetHeader = sizeof(RemDataHeaderByte);
   header->ProtobufType = uint8_t(ProtobufType_PONG);
-  uint32_t ac;
-  memcpy(&ac, pb_buffer + offsetHeader, sizeof(ac));
-  ac++;
+
   // memcpy(pb_buffer+offsetHeader+1,&ac,sizeof(ac));
   logf("\tRecived PONG\n");
-  rc->send((uint8_t *)(pb_buffer), offsetHeader + sizeof(ac));
+  rc->send((uint8_t *)(pb_buffer), offsetHeader);
 }
 void RespirMesh::HandlePong(uint8_t *data, uint16_t size, RemChannel *rc) {
   logf("\tRecived PONG %d\n", tmili - hardware_->time_milis());
-  RemBasicHeader *header = (RemBasicHeader *)data;
-  uint16_t offsetHeader = sizeof(RemBasicHeader);
+  RemDataHeaderByte *header = (RemDataHeaderByte *)data;
+  uint16_t offsetHeader = sizeof(RemDataHeaderByte);
+  if(rc->connected_to_root){
+    nrping++;
+    if(nrping>=nrpingSendTopo){
+      nrping=0;
+      nrpingSendTopo=16;
+      send_mesh_topo_to_server();
+    }
+  }
   // header->ProtobufType = uint8_t(ProtobufType_PONG);
-  uint32_t ac;
-  memcpy(&ac, pb_buffer + offsetHeader, sizeof(ac));
-  ac++;
+
   // memcpy(pb_buffer+offsetHeader+1,&ac,sizeof(ac));
   // rc->send((uint8_t *)(pb_buffer), stream.bytes_written + offsetHeader);
+}
+void RespirMesh::sendInfoToParent(RemChannel *rc){
+  RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
+  uint16_t offsetHeader = sizeof(RemBasicHeader);
+  header->HeaderType = HeaderType_BASIC;
+
+  RespirMeshInfo remPingPong = RespirMeshInfo_init_default;
+  remPingPong.source_id = hardware_->device_id();
+
+  header->ForwardingType = ForwardingType_TO_PARENT;
+  header->ProtobufType = ProtobufType_MESH_TOPOLOGY;
+  remPingPong.type = ProtobufType_MESH_TOPOLOGY;
+
+  pb_ostream_t ostream = pb_ostream_from_buffer(
+      (uint8_t *)pb_buffer + offsetHeader, sizeof(pb_buffer) - offsetHeader);
+  bool pb_status = pb_encode(&ostream, RespirMeshInfo_fields, &remPingPong);
+
+  if (!pb_status) {
+    PRINTF("Encoding PingPong failed: %s\n", PB_GET_ERROR(&ostream));
+    return;
+  }
+
+  PRINTF(" HEADER size %d \n", offsetHeader);
+  PRINTF(" Protobuf size %d \n", (int)ostream.bytes_written);
+
+  // pb_buffer[ostream.bytes_written + offsetHeader] = '\n';
+  // pb_buffer[ostream.bytes_written + offsetHeader + 1] = '\r';
+  // pb_buffer[ostream.bytes_written + offsetHeader + 2] = '\0';
+
+  for (uint8_t i = 0; i < ostream.bytes_written + offsetHeader; i++)
+    PRINTF("%d ", pb_buffer[i]);
+  PRINTF("\n");
+  rc->send(pb_buffer, ostream.bytes_written + offsetHeader);
 }
 // void RespirMesh::handlePingPong(/*AsyncClient *c,*/ uint8_t *data, size_t
 // len, RemBasicHeader *header)

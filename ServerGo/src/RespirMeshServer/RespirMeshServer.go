@@ -46,7 +46,7 @@ func headerToBytes(header *headertypes.RemBasicHeader) []byte {
 	return buf.Bytes()
 }
 
-func (s *RmServer) handlePingPong(allData []byte, header *headertypes.RemBasicHeader, c *tcp_server.Client) {
+func (s *RmServer) handlePingPong(allData []byte, header *headertypes.RemDataHeaderByte, c *tcp_server.Client) {
 	//pingpong := &rem.RespirMeshInfo{}
 	//err := proto.Unmarshal(allData, pingpong)
 
@@ -64,11 +64,13 @@ func (s *RmServer) handlePingPong(allData []byte, header *headertypes.RemBasicHe
 
 	header.ForwardingType = uint8(rem.ForwardingType_TO_NEIGHBORS)
 	header.ProtobufType = uint8(rem.ProtobufType_PONG)
-
+	header.Data = uint8(0)
+	header.Checksum = uint8(0)
 	// pingpong.SourceId = s.ServerSesionUUID
-
+	buf := bytes.Buffer{}
+	binary.Write(&buf, binary.LittleEndian, header)
 	// respPacket := assembleStruct(header, pingpong)
-	c.SendBytes(headerToBytes(header))
+	c.SendBytes(buf.Bytes())
 
 }
 
@@ -139,6 +141,14 @@ func (s *RmServer) onNewBytes(c *tcp_server.Client, allData []byte) {
 		case rem.ProtobufType_TIMESYNC:
 			s.handleTimeSync(packetData, &header)
 		case rem.ProtobufType_PING:
+			header := headertypes.RemDataHeaderByte{}
+			buf := bytes.NewReader(allData)
+			// err := binary.Read(buf, binary.BigEndian, &header)
+			err := binary.Read(buf, binary.LittleEndian, &header)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 			s.handlePingPong(packetData, &header, c)
 		case rem.ProtobufType_MESH_TOPOLOGY:
 			meshTopo := &rem.RespirMeshInfo{}
@@ -150,7 +160,8 @@ func (s *RmServer) onNewBytes(c *tcp_server.Client, allData []byte) {
 			}
 			s.handleMeshTopology(meshTopo, &header)
 		}
-
+	case rem.ForwardingType_TO_PARENT:
+		fallthrough
 	case rem.ForwardingType_PARENT_TO_ROOT:
 		switch rem.ProtobufType(header.ProtobufType) {
 		case rem.ProtobufType_MESH_TOPOLOGY:
@@ -167,9 +178,18 @@ func (s *RmServer) onNewBytes(c *tcp_server.Client, allData []byte) {
 			}
 			s.handleMeshTopology(meshTopo, &header)
 		}
+
 	case rem.ForwardingType_TO_NEIGHBORS:
 		switch rem.ProtobufType(header.ProtobufType) {
 		case rem.ProtobufType_PING:
+			header := headertypes.RemDataHeaderByte{}
+			buf := bytes.NewReader(allData)
+			// err := binary.Read(buf, binary.BigEndian, &header)
+			err := binary.Read(buf, binary.LittleEndian, &header)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 			s.handlePingPong(packetData, &header, c)
 		}
 	}

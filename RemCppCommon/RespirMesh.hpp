@@ -27,14 +27,24 @@ public:
 
 class RespirMesh {
 private:
+  struct RemChannelAndId{
+    RemChannel * rc;
+    uint32_t id;
+  };
+  std::list<RemChannelAndId *> MapedChannels;
   std::list<RemChannel *> channels;
   Hardware *hardware_;
   uint8_t pb_buffer[INTERNAL_BUFFER_ZISE];
   int action_counter = 0;
   int32_t tmili;
+  uint8_t nrping;
+  uint8_t nrpingSendTopo;
 
 public:
-  RespirMesh(Hardware *hardware) { hardware_ = hardware; };
+  RespirMesh(Hardware *hardware) {
+    hardware_ = hardware;
+    nrpingSendTopo = 2;
+  };
   ~RespirMesh(){};
 
   static void receive_fn(uint8_t *data, uint16_t size, void *arg);
@@ -44,12 +54,13 @@ public:
   void recv(uint8_t *data, uint16_t size);
   void update();
 
-  void handleMeshTopology(uint8_t *data, size_t len);
+  void handleMeshTopology(uint8_t *data, size_t len,RemChannel* rc);
   void send_mesh_topo_to_server();
 
   void Ping(ForwardingType TO);
   void HandlePing(uint8_t *data, uint16_t size, RemChannel *arg);
   void HandlePong(uint8_t *data, uint16_t size, RemChannel *arg);
+  void sendInfoToParent(RemChannel *rc);
   // void sendPing();
 
   // void sendPingToNode(RemChannel* c);

@@ -5,11 +5,18 @@
 
 #include <inttypes.h>
 
-typedef struct _RemBasicHeader
-{
-    uint8_t ForwardingType;
-    uint8_t HeaderType;
-    uint8_t ProtobufType;
+typedef struct _RemBasicHeader {
+  uint8_t ForwardingType;
+  uint8_t HeaderType;
+  uint8_t ProtobufType;
 } RemBasicHeader;
+
+typedef struct _RemDataHeaderByte {
+  uint8_t ForwardingType;
+  uint8_t HeaderType;
+  uint8_t ProtobufType;
+  uint8_t Data;
+  uint8_t Checksum;
+} RemDataHeaderByte;
 
 #endif /* !REMHEADERTYPES_H_ */
