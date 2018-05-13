@@ -47,28 +47,28 @@ func headerToBytes(header *headertypes.RemBasicHeader) []byte {
 }
 
 func (s *RmServer) handlePingPong(allData []byte, header *headertypes.RemBasicHeader, c *tcp_server.Client) {
-	pingpong := &rem.RespirMeshInfo{}
-	err := proto.Unmarshal(allData, pingpong)
+	//pingpong := &rem.RespirMeshInfo{}
+	//err := proto.Unmarshal(allData, pingpong)
 
-	if err != nil {
-		fmt.Println("unmarshaling error on PingPong: ", err)
-		return
-	}
+	// if err != nil {
+	// 	fmt.Println("unmarshaling error on PingPong: ", err)
+	// 	return
+	// }
 
 	// fmt.Println("         Type: ", pingpong.GetType())
 	// fmt.Println("     TargetId: ", "0x"+strconv.FormatInt(int64(pingpong.GetTargetId()), 16))
 	// fmt.Println("     SourceId: ", "0x"+strconv.FormatInt(int64(pingpong.GetSourceId()), 16))
 
-	pingpong.Type = rem.ProtobufType_PONG
-	pingpong.TargetId = pingpong.GetSourceId()
+	// pingpong.Type = rem.ProtobufType_PONG
+	// pingpong.TargetId = pingpong.GetSourceId()
 
-	header.ForwardingType = uint8(rem.ForwardingType_RTN_HEADER_QUEUE)
+	header.ForwardingType = uint8(rem.ForwardingType_TO_NEIGHBORS)
 	header.ProtobufType = uint8(rem.ProtobufType_PONG)
 
-	pingpong.SourceId = s.ServerSesionUUID
+	// pingpong.SourceId = s.ServerSesionUUID
 
-	respPacket := assembleStruct(header, pingpong)
-	c.SendBytes(respPacket)
+	// respPacket := assembleStruct(header, pingpong)
+	c.SendBytes(headerToBytes(header))
 
 }
 
@@ -167,7 +167,11 @@ func (s *RmServer) onNewBytes(c *tcp_server.Client, allData []byte) {
 			}
 			s.handleMeshTopology(meshTopo, &header)
 		}
-
+	case rem.ForwardingType_TO_NEIGHBORS:
+		switch rem.ProtobufType(header.ProtobufType) {
+		case rem.ProtobufType_PING:
+			s.handlePingPong(packetData, &header, c)
+		}
 	}
 
 }

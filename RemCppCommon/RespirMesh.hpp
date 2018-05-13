@@ -12,6 +12,7 @@
 #include <pb_encode.h>
 
 #include <stdio.h>
+
 #define PRINTF printf
 #define infof printf
 #define logf printf

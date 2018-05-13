@@ -36,8 +36,7 @@ void RespirMesh::receive_fn(uint8_t *data, uint16_t size, void *arg) {
 }
 
 void RespirMesh::add_channel(RemChannel *channel) {
-
-  logf(" add ch %d   \n", channel->ch_info());
+  // logf(" add ch %d   \n", channel->ch_info());
   channel->set_recv_cb(receive_fn, this);
   channels.push_back(channel);
 }
@@ -55,7 +54,7 @@ void RespirMesh::send(uint8_t *data, uint16_t size) {
         logf(" P/TO_ROOT  \n");
 
         (*it)->send(data, size);
-        logf(" sendd ch %d   \n", (*it)->ch_info());
+        //logf(" sendd ch %d   \n", (*it)->ch_info());
       }
     break;
   case ForwardingType_TO_NEIGHBORS:
@@ -211,7 +210,7 @@ void RespirMesh::Ping(ForwardingType TO) {
   header->ProtobufType = uint8_t(ProtobufType_PING);
   header->HeaderType = uint8_t(HeaderType_BASIC);
   memcpy(pb_buffer + offsetHeader + 1, &action_counter, ActionSize);
-  action_counter++;
+  //action_counter++;
   tmili = hardware_->time_milis();
   logf("\tSend PING %d\n", tmili);
   send(pb_buffer, offsetHeader + ActionSize);
