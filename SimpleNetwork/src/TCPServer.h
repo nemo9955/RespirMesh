@@ -40,7 +40,7 @@ class TCPServer
     string Message;
 
     void setup(int port);
-    TCPClient* receive();
+    int receive();
     string getMessage();
     int getMsgLen();
     void Send(string msg);

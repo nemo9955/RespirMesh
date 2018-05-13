@@ -29,10 +29,10 @@ class TCPClient
 
   public:
     TCPClient();
-    TCPClient(int sockc);
-    bool setup(string address, int port);
+    void setup(int sockc);
+    bool setup(const  char* address, int port);
     bool Send(void *data, int len);
-    void receive();
+    bool receive();
     string read();
     void exit();
     void clean();

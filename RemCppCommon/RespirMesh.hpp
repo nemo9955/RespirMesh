@@ -32,7 +32,7 @@ class RespirMesh
     Hardware *hardware_;
     uint8_t pb_buffer[INTERNAL_BUFFER_ZISE];
     int action_counter = 0;
-    
+    int32_t tmili;
   public:
     RespirMesh(Hardware *hardware) {hardware_ = hardware;};
     ~RespirMesh() {};
@@ -47,13 +47,16 @@ class RespirMesh
     void handleMeshTopology(uint8_t *data, size_t len);
     void send_mesh_topo_to_server();
 
-    void sendPing();
+    void Ping(ForwardingType TO);
+    void HandlePing(uint8_t *data, uint16_t size, RemChannel *arg);
+    void HandlePong(uint8_t *data, uint16_t size, RemChannel *arg);
+    // void sendPing();
 
-    void sendPingToNode(RemChannel* c);
-    void sendPongToNode(RemChannel* , uint8_t *data, size_t len, RemBasicHeader *header);
+    // void sendPingToNode(RemChannel* c);
+    // void sendPongToNode(RemChannel* , uint8_t *data, size_t len, RemBasicHeader *header);
 
 
-    void HandlePong(RemChannel *c, uint8_t *data, size_t len, RemBasicHeader *header);
+    // void HandlePong(RemChannel *c, uint8_t *data, size_t len, RemBasicHeader *header);
 
 };
 

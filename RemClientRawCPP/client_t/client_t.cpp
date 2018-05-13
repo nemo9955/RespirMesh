@@ -4,7 +4,8 @@
 #include "TCPClient.h"
 #include "TCPServer.h"
 #include <stdio.h>
-#include <string> // std::string, std::stoi
+// #include <string> // std::string, std::stoi
+#include <list>
 
 #include "RespirMesh.hpp"
 #include "RemChannel.hpp"
@@ -12,7 +13,6 @@
 void sig_exit(int s);
 
 uint32_t chipID = 0;
-uint32_t PUFY = 0;
 
 class x86LinuxHardware : public Hardware
 {
@@ -36,8 +36,8 @@ class x86LinuxClientChannel : public RemChannel
   private:
     static void *recvParentStat(void *_this)
     {
-        PUFY++;
         ((x86LinuxClientChannel *)_this)->recvParentObj();
+        return NULL;
     }
 
   public:
@@ -45,22 +45,32 @@ class x86LinuxClientChannel : public RemChannel
     x86LinuxClientChannel(){};
 
     int ch_info() { return 500; }
-    void init(char *address, int port)
+    void init(int socket){
+        logf("Local TCP started in socket:%d \n", socket);
+        tcpParent.setup(socket);
+
+        connected_to_root = false;
+        // tcpParent.setup("127.0.0.1", atoi(argv[1]));
+        pthread_t paren;
+        pthread_create(&paren, NULL, &x86LinuxClientChannel::recvParentStat, this);
+        pthread_detach(paren);
+    }
+    void init(const char *address, int port)
     {
         logf("Local TCP started %s:%d \n", address, port);
         connected_to_root = true;
 
-        tcpParent.setup(std::string(address), port);
+        tcpParent.setup(address, port);
         // tcpParent.setup("127.0.0.1", atoi(argv[1]));
         pthread_t paren;
         pthread_create(&paren, NULL, &x86LinuxClientChannel::recvParentStat, this);
         pthread_detach(paren);
     }
 
-    void send(uint8_t *data, uint16_t size)
+    bool send(uint8_t *data, uint16_t size)
     {
-        logf("Client TCP sending .... \n");
-        tcpParent.Send((void *)data, size);
+        //logf("Client TCP sending .... \n");
+        return tcpParent.Send((void *)data, size);
     }
 
     void recvParentObj()
@@ -69,16 +79,13 @@ class x86LinuxClientChannel : public RemChannel
         // tcpServer.receive();
         // logf("*****");
 
-        while (1)
+        while (tcpParent.receive())
         {
-            // logf(".");
-            tcpParent.receive();
             // logf(" r:%s ", rec);
             if (tcpParent.msgLen > 0)
             {
-                logf(" r: %d ", PUFY);
                 // cout << "Server Response:" << rec << endl;
-                recv((uint8_t *)tcpParent.msg, tcpParent.msgLen);
+                this->recv((uint8_t *)tcpParent.msg, tcpParent.msgLen);
                 tcpParent.clean();
             }
             // logf(".");
@@ -97,10 +104,11 @@ class x86LinuxServerChannel : public RemChannel
   private:
     static void *recvParent(void *_this)
     {
-        PUFY++;
         ((x86LinuxServerChannel *)_this)->recvParent();
+        return NULL;
     }
 
+    std::list<RemChannel *> channels;
   public:
     TCPServer tcpSrv;
     x86LinuxServerChannel(){};
@@ -117,40 +125,30 @@ class x86LinuxServerChannel : public RemChannel
         pthread_detach(paren);
     }
 
-    void send(uint8_t *data, uint16_t size)
+    bool send(uint8_t *data, uint16_t size)
     {
-        logf("Server TCP sending .... \n");
-        tcpSrv.Send(data, size);
-    }
-    struct dirtyStruct{
-         TCPClient* c;
-         RemChannel* s;
-    };
-    static void *handleClient(void* argv){
-        dirtyStruct* ds=(dirtyStruct*)argv;
-        TCPClient* c=(TCPClient*)ds->c;
-        RemChannel* s=(RemChannel*)ds->s;
-        while(1){
-            c->receive();
-        if (c->msgLen > 0)
-            {
-            logf(" r: %d ", PUFY);
-                // cout << "Server Response:" << rec << endl;
-                s->recv((uint8_t *)c->msg, c->msgLen);
-                c->clean();
-            }}
+        //logf("Server TCP sending .... \n");
+        for (std::list<RemChannel *>::iterator it = channels.begin(); it != channels.end();)
+        {
+            if(!(*it)->send(data, size)){
+                (*it)->stop();
+                channels.erase(it++);
+            }
+            else{
+                ++it;
+            }
+        }
+        return true;
     }
     void recvParent()
     {
         while (1)
         {
-            TCPClient* c=tcpSrv.receive();
-            pthread_t paren;
-            dirtyStruct ds;
-            ds.c=c;
-            ds.s=this;
-            pthread_create(&paren, NULL, &x86LinuxServerChannel::handleClient, &ds);
-            pthread_detach(paren);
+            x86LinuxClientChannel *c=new x86LinuxClientChannel();
+            c->set_recv_cb(this->on_recv_cb,argv_recv.argv);
+            channels.push_back((RemChannel *)c);
+            int soc=tcpSrv.receive();
+            c->init(soc);
         }
     };
 
@@ -170,6 +168,7 @@ RespirMesh mesh(&hardware);
 
 int main(int argc, char *argv[])
 {
+    const char* IP="127.0.0.1";
     signal(SIGINT, sig_exit);
     PRINTF("STARTING CLIENT \n");
 
@@ -186,7 +185,7 @@ int main(int argc, char *argv[])
     else
         chipID = rand() % 640000;
 
-    clientTcp.init("127.0.0.1", atoi(argv[1]));
+    clientTcp.init(IP, atoi(argv[1]));
     serverTcp.init(atoi(argv[2]));
 
     mesh.add_channel(&clientTcp);

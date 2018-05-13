@@ -22,7 +22,7 @@ void TCPServer::setup(int port)
     listen(sockfd, 5);
 }
 
-TCPClient* TCPServer::receive()
+int TCPServer::receive()
 {
 
         socklen_t sosize = sizeof(clientAddress);
@@ -32,7 +32,7 @@ TCPClient* TCPServer::receive()
         // receiveMesage();
         // ThreadContainer con {this,newsockfd};
 
-        return new TCPClient( newsockfd);
+        return  newsockfd;
 
 }
 void TCPServer::receiveMesage(){

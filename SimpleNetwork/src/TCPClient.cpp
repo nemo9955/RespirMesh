@@ -6,11 +6,11 @@ TCPClient::TCPClient()
     port = 0;
     address = "";
 }
-TCPClient::TCPClient(int sockc)
-{
+
+void TCPClient::setup(int sockc){
     sock =  sockc;
 }
-bool TCPClient::setup(string address, int port)
+bool TCPClient::setup(const  char* address, int port)
 {
     if (sock == -1)
     {
@@ -25,11 +25,11 @@ bool TCPClient::setup(string address, int port)
     cast to correct warning:
     comparison between signed and unsigned integer expressions
     */
-    if ((int32_t)inet_addr(address.c_str()) == -1)
+    if ((int32_t)inet_addr(address) == -1)
     {
         struct hostent *he;
         struct in_addr **addr_list;
-        if ((he = gethostbyname(address.c_str())) == NULL)
+        if ((he = gethostbyname(address)) == NULL)
         {
             herror("gethostbyname");
             cout << "Failed to resolve hostname\n";
@@ -44,7 +44,7 @@ bool TCPClient::setup(string address, int port)
     }
     else
     {
-        server.sin_addr.s_addr = inet_addr(address.c_str());
+        server.sin_addr.s_addr = inet_addr(address);
     }
     server.sin_family = AF_INET;
     server.sin_port = htons(port);
@@ -71,7 +71,7 @@ bool TCPClient::Send(void *data, int len)
     return true;
 }
 
-void TCPClient::receive()
+bool TCPClient::receive()
 {
     // char buffer[size];
     int n;
@@ -85,14 +85,15 @@ void TCPClient::receive()
     {
         // msgLen = 0;
         cout << "receive failed!" << endl;
-        return ;
+        this->exit();
+        return false ;
     }
 
     msg[n] = '\0';
     msgLen = n;
     // buffer[size - 1] = '\0';
     // reply = buffer;
-    return;
+    return true;
 }
 
 string TCPClient::read()
