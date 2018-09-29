@@ -16,7 +16,6 @@ typedef struct _RemDataHeaderByte {
   uint8_t HeaderType;
   uint8_t ProtobufType;
   uint8_t Data;
-  uint8_t Checksum;
 } RemDataHeaderByte;
 
 #endif /* !REMHEADERTYPES_H_ */

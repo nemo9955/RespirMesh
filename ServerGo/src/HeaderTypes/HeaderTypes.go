@@ -11,5 +11,4 @@ type RemDataHeaderByte struct {
 	HeaderType     uint8
 	ProtobufType   uint8
 	Data           uint8
-	Checksum       uint8
 }

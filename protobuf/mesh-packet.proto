@@ -10,7 +10,7 @@ enum ForwardingType {
     TO_ROOT = 0;
     RTN_HEADER_QUEUE = 1;
 
-    PARENT_TO_ROOT = 3;
+    TO_PARENT_TO_ROOT = 3;
     TO_PARENT = 4;
     TO_CHILD = 5;
     TO_NEIGHBORS = 6;
@@ -24,6 +24,7 @@ enum ForwardingType {
 
 enum HeaderType {
     BASIC = 0;
+    DATA_BYTE = 1;
     LITTLE_BIG_ENDIAN_SYNC=15;
 }
 

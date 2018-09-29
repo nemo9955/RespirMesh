@@ -13,62 +13,77 @@
 
 #include <stdio.h>
 
-#define PRINTF printf
+#define errorf printf
+#define debugf //printf
 #define infof printf
 #define logf printf
 
 #define INTERNAL_BUFFER_ZISE 64
 
-class Hardware {
-public:
-  virtual uint32_t device_id() = 0;
-  virtual uint32_t time_milis() = 0;
+class Hardware
+{
+  public:
+    virtual uint32_t device_id() = 0;
+    virtual uint32_t time_milis() = 0;
 };
 
-class RespirMesh {
-private:
-  struct RemChannelAndId{
-    RemChannel * rc;
-    uint32_t id;
-  };
-  std::list<RemChannelAndId *> MapedChannels;
-  std::list<RemChannel *> channels;
-  Hardware *hardware_;
-  uint8_t pb_buffer[INTERNAL_BUFFER_ZISE];
-  int action_counter = 0;
-  int32_t tmili;
-  uint8_t nrping;
-  uint8_t nrpingSendTopo;
+class RespirMesh
+{
+  private:
+    struct RemChannelAndId
+    {
+        RemChannel *rc;
+        uint32_t id;
+    };
+    std::list<RemChannelAndId *> MapedChannels;
+    std::list<RemChannel *> channels;
+    Hardware *hardware_;
+    uint8_t pb_buffer[INTERNAL_BUFFER_ZISE];
+    int action_counter = 0;
+    int32_t tmili;
+    uint8_t nrping;
+    uint8_t nrpingSendTopo;
 
-public:
-  RespirMesh(Hardware *hardware) {
-    hardware_ = hardware;
-    nrpingSendTopo = 2;
-  };
-  ~RespirMesh(){};
+  public:
+    RespirMesh()
+    {
+        nrpingSendTopo = 2;
+    };
+    //   RespirMesh(Hardware *hardware) {
+    //     hardware_ = hardware;
+    //     nrpingSendTopo = 2;
+    //   };
+    ~RespirMesh(){};
 
-  static void receive_fn(uint8_t *data, uint16_t size, void *arg);
-  void add_channel(RemChannel *channel);
+    void set_hardware(Hardware *_hard);
+    uint32_t time_milis();
+    uint32_t device_id();
 
-  void send(uint8_t *data, uint16_t size);
-  void recv(uint8_t *data, uint16_t size);
-  void update();
+    static void receive_fn(uint8_t *data, uint16_t size, void *arg);
+    void add_channel(RemChannel *channel);
+    void clean_channels();
 
-  void handleMeshTopology(uint8_t *data, size_t len,RemChannel* rc);
-  void send_mesh_topo_to_server();
+    void send_packet(uint8_t *data, uint16_t size);
+    void route_packet(uint8_t *data, uint16_t size);
+    void process_packet(uint8_t *data, uint16_t size);
+    void update();
 
-  void Ping(ForwardingType TO);
-  void HandlePing(uint8_t *data, uint16_t size, RemChannel *arg);
-  void HandlePong(uint8_t *data, uint16_t size, RemChannel *arg);
-  void sendInfoToParent(RemChannel *rc);
-  // void sendPing();
+    void handle_mesh_topo(uint8_t *data, size_t len);
+    void send_mesh_topo();
 
-  // void sendPingToNode(RemChannel* c);
-  // void sendPongToNode(RemChannel* , uint8_t *data, size_t len, RemBasicHeader
-  // *header);
+    void handle_ping(uint8_t *data, uint16_t siz );
+    void send_ping(ForwardingType TO);
 
-  // void HandlePong(RemChannel *c, uint8_t *data, size_t len, RemBasicHeader
-  // *header);
+    //   void handle_pong(uint8_t *data, uint16_t size);
+    //   void send_info(RemChannel *rc);
+    // void sendPing();
+
+    // void sendPingToNode(RemChannel* c);
+    // void sendPongToNode(RemChannel* , uint8_t *data, size_t len, RemBasicHeader
+    // *header);
+
+    // void handle_pong(RemChannel *c, uint8_t *data, size_t len, RemBasicHeader
+    // *header);
 };
 
 #endif /* !RESPIRMESH_HPP_ */

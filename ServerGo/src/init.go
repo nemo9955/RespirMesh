@@ -12,14 +12,14 @@ import (
 	"./RespirMeshServer"
 )
 
-var server *respirmeshserver.RmServer = nil
+var server *remserver.RmServer = nil
 
-// var server = respirmeshserver.New("0.0.0.0:9995", 60*time.Second)
+// var server = remserver.New("0.0.0.0:9995", 60*time.Second)
 
 func main() {
 	var quit = make(chan bool)
 
-	server = respirmeshserver.New("0.0.0.0:9995", 60*time.Second)
+	server = remserver.New("0.0.0.0:9995", 60*time.Second)
 	log.Println("Respir Mesh server created ", server)
 	server.StartRemServer()
 	log.Println("Respir Mesh server started ", server)

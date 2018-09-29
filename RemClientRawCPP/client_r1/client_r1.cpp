@@ -29,7 +29,7 @@ void send_ping_to_server()
 {
 }
 
-void send_mesh_topo_to_server()
+void send_mesh_topo()
 {
     RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
     uint16_t offsetHeader = sizeof(RemBasicHeader);
@@ -39,7 +39,7 @@ void send_mesh_topo_to_server()
     RespirMeshInfo remPingPong = RespirMeshInfo_init_default;
     remPingPong.source_id = chipID;
 
-    header->ForwardingType = ForwardingType_PARENT_TO_ROOT;
+    header->ForwardingType = ForwardingType_TO_PARENT_TO_ROOT;
     header->ProtobufType = ProtobufType_MESH_TOPOLOGY;
     remPingPong.type = ProtobufType_MESH_TOPOLOGY;
 
@@ -74,7 +74,7 @@ void *recvServ(void *m)
     tcpServer.receive();
 }
 
-void handleMeshTopology(uint8_t *data, size_t len)
+void handle_mesh_topo(uint8_t *data, size_t len)
 {
 
     for (uint8_t i = 0; i < len + 10; i++)
@@ -107,7 +107,7 @@ void handleMeshTopology(uint8_t *data, size_t len)
         printf("%d ", ((char *)pb_buffer)[i]);
     printf("\n");
 
-    if (header->ForwardingType == ForwardingType_PARENT_TO_ROOT)
+    if (header->ForwardingType == ForwardingType_TO_PARENT_TO_ROOT)
     {
 
         header->ForwardingType = ForwardingType_TO_ROOT;
@@ -171,13 +171,13 @@ void *loop(void *m)
                 // parClient.write(((const char *)data), len);
                 tcpParent.Send((void *)data, len);
             }
-            else if (header->ForwardingType == ForwardingType_PARENT_TO_ROOT)
+            else if (header->ForwardingType == ForwardingType_TO_PARENT_TO_ROOT)
             {
                 switch (header->ProtobufType)
                 {
                 case ProtobufType_MESH_TOPOLOGY:
                     printf("putting data in  TOPO to root : \n");
-                    handleMeshTopology((uint8_t *)(data), len);
+                    handle_mesh_topo((uint8_t *)(data), len);
                     break;
                 }
             }
@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
 
         if (action_counter % 2 == 1)
         {
-            send_mesh_topo_to_server();
+            send_mesh_topo();
         }
         else if (action_counter % 3 == 0)
         {

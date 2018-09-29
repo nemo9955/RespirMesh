@@ -66,8 +66,8 @@ WiFiEventHandler stationConnectedHandler;
 WiFiEventHandler stationDisconnectedHandler;
 
 void ensureParentConnected();
-// void handleMeshTopology(AsyncClient *c, uint8_t *data, size_t len, RemBasicHeader *header);
-void handleMeshTopology(AsyncClient *c, uint8_t *data, size_t len);
+// void handle_mesh_topo(AsyncClient *c, uint8_t *data, size_t len, RemBasicHeader *header);
+void handle_mesh_topo(AsyncClient *c, uint8_t *data, size_t len);
 void handlePingPong(AsyncClient *c, uint8_t *data, size_t len, RemBasicHeader *header);
 void handleTimeSync(AsyncClient *c, uint8_t *data, size_t len, RemBasicHeader *header);
 void remPacketSendTestCallback();
@@ -255,13 +255,13 @@ void dataRecv(void *s, AsyncClient *c, void *data, size_t len)
     {
         parClient.write(((const char *)data), len);
     }
-    else if (header->ForwardingType == ForwardingType_PARENT_TO_ROOT)
+    else if (header->ForwardingType == ForwardingType_TO_PARENT_TO_ROOT)
     {
         switch (header->ProtobufType)
         {
         case ProtobufType_MESH_TOPOLOGY:
             Serial.printf("putting data in  TOPO to root : \n");
-            handleMeshTopology(c, (uint8_t *)(data), len);
+            handle_mesh_topo(c, (uint8_t *)(data), len);
             break;
         }
     }
@@ -285,8 +285,8 @@ void dataRecv(void *s, AsyncClient *c, void *data, size_t len)
     delay(1);
 }
 
-// void handleMeshTopology(AsyncClient *c, uint8_t *data, size_t len, RemBasicHeader *header)
-void handleMeshTopology(AsyncClient *c, uint8_t *data, size_t len)
+// void handle_mesh_topo(AsyncClient *c, uint8_t *data, size_t len, RemBasicHeader *header)
+void handle_mesh_topo(AsyncClient *c, uint8_t *data, size_t len)
 {
 
     for (uint8_t i = 0; i < len + 10; i++)
@@ -319,7 +319,7 @@ void handleMeshTopology(AsyncClient *c, uint8_t *data, size_t len)
         Serial.printf("%d ", ((char *)pb_buffer)[i]);
     Serial.println();
 
-    if (header->ForwardingType == ForwardingType_PARENT_TO_ROOT)
+    if (header->ForwardingType == ForwardingType_TO_PARENT_TO_ROOT)
     {
 
         header->ForwardingType = ForwardingType_TO_ROOT;
@@ -430,7 +430,7 @@ void remPingPongCallback()
 
     if (remPingPongTask.getRunCounter() % EVERY_N_PING_A_TOPO == 1)
     {
-        header->ForwardingType = ForwardingType_PARENT_TO_ROOT;
+        header->ForwardingType = ForwardingType_TO_PARENT_TO_ROOT;
         header->ProtobufType = ProtobufType_MESH_TOPOLOGY;
         remPingPong.type = ProtobufType_MESH_TOPOLOGY;
     }

@@ -26,7 +26,7 @@ void send_ping_to_server()
 {
 }
 
-void send_mesh_topo_to_server()
+void send_mesh_topo()
 {
     RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
     uint16_t offsetHeader = sizeof(RemBasicHeader);
@@ -36,7 +36,7 @@ void send_mesh_topo_to_server()
     RespirMeshInfo remPingPong = RespirMeshInfo_init_default;
     remPingPong.source_id = chipID;
 
-    header->ForwardingType = ForwardingType_PARENT_TO_ROOT;
+    header->ForwardingType = ForwardingType_TO_PARENT_TO_ROOT;
     header->ProtobufType = ProtobufType_MESH_TOPOLOGY;
     remPingPong.type = ProtobufType_MESH_TOPOLOGY;
 
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 
         if (action_counter % 4 == 1)
         {
-            send_mesh_topo_to_server();
+            send_mesh_topo();
         }
         else if (action_counter % 3 == 0)
         {
