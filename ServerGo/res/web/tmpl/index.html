@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<style>
+<!-- <style>
     .links line {
         stroke: #999;
         stroke-opacity: 1;
@@ -10,130 +10,565 @@
         stroke: rgb(255, 0, 0);
         stroke-width: 5px;
     }
-</style>
-<svg width="800" height="600"></svg>
+</style> -->
+<!-- <svg width="800" height="600"></svg> -->
+<svg width="400" height="300"></svg>
 <script src="https://d3js.org/d3.v5.min.js"></script>
 <script>
+
+    var websock;
+    function start_ws() {
+        var server_ip = window.location.hostname
+        if (server_ip == "") {
+            server_ip = "192.168.1.100"
+        }
+        console.log(server_ip);
+        console.log(window.location);
+        websock = new WebSocket('ws://' + server_ip + ':' + window.location.port + "/websockets");
+        websock.onopen = function (evt) { console.log('websock open'); };
+        websock.onclose = function (evt) { console.log('websock close'); };
+        websock.onerror = function (evt) { console.log(evt); };
+        websock.onmessage = function (evt) { receive_data(evt); };
+        // websock.send("some string");
+    }
+
+    function receive_data(evt) {
+        // console.log(evt);
+        // console.log(evt.data);
+        // console.log(JSON.parse(evt.data));
+        mesh_graph = JSON.parse(JSON.parse(evt.data))
+        // console.log(mesh_graph)
+
+        // console.log("mesh_graph ------------ ")
+        // console.log(typeof mesh_graph)
+        // console.log(typeof mesh_graph.nodes)
+        console.log(mesh_graph)
+        // console.log(mesh_graph.nodes)
+        // console.log("/ mesh_graph ---------")
+
+        baseNodes = mesh_graph.nodes
+        baseLinks = mesh_graph.links
+
+        selectedId = undefined
+        resetData()
+        updateSimulation()
+    }
+
+
+    var mesh_graph = JSON.parse({{.Json }});
+    // console.log("mesh_graph")
+    // console.log(typeof mesh_graph)
+    // console.log(typeof mesh_graph.nodes)
+    // console.log(mesh_graph)
+    // console.log(mesh_graph.nodes)
+    // console.log("/ mesh_graph")
+
+    var baseNodes = [...mesh_graph.nodes]
+    var baseLinks = [...mesh_graph.links]
+
+    console.log(baseNodes)
+    console.log(baseLinks)
+
+
     // const graph = JSON.parse("{
     // \"nodes\":[{\"id\":1298498081,\"StrID\":\"4d658221\",\"group\":8674665223082153551,\"IsRoot\":true},{\"id\":12345,\"StrID\":\"3039\",\"group\":6129484611666145821,\"IsRoot\":false},{\"id\":7896,\"StrID\":\"1ed8\",\"group\":4037200794235010051,\"IsRoot\":false},{\"id\":484654,\"StrID\":\"7652e\",\"group\":3916589616287113937,\"IsRoot\":false},{\"id\":854,\"StrID\":\"356\",\"group\":6334824724549167320,\"IsRoot\":false}],
     // \"links\":[{\"source\":12345,\"target\":1298498081,\"value\":4},{\"source\":12345,\"target\":7896,\"value\":1},{\"source\":12345,\"target\":484654,\"value\":2},{\"source\":7896,\"target\":854,\"value\":4}]}");
-    const graph = JSON.parse({{.Json }});
 
-    var svg = d3.select("svg");
-    var width = +svg.attr("width");
-    var height = +svg.attr("height");
 
-    var simulation = d3.forceSimulation()
-        .force("link", d3.forceLink().id(function (d) { console.log(d); return d.id; }))
-        //.force("charge", d3.forceManyBody().strength(-200))
-        .force('charge', d3.forceManyBody()
-            .strength(-500)
-            // .theta(0.8)
-            // .distanceMax(150)
+
+
+
+    var nodes = [...baseNodes]
+    var links = [...baseLinks]
+
+    console.log(links)
+    console.log(nodes)
+
+    // var svg = d3.select("svg");
+    // var width = svg.attr("width");
+    // var height = svg.attr("height");
+
+
+    function getNeighbors(node) {
+        return baseLinks.reduce(function (neighbors, link) {
+            if (link.target.id === node.id) {
+                neighbors.push(link.source.id)
+            } else if (link.source.id === node.id) {
+                neighbors.push(link.target.id)
+            }
+            return neighbors
+        },
+            [node.id]
         )
-        // 		.force('collide', d3.forceCollide()
-        //       .radius(d => 40)
-        //       .iterations(2)
-        //     )
-        .force("center", d3.forceCenter(width / 2, height / 2));
-
-
-    function getNodeColorMain(node) {
-        return node.IsRoot == true ? 'rgb(238, 255, 3)' : 'rgb(3, 238, 255)'
     }
 
-    function getNodeStrokeColor(node) {
-        return node.IsOldNode == true ? 'rgb(255, 0, 0)' : 'rgb(100, 100, 100)'
-    }
-
-    function getNodeStrokeWidth(node) {
-        return node.IsOldNode == true ? '6px' : '2px'
-    }
-
-    function getLinkStrokeWidth(node) {
-        return node.IsOldEdge == true ? '1px' : '5px'
-    }
-
-    function run(graph) {
-
-        graph.links.forEach(function (d) {
-            //     d.source = d.source_id;
-            //     d.target = d.target_id;
-        });
-
-        var link = svg.append("g")
-            .style("stroke", "#aaa")
-            .selectAll("line")
-            .data(graph.links)
-            .enter().append("line");
-
-        var node = svg.append("g")
-            .attr("class", "nodes")
-            .selectAll("circle")
-            .data(graph.nodes)
-            .enter().append("circle")
-            .attr("r", 10)
-            .attr('fill', getNodeColorMain)
-            .call(d3.drag()
-                .on("start", dragstarted)
-                .on("drag", dragged)
-                .on("end", dragended));
-
-        var label = svg.append("g")
-            .attr("class", "labels")
-            .selectAll("text")
-            .data(graph.nodes)
-            .enter().append("text")
-            .attr("class", "label")
-            .text(function (d) { return d.id; });
-
-        simulation
-            .nodes(graph.nodes)
-            .on("tick", ticked);
-
-        simulation.force("link")
-            .links(graph.links);
-
-        function ticked() {
-            link
-                .style("stroke-width", getLinkStrokeWidth)
-                .attr("x1", function (d) { return d.source.x; })
-                .attr("y1", function (d) { return d.source.y; })
-                .attr("x2", function (d) { return d.target.x; })
-                .attr("y2", function (d) { return d.target.y; });
-            node
-                .attr("r", 16)
-                // .style("fill", "#efefef")
-                .style("stroke", getNodeStrokeColor)
-                .style("stroke-width", getNodeStrokeWidth)
-                .attr("cx", function (d) { return d.x + 5; })
-                .attr("cy", function (d) { return d.y - 3; });
-
-            label
-                .attr("x", function (d) { return d.x; })
-                .attr("y", function (d) { return d.y; })
-                .style("font-size", "10px").style("fill", "#333");
+    function isNeighborLink(link, node) {
+        if (node === null) {
+            return false
         }
-    }
-    function dragstarted(d) {
-        if (!d3.event.active) simulation.alphaTarget(0.3).restart()
-        d.fx = d.x
-        d.fy = d.y
-        //  simulation.fix(d);
-    }
-    function dragged(d) {
-        d.fx = d3.event.x
-        d.fy = d3.event.y
-        //  simulation.fix(d, d3.event.x, d3.event.y);
-    }
-    function dragended(d) {
-        d.fx = d3.event.x
-        d.fy = d3.event.y
-        if (!d3.event.active) simulation.alphaTarget(0);
-        //simulation.unfix(d);
+        return link.target.id === node.id || link.source.id === node.id
     }
 
-    run(graph)
+    function getNodeColorNormal(node) {
+        return node.IsRoot == true ? 'cyan' : 'yellow'
+    }
+
+    function getNodeColor(node, neighbors) {
+        if (Array.isArray(neighbors) && neighbors.indexOf(node.id) > -1) {
+            return node.IsRoot == true ? 'blue' : 'green'
+        }
+        return getNodeColorNormal(node)
+    }
+
+    function getLinkColor(node, link) {
+        return isNeighborLink(link, node) ? 'green' : 'black'
+    }
+
+    function getLinkWidth(node, link) {
+        return isNeighborLink(link, node) ? '5px' : '2px'
+    }
+
+    function getTextColor(node, neighbors) {
+        return Array.isArray(neighbors) && neighbors.indexOf(node.id) > -1 ? 'green' : 'black'
+    }
+
+    var width = window.innerWidth
+    var height = window.innerHeight
+
+    var svg = d3.select('svg')
+    svg.attr('width', width).attr('height', height)
+
+    var linkElements,
+        nodeElements,
+        textElements
+
+    // we use svg groups to logically group the elements together
+    var linkGroup = svg.append('g').attr('class', 'links')
+    var nodeGroup = svg.append('g').attr('class', 'nodes')
+    var textGroup = svg.append('g').attr('class', 'texts')
+
+    // we use this reference to select/deselect
+    // after clicking the same element twice
+    var selectedId
+
+    // simulation setup with all forces
+    var linkForce = d3
+        .forceLink()
+        .id(function (link) { return link.id })
+        .strength(function (link) { return link.strength })
+
+    var simulation = d3
+        .forceSimulation()
+        .force('link', linkForce)
+        .force('charge', d3.forceManyBody().strength(-10))
+        .force('center', d3.forceCenter(width / 2, height / 2))
+
+
+
+    var dragDrop = d3.drag()
+        .on('start', function (node) {
+            node.fx = node.x
+            node.fy = node.y
+        }).on('drag', function (node) {
+            simulation.alphaTarget(0.7).restart()
+            node.fx = d3.event.x
+            node.fy = d3.event.y
+        }).on('end', function (node) {
+            if (!d3.event.active) {
+                simulation.alphaTarget(0)
+            }
+            node.fx = null
+            node.fy = null
+        })
+
+    // select node is called on every click
+    // we either update the data according to the selection
+    // or reset the data if the same node is clicked twice
+    function selectNode(selectedNode) {
+        if (selectedId === selectedNode.id) {
+            selectedId = undefined
+            resetData()
+            updateSimulation()
+        } else {
+            selectedId = selectedNode.id
+            updateData(selectedNode)
+            updateSimulation()
+        }
+
+        var neighbors = getNeighbors(selectedNode)
+
+        // we modify the styles to highlight selected nodes
+        nodeElements.attr('fill', node => getNodeColor(node, neighbors))
+        textElements.attr('fill', node => getTextColor(node, neighbors))
+        linkElements.attr('stroke', link => getLinkColor(selectedNode, link))
+        linkElements.attr('stroke-width', link => getLinkWidth(selectedNode, link))
+    }
+
+    // this helper simple adds all nodes and links
+    // that are missing, to recreate the initial state
+    function resetData() {
+        var nodeIds = nodes.map(node => node.id)
+        var baseIds = baseNodes.map(node => node.id)
+        baseNodes.forEach(function (node) {
+            if (nodeIds.indexOf(node.id) === -1) {
+                nodes.push(node)
+            }
+        })
+
+        nodes.forEach(function (node) {
+            if (baseIds.indexOf(node.id) === -1) {
+                nodes.splice(nodes.indexOf(node), 1)
+            }
+        })
+
+        links = baseLinks
+    }
+
+    // diffing and mutating the data
+    function updateData(selectedNode) {
+        var neighbors = getNeighbors(selectedNode)
+        var newNodes = baseNodes.filter(function (node) {
+            // return neighbors.indexOf(node.id) > -1 || node.IsRoot == true
+            return neighbors.indexOf(node.id) > -1
+            // return true
+        })
+
+        var diff = {
+            removed: nodes.filter(function (node) { return newNodes.indexOf(node) === -1 }),
+            added: newNodes.filter(function (node) { return nodes.indexOf(node) === -1 })
+        }
+
+        diff.removed.forEach(function (node) { nodes.splice(nodes.indexOf(node), 1) })
+        diff.added.forEach(function (node) { nodes.push(node) })
+
+        links = baseLinks.filter(function (link) {
+            return link.target.id === selectedNode.id || link.source.id === selectedNode.id
+        })
+    }
+
+    function updateGraph() {
+        // links
+        linkElements = linkGroup.selectAll('line')
+            .data(links, function (link) {
+                // console.log(link)
+                return link.target.id + link.source.id
+            })
+
+        linkElements.exit().remove()
+
+        var linkEnter = linkElements
+            .enter().append('line')
+            .attr('stroke', link => getLinkColor(null, link))
+            .attr('stroke-width', link => getLinkWidth(null, link))
+
+        linkElements = linkEnter.merge(linkElements)
+
+        // nodes
+        nodeElements = nodeGroup.selectAll('circle')
+            .data(nodes, function (node) { return node.id })
+
+        nodeElements.exit().remove()
+
+        var nodeEnter = nodeElements
+            .enter()
+            .append('circle')
+            .attr('r', 10)
+            .attr('fill', function (node) { return getNodeColorNormal(node) })
+            .call(dragDrop)
+            // we link the selectNode method here
+            // to update the graph on every click
+            .on('click', selectNode)
+
+        nodeElements = nodeEnter.merge(nodeElements)
+
+        // texts
+        textElements = textGroup.selectAll('text')
+            .data(nodes, function (node) { return node.id })
+
+        textElements.exit().remove()
+
+        var textEnter = textElements
+            .enter()
+            .append('text')
+            .text(function (node) { return node.id })
+            .attr('font-size', 15)
+            .attr('dx', 15)
+            .attr('dy', 4)
+
+        textElements = textEnter.merge(textElements)
+    }
+
+    function updateSimulation() {
+        updateGraph()
+
+        simulation.nodes(nodes).on('tick', () => {
+            nodeElements
+                .attr('cx', function (node) { return node.x })
+                .attr('cy', function (node) { return node.y })
+            textElements
+                .attr('x', function (node) { return node.x })
+                .attr('y', function (node) { return node.y })
+            linkElements
+                .attr('x1', function (link) { return link.source.x })
+                .attr('y1', function (link) { return link.source.y })
+                .attr('x2', function (link) { return link.target.x })
+                .attr('y2', function (link) { return link.target.y })
+        })
+
+        simulation.force('link').links(links)
+        simulation.alphaTarget(0.7).restart()
+    }
+
+    // last but not least, we call updateSimulation
+    // to trigger the initial render
+    updateSimulation()
+    start_ws()
+
+    // function getNeighbors(node) {
+    //     return links.reduce((neighbors, link) => {
+    //         if (link.target.id === node.id) {
+    //             neighbors.push(link.source.id)
+    //         } else if (link.source.id === node.id) {
+    //             neighbors.push(link.target.id)
+    //         }
+    //         return neighbors
+    //     }, [node.id])
+    // }
+
+    // function getNodeColor(node, neighbors) {
+    //     if (Array.isArray(neighbors) && neighbors.indexOf(node.id) > -1) {
+    //         return node.IsRoot == true ? 'blue' : 'green'
+    //     }
+
+    //     return node.IsRoot == true ? 'rgb(238, 255, 3)' : 'rgb(3, 238, 255)'
+    // }
+
+    // function isNeighborLink(node, link) {
+    //     return link.target.id === node.id || link.source.id === node.id
+    // }
+
+    // function getTextColor(node, neighbors) {
+    //     return neighbors.indexOf(node.id) ? 'green' : 'black'
+    // }
+    // function getLinkColor(node, link) {
+    //     return isNeighborLink(node, link) ? 'green' : '#E5E5E5'
+    // }
+
+
+
+    // var last_sel_node = null
+    // var neighbors = []
+
+    // function selectNode(selectedNode) {
+    //     if (last_sel_node === selectedNode) {
+    //         neighbors = []
+    //     } else {
+    //         neighbors = getNeighbors(selectedNode)
+    //         last_sel_node = selectedNode
+    //     }
+
+    //     nodeElements
+    //         .attr('fill', node => getNodeColor(node, neighbors))
+    //     textElements
+    //         .attr('fill', node => getTextColor(node, neighbors))
+    //     linkElements
+    //         .attr('stroke', link => getLinkColor(selectedNode, link))
+    // }
+
+
+    // const dragDrop = d3.drag()
+    //     .on('start', node => {
+    //         node.fx = node.x
+    //         node.fy = node.y
+    //     })
+    //     .on('drag', node => {
+    //         simulation.alphaTarget(0.7).restart()
+    //         node.fx = d3.event.x
+    //         node.fy = d3.event.y
+    //     })
+    //     .on('end', node => {
+    //         if (!d3.event.active) {
+    //             simulation.alphaTarget(0)
+    //         }
+    //         node.fx = null
+    //         node.fy = null
+    //     })
+
+
+    // var simulation = d3.forceSimulation()
+    //     .force('link', d3.forceLink()
+    //         .id(link => link.id)
+    //         .strength(link => link.strength))
+    //     .force('charge', d3.forceManyBody().strength(-20))
+    //     .force("center", d3.forceCenter(width / 2, height / 2))
+    // // .force("link", d3.forceLink().id(function (d) { console.log(d); return d.id; }))
+    // //.force("charge", d3.forceManyBody().strength(-200))
+    // // .force('charge', d3.forceManyBody()            .strength(-500)
+    // // .theta(0.8)
+    // // .distanceMax(150)        )
+    // // 		.force('collide', d3.forceCollide()
+    // //       .radius(d => 40)
+    // //       .iterations(2)
+    // //     )
+
+
+
+    // const nodeElements = svg.append('g')
+    //     .selectAll('circle')
+    //     .data(graph.nodes)
+    //     .enter().append('circle')
+    //     .attr('r', 10)
+    //     .attr('fill', getNodeColor)
+    //     .call(dragDrop)
+    //     .on('click', selectNode)
+
+
+    // const textElements = svg.append('g')
+    //     .selectAll('text')
+    //     .data(graph.nodes)
+    //     .enter().append('text')
+    //     .text(node => node.id)
+    //     .attr('font-size', 15)
+    //     .attr('dx', 15)
+    //     .attr('dy', 4)
+
+
+    // const linkElements = svg.append('g')
+    //     .selectAll('line')
+    //     .data(graph.links)
+    //     .enter().append('line')
+    //     .attr('stroke-width', 1)
+    //     .attr('stroke', '#E5E5E5')
+
+    // simulation.nodes(graph.nodes).on("tick", () => {
+    //     nodeElements
+    //         .attr("cx", node => node.x)
+    //         .attr("cy", node => node.y)
+    //     textElements
+    //         .attr("x", node => node.x)
+    //         .attr("y", node => node.y)
+    //     linkElements
+    //         .attr('x1', link => link.source.x)
+    //         .attr('y1', link => link.source.y)
+    //         .attr('x2', link => link.target.x)
+    //         .attr('y2', link => link.target.y)
+    // })
+
+
+    // console.log(graph)
+
+
+
+
+    // simulation.force('link').links(graph.links)
+
+
+
+
+
+
+
+
+
+
+
+
+    // function getNodeColorMain(node) {
+    //     return node.IsRoot == true ? 'rgb(238, 255, 3)' : 'rgb(3, 238, 255)'
+    // }
+
+    // function getNodeStrokeColor(node) {
+    //     return node.IsOldNode == true ? 'rgb(255, 0, 0)' : 'rgb(100, 100, 100)'
+    // }
+
+    // function getNodeStrokeWidth(node) {
+    //     return node.IsOldNode == true ? '6px' : '2px'
+    // }
+
+    // function getLinkStrokeWidth(node) {
+    //     return node.IsOldEdge == true ? '1px' : '5px'
+    // }
+
+    // function run(graph) {
+
+    //     graph.links.forEach(function (d) {
+    //         //     d.source = d.source_id;
+    //         //     d.target = d.target_id;
+    //     });
+
+    //     var link = svg.append("g")
+    //         .style("stroke", "#aaa")
+    //         .selectAll("line")
+    //         .data(graph.links)
+    //         .enter().append("line");
+
+    //     var node = svg.append("g")
+    //         .attr("class", "nodes")
+    //         .selectAll("circle")
+    //         .data(graph.nodes)
+    //         .enter().append("circle")
+    //         .attr("r", 10)
+    //         .attr('fill', getNodeColorMain)
+    //         .call(d3.drag()
+    //             .on("start", dragstarted)
+    //             .on("drag", dragged)
+    //             .on("end", dragended));
+
+    //     var label = svg.append("g")
+    //         .attr("class", "labels")
+    //         .selectAll("text")
+    //         .data(graph.nodes)
+    //         .enter().append("text")
+    //         .attr("class", "label")
+    //         .text(node => node.id);
+
+    //     simulation
+    //         .nodes(graph.nodes)
+    //         .on("tick", ticked);
+
+    //     simulation.force("link")
+    //         .links(graph.links);
+
+    //     function ticked() {
+    //         link
+    //             .style("stroke-width", getLinkStrokeWidth)
+    //             .attr("x1", function (d) { return d.source.x; })
+    //             .attr("y1", function (d) { return d.source.y; })
+    //             .attr("x2", function (d) { return d.target.x; })
+    //             .attr("y2", function (d) { return d.target.y; });
+    //         node
+    //             .attr("r", 16)
+    //             // .style("fill", "#efefef")
+    //             .style("stroke", getNodeStrokeColor)
+    //             .style("stroke-width", getNodeStrokeWidth)
+    //             .attr("cx", function (d) { return d.x + 5; })
+    //             .attr("cy", function (d) { return d.y - 3; });
+
+    //         label
+    //             .attr("x", function (d) { return d.x; })
+    //             .attr("y", function (d) { return d.y; })
+    //             .style("font-size", 10).style("fill", "#333");
+    //     }
+    // }
+    // function dragstarted(d) {
+    //     if (!d3.event.active) simulation.alphaTarget(0.3).restart()
+    //     d.fx = d.x
+    //     d.fy = d.y
+    //     //  simulation.fix(d);
+    // }
+    // function dragged(d) {
+    //     d.fx = d3.event.x
+    //     d.fy = d3.event.y
+    //     //  simulation.fix(d, d3.event.x, d3.event.y);
+    // }
+    // function dragended(d) {
+    //     d.fx = d3.event.x
+    //     d.fy = d3.event.y
+    //     if (!d3.event.active) simulation.alphaTarget(0);
+    //     //simulation.unfix(d);
+    // }
+
+    // run(graph)
 
 
 // setTimeout(function(){

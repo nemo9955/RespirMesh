@@ -17,6 +17,7 @@
 #define debugf //printf
 #define infof printf
 #define logf printf
+#define funcf printf
 
 #define INTERNAL_BUFFER_ZISE 64
 
@@ -73,6 +74,8 @@ class RespirMesh
 
     void handle_ping(uint8_t *data, uint16_t siz );
     void send_ping(ForwardingType TO);
+
+    void stop();
 
     //   void handle_pong(uint8_t *data, uint16_t size);
     //   void send_info(RemChannel *rc);

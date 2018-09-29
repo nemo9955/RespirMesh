@@ -235,9 +235,10 @@ func (g *RemTopology) AssembleJSON() []byte {
 	}
 
 	type _Edge struct {
-		Source string `json:"source"`
-		Target string `json:"target"`
-		IsOld  bool   `json:"IsOldEdge"`
+		Source   string  `json:"source"`
+		Target   string  `json:"target"`
+		IsOld    bool    `json:"IsOldEdge"`
+		Strength float32 `json:"strength"`
 	}
 
 	type _RemTopology struct {
@@ -262,9 +263,10 @@ func (g *RemTopology) AssembleJSON() []byte {
 
 	for _, edge := range g.Edges {
 		mEdge := _Edge{
-			Source: edge.Source.StrID(),
-			Target: edge.Target.StrID(),
-			IsOld:  edge.isOld,
+			Source:   edge.Source.StrID(),
+			Target:   edge.Target.StrID(),
+			IsOld:    edge.isOld,
+			Strength: rand.Float32(),
 		}
 		rtop.Edges = append(rtop.Edges, mEdge)
 	}

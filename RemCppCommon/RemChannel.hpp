@@ -5,11 +5,11 @@
 
 typedef void (*ReceiveDataCallback)(uint8_t *data, uint16_t size, void *arg);
 
-struct SelfReference
-{
-    void *_this;
-    void *argv;
-};
+// struct SelfReference
+// {
+//     void *_this;
+//     void *argv;
+// };
 
 class RemChannel
 {
@@ -25,23 +25,26 @@ class RemChannel
 
     virtual void received(uint8_t *data, uint16_t size)
     {
-        on_recv_cb(data, size, on_recv_arg);
+        on_recv_cb(data, size, rem_pointer);
+        // on_recv_cb(data, size, on_recv_arg);
     };
 
     virtual void set_receiver(ReceiveDataCallback cb, void *arg)
     {
-        argv_recv._this = this;
-        argv_recv.argv = arg;
+        rem_pointer=arg;
+        // argv_recv._this = this;
+        // argv_recv.argv = arg;
         on_recv_cb = cb;
-        on_recv_arg = (void *)&argv_recv;
+        // on_recv_arg = (void *)&argv_recv;
     };
 
     bool connected_to_root;
 
   protected:
     ReceiveDataCallback on_recv_cb;
-    void *on_recv_arg;
-    SelfReference argv_recv;
+    void *rem_pointer;
+    // void *on_recv_arg;
+    // SelfReference argv_recv;
 };
 
 #endif /* !REMCHANNEL_HPP_ */

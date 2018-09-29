@@ -18,10 +18,10 @@ void RespirMesh::set_hardware(Hardware *_hard)
 void RespirMesh::receive_fn(uint8_t *data, uint16_t size, void *arg)
 {
 
-    logf("data  receive_fn :  ");
+    funcf("data  receive_fn :      \t");
     for (uint8_t i = 0; i < size; i++)
-        logf("%d ", data[i]);
-    logf("\n");
+        funcf("%d ", data[i]);
+    funcf("\n");
 
     RespirMesh *rm = (RespirMesh *)arg;
     (rm)->route_packet(data, size);
@@ -30,7 +30,7 @@ void RespirMesh::receive_fn(uint8_t *data, uint16_t size, void *arg)
 void RespirMesh::add_channel(RemChannel *channel)
 {
     channel->set_receiver(receive_fn, this);
-    logf("ADDED ch %d , CHs size  %d  \n", channel->ch_info(), channels.size() + 1);
+    logf("ADDED ch %d  \n", channel->ch_info());
     channels.push_back(std::move(channel));
     clean_channels();
 }
@@ -47,15 +47,26 @@ void RespirMesh::clean_channels()
             channels.erase(it++);
         }
     }
+
+    logf("CHs size  %d  \n", channels.size());
 }
+
+void RespirMesh::stop()
+{
+    for (std::list<RemChannel *>::iterator it = channels.begin(); it != channels.end(); ++it)
+    {
+        (*it)->stop();
+        channels.erase(it++);
+    }
+};
 
 void RespirMesh::send_packet(uint8_t *data, uint16_t size)
 {
 
-    logf("data  send_packet :  ");
+    funcf("data  send_packet :  \t");
     for (uint8_t i = 0; i < size; i++)
-        logf("%d ", data[i]);
-    logf("\n");
+        funcf("%d ", data[i]);
+    funcf("\n");
 
     RemBasicHeader *header = (RemBasicHeader *)data;
     switch (header->ForwardingType)
@@ -87,10 +98,10 @@ void RespirMesh::route_packet(uint8_t *data, uint16_t size)
 {
     // logf(" RECV   \n");
 
-    logf("data  route_packet :  ");
+    funcf("data  route_packet :       \t");
     for (uint8_t i = 0; i < size; i++)
-        logf("%d ", data[i]);
-    logf("\n");
+        funcf("%d ", data[i]);
+    funcf("\n");
 
     RemBasicHeader *header = (RemBasicHeader *)data;
 
@@ -118,17 +129,10 @@ void RespirMesh::route_packet(uint8_t *data, uint16_t size)
 
 void RespirMesh::process_packet(uint8_t *data, uint16_t size)
 {
-    logf("data  process_packet :  ");
+    funcf("data  process_packet :  \t");
     for (uint8_t i = 0; i < size; i++)
-        logf("%d ", data[i]);
-    logf("\n");
-
-
-    logf(" 00000000000000000000   RespirMesh::process_packet(uint8_t      \n");
-    printf(" dev_id %x    \n", hardware_->device_id());
-    printf(" dev_id  %d    \n", hardware_->device_id());
-    printf(" dev_id %x  %d    \n", hardware_->device_id(), hardware_->device_id());
-
+        funcf("%d ", data[i]);
+    funcf("\n");
 
     RemBasicHeader *header = (RemBasicHeader *)data;
 
@@ -149,14 +153,18 @@ void RespirMesh::update()
 
     if (action_counter % 7 == 3)
     {
+        logf("\n");
         send_mesh_topo();
+        logf("\n");
     }
     else if (action_counter % 5 == 4)
     {
+        // logf("\n");
         // clean_channels();
     }
     else if (action_counter % 4 == 2)
     {
+        // logf("\n");
         // send_ping(ForwardingType_TO_ROOT);
         // send_ping(ForwardingType_TO_NEIGHBORS);
     }
@@ -168,7 +176,6 @@ void RespirMesh::update()
 
 void RespirMesh::send_ping(ForwardingType forward_type)
 {
-    logf("Send PING \n");
     RemDataHeaderByte *header = (RemDataHeaderByte *)pb_buffer;
     // uint8_t ActionSize = sizeof(action_counter);
     header->ForwardingType = forward_type;
@@ -191,14 +198,17 @@ void RespirMesh::send_ping(ForwardingType forward_type)
     }
     uint16_t packet_size = ostream.bytes_written + offsetHeader;
 
+    funcf("data Send PING  \t");
+    for (uint8_t i = 0; i < packet_size; i++)
+        funcf("%d ", pb_buffer[i]);
+    funcf("\n");
+
     tmili = hardware_->time_milis();
     send_packet(pb_buffer, packet_size);
 }
 
 void RespirMesh::send_mesh_topo()
 {
-    logf(" 00000000000000000000   RespirMesh::send_mesh_topo()      \n");
-    printf(" dev_id %x  %d    \n", device_id(), device_id());
 
     RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
     header->ForwardingType = ForwardingType_TO_PARENT_TO_ROOT;
@@ -224,28 +234,25 @@ void RespirMesh::send_mesh_topo()
     debugf("RemBasicHeader size %d \n", offsetHeader);
     debugf("Protobuf size %d \n", (int)ostream.bytes_written);
 
+    funcf("data Send TOPO  \t");
     for (uint8_t i = 0; i < packet_size; i++)
-        debugf("%d ", pb_buffer[i]);
-    debugf("\n");
+        funcf("%d ", pb_buffer[i]);
+    funcf("\n");
 
-    logf("Send TOPO \n");
     send_packet(pb_buffer, packet_size);
     // handle_mesh_topo(pb_buffer, packet_size);
 }
 
 void RespirMesh::handle_mesh_topo(uint8_t *data, size_t size)
 {
-    logf(" 00000000000000000000   RespirMesh::handle_mesh_topo      \n");
-    printf(" dev_id %x  %d    \n", device_id(), device_id());
-
-    logf("data  handle_mesh_topo :  ");
+    funcf("data  handle_mesh_topo got :  \t");
     for (uint8_t i = 0; i < size; i++)
-        logf("%d ", data[i]);
-    logf("\n");
+        funcf("%d ", data[i]);
+    funcf("\n");
 
-    RemBasicHeader *header = (RemBasicHeader *)data;
     uint16_t offsetHeader = sizeof(RemBasicHeader);
     memcpy(pb_buffer, data, offsetHeader);
+    RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
     RespirMeshInfo meshTopo;
 
     uint8_t *packetData = (uint8_t *)(data) + offsetHeader;
@@ -261,15 +268,11 @@ void RespirMesh::handle_mesh_topo(uint8_t *data, size_t size)
 
     if (header->ForwardingType == ForwardingType_TO_PARENT_TO_ROOT)
     {
-        logf(" 00000000000000000000         \n");
         header->ForwardingType = ForwardingType_TO_ROOT;
-        logf(" 1111111111111111111111111111 \n");
         meshTopo.type = ProtobufType_MESH_TOPOLOGY;
-        logf(" 2222222222222 \n");
         printf(" src %x  tar %x     \n", meshTopo.source_id, meshTopo.target_id);
         // printf(" src %x  tar %x  dev_id %x    \n", meshTopo.source_id, meshTopo.target_id ,device_id() );
         meshTopo.target_id = device_id();
-        logf(" 333333333333333333333333333333333333333 \n");
 
         pb_ostream_t ostream = pb_ostream_from_buffer(pb_buffer + offsetHeader, sizeof(pb_buffer) - offsetHeader);
         pb_status = pb_encode(&ostream, RespirMeshInfo_fields, &meshTopo);
@@ -280,15 +283,19 @@ void RespirMesh::handle_mesh_topo(uint8_t *data, size_t size)
             return;
         }
 
-        printf("Send TOPO to root %lu %d \n", ostream.bytes_written, offsetHeader);
-        printf(" src %x  tar %x \n", meshTopo.source_id, meshTopo.target_id);
-        printf(" Forward %d \n", header->ForwardingType);
-        printf(" Hea %d \n", header->HeaderType);
-        printf(" Proto %d \n", header->ProtobufType);
+        // printf("Send TOPO to root %lu %d \n", ostream.bytes_written, offsetHeader);
+        printf("\t src %x -> tar %x \n", meshTopo.source_id, meshTopo.target_id);
+        // printf(" Forward %d \n", header->ForwardingType);
+        // printf(" Hea %d \n", header->HeaderType);
+        // printf(" Proto %d \n", header->ProtobufType);
 
-        logf("Hand TOPO send %d\n", tmili);
-        send_packet(pb_buffer, ostream.bytes_written + offsetHeader);
-        logf(" 4444444444444444444 \n");
+        uint16_t packet_size = ostream.bytes_written + offsetHeader;
+
+        funcf("data  handle_mesh_topo send :  \t");
+        for (uint8_t i = 0; i < packet_size; i++)
+            funcf("%d ", pb_buffer[i]);
+        funcf("\n");
+        send_packet(pb_buffer, packet_size);
     }
     // else if (header->ForwardingType == ForwardingType_TO_PARENT)
     // {

@@ -26,11 +26,14 @@
 uint32_t chipID = 0;
 
 using namespace std;
+void sig_exit(int s);
 
 class x86LinuxHardware : public Hardware
 {
   public:
-    x86LinuxHardware(){};
+    x86LinuxHardware(){
+        // hard_id = chipID;
+    };
     uint32_t device_id() { return chipID; };
 
     uint32_t time_milis()
@@ -42,6 +45,7 @@ class x86LinuxHardware : public Hardware
     };
 
   private:
+    // uint32_t hard_id;
 };
 
 template <typename T, typename... Args>
@@ -83,7 +87,6 @@ class x86LinuxClientChannel : public RemChannel
             managed_to_send = false;
             cout << " x86LinuxClientChannel :    void init(char *_host, char *_port)   " << endl;
             cerr << exc.mesg;
-            // exit(60);
             return;
         }
 
@@ -108,7 +111,6 @@ class x86LinuxClientChannel : public RemChannel
             managed_to_send = false;
             cout << " x86LinuxClientChannel :    void init(libsocket::inet_stream _sock_client)   " << endl;
             cerr << exc.mesg;
-            // exit(60);
             return;
         }
 
@@ -121,7 +123,6 @@ class x86LinuxClientChannel : public RemChannel
     {
 
         int r;
-
         r = fcntl(cli_sock->getfd(), F_GETFL);
         if (r == -1)
             managed_to_send = false;
@@ -134,12 +135,20 @@ class x86LinuxClientChannel : public RemChannel
     bool send(uint8_t *data, uint16_t size)
     {
         // logf("\t cli send  \n");
-        ssize_t bytes;
+        ssize_t act_size;
 
         try
         {
             // logf("SENd ch %d [%d] %s \n", this->ch_info(), size, (uint8_t *)data);
-            bytes = cli_sock->snd((void *)data, size);
+            funcf("[ CHAN ] %d send client [size %zu]   ", ch_info(), size);
+            for (uint8_t i = 0; i < size; i++)
+                funcf("%d ", data[i]);
+            act_size = cli_sock->snd((void *)data, size);
+            funcf(" ===> actual %d ", act_size);
+            funcf("\n");
+            funcf("\n");
+            funcf("\n");
+            funcf("\n");
         }
         catch (const libsocket::socket_exception &exc)
         {
@@ -148,7 +157,7 @@ class x86LinuxClientChannel : public RemChannel
             cerr << exc.mesg;
             return false;
         }
-        return bytes > 0;
+        return act_size > 0;
     };
 
     int ch_info() { return ch_id; };
@@ -167,23 +176,40 @@ class x86LinuxClientChannel : public RemChannel
             try
             {
                 recvbyt = cli_sock->rcv(&buf, sizeof(buf));
+                if (recvbyt == 0)
+                {
+                    managed_to_send = false;
+                    logf(" x86LinuxClientChannel :       void receive_loop()  \n");
+                    logf(" ^ STOPPED the socket  \n");
+                    stop();
+
+                    if (connected_to_root == true)
+                    {
+                        sig_exit(42);
+                    }
+                    return;
+                }
                 if (recvbyt > 0)
                 {
                     buf[recvbyt] = '\0';
-                    this->received((uint8_t *)buf, recvbyt);
 
-                    logf("REVd ch client %d [%zu]   ", this->ch_info(), recvbyt);
+                    funcf("\n");
+                    funcf("\n");
+                    funcf("\n");
+                    funcf("\n");
+                    funcf("[ CHAN ] %d recv client [size %zu]   ", ch_info(), recvbyt);
                     for (uint8_t i = 0; i < recvbyt; i++)
-                        logf("%d ", buf[i]);
-                    logf("\n");
+                        funcf("%d ", buf[i]);
+                    funcf("\n");
+
+                    this->received((uint8_t *)buf, recvbyt);
                 }
             }
             catch (const libsocket::socket_exception &exc)
             {
                 cout << " x86LinuxClientChannel :       void receive_loop()" << endl;
                 cerr << exc.mesg;
-            managed_to_send = false;
-                // exit(60);
+                managed_to_send = false;
                 return;
             }
         }
@@ -262,8 +288,12 @@ class x86LinuxServerChannel : public RemChannel
                 x86LinuxClientChannel *chan_client_ = new x86LinuxClientChannel();
                 chan_client_->init(move(client));
 
-                logf("Server accepted client %d \n", chan_client_->ch_info());
+                funcf("\n");
+                funcf("\n");
+                funcf("Server accepted client %d \n", chan_client_->ch_info());
                 rem_srv->add_channel(move(chan_client_));
+                funcf("\n");
+                funcf("\n");
             }
             catch (const libsocket::socket_exception &exc)
             {
@@ -282,7 +312,7 @@ class x86LinuxServerChannel : public RemChannel
     }
 };
 
-x86LinuxHardware hardware;
+x86LinuxHardware hardware_;
 x86LinuxClientChannel clientTcp;
 x86LinuxServerChannel serverTcp;
 RespirMesh mesh;
@@ -325,10 +355,10 @@ int main(int argc, char *argv[])
     // uint8_t test[] = {0, 0, 5};
     // logf(" ... snd %d \n", clientTcp.send(test, 3));
 
-    mesh.set_hardware(&hardware);
+    mesh.set_hardware(&hardware_);
 
     logf("Time: %d  \n", mesh.time_milis());
-    logf("d ID: %d  \n", mesh.device_id());
+    logf("d ID: %d = 0x %x \n", mesh.device_id(), mesh.device_id());
 
     while (1)
     {
