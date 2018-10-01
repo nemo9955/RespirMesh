@@ -358,7 +358,7 @@ func New() *RemTopology {
 	remTopo := &RemTopology{
 		TopoCleanFreq:          1 * time.Second,
 		maximumOldTimeLimit:    6 * time.Second,
-		maximumDeleteTimeLimit: 9 * time.Second,
+		maximumDeleteTimeLimit: 11 * time.Second,
 		Nodes: []*Node{},
 		Edges: []*Edge{},
 	}

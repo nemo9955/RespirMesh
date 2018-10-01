@@ -42,7 +42,7 @@
         // console.log("mesh_graph ------------ ")
         // console.log(typeof mesh_graph)
         // console.log(typeof mesh_graph.nodes)
-        console.log(mesh_graph)
+        // console.log(mesh_graph)
         // console.log(mesh_graph.nodes)
         // console.log("/ mesh_graph ---------")
 
@@ -125,7 +125,8 @@
     }
 
     function getLinkWidth(node, link) {
-        return isNeighborLink(link, node) ? '5px' : '2px'
+        return link.isOldEdge == true ? '2px' : '5px'
+        // return isNeighborLink(link, node) ? '5px' : '2px'
     }
 
     function getTextColor(node, neighbors) {
@@ -204,24 +205,52 @@
         linkElements.attr('stroke-width', link => getLinkWidth(selectedNode, link))
     }
 
+
+    function update(obj/*, …*/) {
+        for (var i = 1; i < arguments.length; i++) {
+            for (var prop in arguments[i]) {
+                var val = arguments[i][prop];
+                if (typeof val == "object") // this also applies to arrays or null!
+                    update(obj[prop], val);
+                else
+                    obj[prop] = val;
+            }
+        }
+        return obj;
+    }
+
     // this helper simple adds all nodes and links
     // that are missing, to recreate the initial state
     function resetData() {
         var nodeIds = nodes.map(node => node.id)
-        var baseIds = baseNodes.map(node => node.id)
         baseNodes.forEach(function (node) {
             if (nodeIds.indexOf(node.id) === -1) {
                 nodes.push(node)
             }
         })
 
+        var baseIds = baseNodes.map(node => node.id)
         nodes.forEach(function (node) {
             if (baseIds.indexOf(node.id) === -1) {
                 nodes.splice(nodes.indexOf(node), 1)
             }
         })
 
+        // nodeIds = nodes.map(node => node.id)
+        // baseNodes.forEach(function (node) {
+        //     if (nodeIds.indexOf(node.id) > -1) {
+        //         // nodes.push(node)
+        //         // update(nodes[nodeIds.indexOf(node.id)], node)
+        //     }
+        // })
+
+
         links = baseLinks
+
+        console.log("-------------")
+        console.log(nodes)
+        console.log(links)
+
     }
 
     // diffing and mutating the data
