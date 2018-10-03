@@ -333,23 +333,30 @@ int main(int argc, char *argv[])
         printf("Second argument specify a port to open the server to\n");
         exit(1);
     }
-
-    char the_host[] = "localhost";
-    char *root_port = const_cast<char *>(argv[1]);
-    char *server_port = const_cast<char *>(argv[2]);
-    srand(time(NULL));
-
-    if (argc > 3)
+    if (argc == 4)
         chipID = atoi(argv[3]);
     else
         chipID = rand() % 640000;
 
+    // char the_host[] = "192.168.1.60";
+    char the_host_local[] = "localhost";
+    char *the_host_client = the_host_local;
+
+    if (argc == 5)
+        the_host_client = const_cast<char *>(argv[4]);
+
+    char the_host_server[] = "0.0.0.0";
+    char *root_port = const_cast<char *>(argv[1]);
+    char *server_port = const_cast<char *>(argv[2]);
+    srand(time(NULL));
+
     signal(SIGINT, sig_exit);
 
-    logf("testing host:port 1 %s: %s <- %s \n", the_host, root_port, server_port);
+    logf(" chipID %d %x \n", chipID, chipID);
+    logf("testing host:port 1 %s: %s <- %s \n", the_host_client, root_port, server_port);
 
-    clientTcp.init(the_host, root_port);
-    serverTcp.init(the_host, server_port, &mesh);
+    clientTcp.init(the_host_client, root_port);
+    serverTcp.init(the_host_server, server_port, &mesh);
     mesh.add_channel(&clientTcp);
 
     // uint8_t test[] = {0, 0, 5};

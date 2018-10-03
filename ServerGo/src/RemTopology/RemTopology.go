@@ -266,7 +266,8 @@ func (g *RemTopology) AssembleJSON() []byte {
 			Source:   edge.Source.StrID(),
 			Target:   edge.Target.StrID(),
 			IsOld:    edge.isOld,
-			Strength: rand.Float32(),
+			Strength: 1,
+			// Strength: rand.Float32(),
 		}
 		rtop.Edges = append(rtop.Edges, mEdge)
 	}
