@@ -11,6 +11,13 @@ typedef void (*ReceiveDataCallback)(uint8_t *data, uint16_t size, void *arg);
 //     void *argv;
 // };
 
+// struct RemChannelAndId
+// {
+//     RemChannel *rc;
+//     uint32_t id;
+// };
+// std::list<RemChannelAndId *> MapedChannels;
+
 class RemChannel
 {
   public:
@@ -31,7 +38,7 @@ class RemChannel
 
     virtual void set_receiver(ReceiveDataCallback cb, void *arg)
     {
-        rem_pointer=arg;
+        rem_pointer = arg;
         // argv_recv._this = this;
         // argv_recv.argv = arg;
         on_recv_cb = cb;

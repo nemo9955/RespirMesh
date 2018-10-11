@@ -26,7 +26,6 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceRoot}/../3rd-party/libsocket",
                 "${workspaceRoot}",
                 "/usr/include/c++/5",
                 "/usr/include/x86_64-linux-gnu/c++/5",
@@ -41,9 +40,14 @@
             "intelliSenseMode": "clang-x64",
             "browse": {
                 "path": [
-                    "${workspaceRoot}/",
-                    "${workspaceRoot}/../3rd-party/nanopb_protobuf/",
-                    "${workspaceRoot}/../3rd-party/libsocket/",
+                    "${workspaceRoot}",
+                    "~/ourhab/3rd-party/deploy-libs",
+                    "~/ourhab/3rd-party/sketch-libs",
+                    "~/ourhab/3rd-party/nanopb_protobuf",
+                    "~/ourhab/3rd-party/libsocket",
+                    "~/Templates/arduino/libraries",
+                    "~/Templates/arduino/hardware",
+                    "~/Arduino/libraries",
                     "/usr/include/c++/5",
                     "/usr/include/x86_64-linux-gnu/c++/5",
                     "/usr/include/c++/5/backward",
@@ -54,7 +58,7 @@
                     "/usr/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": ""
+                "databaseFilename":  "/home/amogoi/ourhab"
             },
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c11",
