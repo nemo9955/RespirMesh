@@ -64,14 +64,18 @@ class x86LinuxClientChannel : public RemChannel
 {
   private:
     unique_ptr<libsocket::inet_stream> cli_sock;
-    // libsocket::inet_dgram_client cli_sock;
-    // char host[32];
-    // char port[8];
     int ch_id;
     bool managed_to_send;
 
   public:
-    x86LinuxClientChannel() : cli_sock(make_unique<libsocket::inet_stream>()){};
+    bool is_connected;
+
+  public:
+    x86LinuxClientChannel()
+    // : cli_sock(make_unique<libsocket::inet_stream>())
+    {
+        is_connected = false;
+    };
 
     void init(char *_host, char *_port)
     {
@@ -82,10 +86,11 @@ class x86LinuxClientChannel : public RemChannel
         {
             connected_to_root = true;
             logf("Local TCP started %s:%s \n", _host, _port);
-            // cli_sock = make_unique<libsocket::inet_stream>();
+            cli_sock = make_unique<libsocket::inet_stream>();
             cli_sock->connect(_host, _port, LIBSOCKET_IPv4);
             ch_id = ch_id_common + chipID;
             ch_id_common++;
+            is_connected = true;
         }
         catch (const libsocket::socket_exception &exc)
         {
@@ -110,6 +115,7 @@ class x86LinuxClientChannel : public RemChannel
             connected_to_root = false;
             // cli_sock = _sock_client;
             cli_sock = move(_sock_client);
+            is_connected = true;
         }
         catch (const libsocket::socket_exception &exc)
         {
@@ -145,7 +151,7 @@ class x86LinuxClientChannel : public RemChannel
         try
         {
             // logf("SENd ch %d [%d] %s \n", this->ch_info(), size, (uint8_t *)data);
-            funcf("[ CHAN ] %d send client [size %zu]   ", ch_info(), size);
+            funcf("chn %d send client [size %zu] \t", ch_info(), size);
             for (uint8_t i = 0; i < size; i++)
                 funcf("%d ", data[i]);
             act_size = cli_sock->snd((void *)data, size);
@@ -169,7 +175,9 @@ class x86LinuxClientChannel : public RemChannel
 
     void stop()
     {
-        cli_sock->shutdown();
+        funcf("x86LinuxClientChannel::stop \n");
+        if (is_connected == true)
+            cli_sock->shutdown();
     };
 
     void receive_loop()
@@ -202,7 +210,7 @@ class x86LinuxClientChannel : public RemChannel
                     funcf("\n");
                     funcf("\n");
                     funcf("\n");
-                    funcf("[ CHAN ] %d recv client [size %zu]   ", ch_info(), recvbyt);
+                    funcf("chn %d recv client [size %zu]  \t", ch_info(), recvbyt);
                     for (uint8_t i = 0; i < recvbyt; i++)
                         funcf("%d ", buf[i]);
                     funcf("\n");
@@ -239,7 +247,13 @@ class x86LinuxServerChannel : public RemChannel
     // char port[8];
 
   public:
-    x86LinuxServerChannel() : serv_sock(){};
+    bool is_connected;
+
+  public:
+    x86LinuxServerChannel() : serv_sock()
+    {
+        is_connected = false;
+    };
 
     void init(char *_host, char *_port, RemOrchestrator *remOrch_)
     {
@@ -254,6 +268,7 @@ class x86LinuxServerChannel : public RemChannel
         {
             logf("Server TCP setup %s:%s \n", _host, _port);
             serv_sock.setup(_host, _port, LIBSOCKET_IPv4);
+            is_connected = true;
         }
         catch (const libsocket::socket_exception &exc)
         {
@@ -280,6 +295,7 @@ class x86LinuxServerChannel : public RemChannel
 
     void stop()
     {
+        funcf("x86LinuxServerChannel::stop \n");
         serv_sock.destroy();
     };
 
@@ -318,24 +334,94 @@ class x86LinuxServerChannel : public RemChannel
     }
 };
 
+template <class CLIENT, class SERVER>
 class SimpleListScanner : public RemConnectionScanner
 {
   private:
-    std::list<std::pair<std::string, std::string>> parents_list;
+    std::list<std::pair<std::string, std::string>> clients_list;
+    std::list<std::pair<std::string, std::string>> servers_list;
+
+    bool is_client_connected;
+    bool is_server_started;
 
   public:
-    SimpleListScanner(){};
-
-    void add_parent(char *_host, char *_port)
+    SimpleListScanner()
     {
-        parents_list.push_back(std::make_pair(std::string(_host), std::string(_port)));
+        is_client_connected = false;
+        is_server_started = false;
+    };
+
+    void add_client_host(char *_host, char *_port)
+    {
+        logf("adding client  %s : %s \n", _host, _port);
+        clients_list.push_back(std::make_pair(_host, _port));
+    };
+
+    void add_server_host(char *_host, char *_port)
+    {
+        servers_list.push_back(std::make_pair(std::string(_host), std::string(_port)));
+    };
+
+    void update()
+    {
+        if (is_client_connected == false)
+        {
+            scan_clients();
+        }
+
+        if (is_server_started == false)
+        {
+            start_servers();
+        }
+    };
+
+    void start_servers()
+    {
+        funcf("SimpleListScanner::start_servers \n");
+        logf("servers_list  size  %d  \n", servers_list.size());
+        for (auto it = servers_list.begin(); it != servers_list.end(); ++it)
+        {
+            logf("\n\n\nTrying to start server %s:%s   \n", it->first.c_str(), it->second.c_str());
+            SERVER *server_ = new SERVER();
+            server_->init(
+                const_cast<char *>(it->first.c_str()),
+                const_cast<char *>(it->second.c_str()),
+                remOrch);
+
+            if (server_->is_connected == true)
+            {
+                remOrch->add_channel(move(server_));
+                is_server_started = true;
+            }
+        }
+        logf("\n\n");
+    };
+
+    void scan_clients()
+    {
+        funcf("SimpleListScanner::scan_clients \n");
+        logf("clients_list  size  %d  \n", clients_list.size());
+
+        for (auto it = clients_list.begin(); it != clients_list.end(); ++it)
+        {
+            logf("\n\n\nTrying to connect to  %s:%s   \n", it->first.c_str(), it->second.c_str());
+
+            CLIENT *client_ = new CLIENT();
+            client_->init(
+                const_cast<char *>(it->first.c_str()),
+                const_cast<char *>(it->second.c_str()));
+
+            if (client_->is_connected == true)
+            {
+                remOrch->add_channel(move(client_));
+                is_client_connected = true;
+            }
+        }
+        logf("\n\n");
     };
 };
 
-SimpleListScanner parentScanner;
-
-x86LinuxClientChannel clientTcp;
-x86LinuxServerChannel serverTcp;
+SimpleListScanner<x86LinuxClientChannel, x86LinuxServerChannel> parentScanner;
 
 x86LinuxHardware hardware_;
 RemRouter remRouter;
@@ -343,8 +429,6 @@ RemOrchestrator remOrch;
 
 void sig_exit(int s)
 {
-    clientTcp.stop();
-    serverTcp.stop();
     remOrch.stop();
     exit(0);
 }
@@ -362,36 +446,52 @@ int main(int argc, char *argv[])
 
     srand(time(NULL));
 
-    if (atoi(argv[3]) == 0)
+    if (atoi(argv[3]) != 0)
         chipID = atoi(argv[3]);
     else
         chipID = rand() % 640000;
 
     char *server_host = const_cast<char *>(argv[1]);
     char *server_port = const_cast<char *>(argv[2]);
-    char *client_host = const_cast<char *>(argv[4]);
-    char *client_port = const_cast<char *>(argv[5]);
+    parentScanner.add_server_host(server_host, server_port);
+
+    for (size_t i = 4; i < argc; i += 2)
+    {
+        char *client_host = const_cast<char *>(argv[i]);
+        char *client_port = const_cast<char *>(argv[i + 1]);
+        parentScanner.add_client_host(client_host, client_port);
+    }
 
     signal(SIGINT, sig_exit);
 
     logf("chipID %d %x \n", chipID, chipID);
-    logf("connections %s:%s <- %s:%s \n", client_host, client_port, server_host, server_port);
+    // logf("connections %s:%s <- %s:%s \n", client_host, client_port, server_host, server_port);
 
     // clientTcp.init(client_host, client_port);
     // serverTcp.init(server_host, server_port, &remOrch);
 
     remOrch.set_hardware(&hardware_);
     remOrch.set_router(&remRouter);
-    remOrch.add_channel(&clientTcp);
+    remOrch.set_scanner(&parentScanner);
+
+    remOrch.start();
 
     logf("Time : %d  \n", remOrch.basicHardware->time_milis());
     logf("devID: %d == 0x%x \n", remOrch.basicHardware->device_id(), remOrch.basicHardware->device_id());
 
+    logf(" 1111111111 \n ");
+
+    logf(" 2222222 \n ");
     while (1)
     {
         remOrch.update();
         sleep(1);
     }
+    // sleep(1);
+    // remOrch.update();
+    logf(" 33333 \n ");
 
+    remOrch.stop();
+    logf(" 444444444 \n ");
     return 0;
 }

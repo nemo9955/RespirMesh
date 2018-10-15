@@ -2,6 +2,7 @@
 #define REMORCHESTRATOR_HPP_
 
 #include "RemRouter.hpp"
+#include "RemConnectionScanner.hpp"
 #include <RemChannel.hpp>
 #include <list>
 #include <stdint.h>
@@ -16,6 +17,8 @@ class Hardware
 };
 
 class RemRouter;
+class RemConnectionScanner;
+
 class RemOrchestrator
 {
   public:
@@ -29,6 +32,7 @@ class RemOrchestrator
 
     void set_hardware(Hardware *);
     void set_router(RemRouter *);
+    void set_scanner(RemConnectionScanner *);
     void init();
     void start();
     void stop();
@@ -36,6 +40,7 @@ class RemOrchestrator
 
     Hardware *basicHardware;
     RemRouter *remRouter;
+    RemConnectionScanner *remScanner;
     std::list<RemChannel *> channels;
     void add_channel(RemChannel *channel);
     void clean_channels();

@@ -21,7 +21,12 @@ typedef void (*ReceiveDataCallback)(uint8_t *data, uint16_t size, void *arg);
 class RemChannel
 {
   public:
-    RemChannel() { connected_to_root = false; };
+    RemChannel()
+    {
+        connected_to_root = false;
+        is_client = false;
+        is_server = false;
+    };
     // virtual void init(char *address, int port)=0;
 
     virtual bool send(uint8_t *data, uint16_t size) = 0;
@@ -46,6 +51,8 @@ class RemChannel
     };
 
     bool connected_to_root;
+    bool is_client;
+    bool is_server;
 
   protected:
     ReceiveDataCallback on_recv_cb;

@@ -12,11 +12,13 @@ void RemOrchestrator::start()
 
 void RemOrchestrator::update()
 {
+    remScanner->update();
     remRouter->update();
 }
 
 void RemOrchestrator::stop()
 {
+    funcf("RemOrchestrator::stop() \n");
     remRouter->stop();
 
     for (std::list<RemChannel *>::iterator it = channels.begin(); it != channels.end(); ++it)
@@ -31,7 +33,7 @@ void RemOrchestrator::add_channel(RemChannel *channel)
     channel->set_receiver(receive_fn, this);
     logf("ADDED ch %d  \n", channel->ch_info());
     channels.push_back(std::move(channel));
-    clean_channels();
+    // clean_channels();
 }
 
 void RemOrchestrator::clean_channels()
@@ -54,12 +56,18 @@ void RemOrchestrator::set_hardware(Hardware *hardware_)
 {
     basicHardware = hardware_;
 }
+
 void RemOrchestrator::set_router(RemRouter *remRouter_)
 {
     remRouter = remRouter_;
     remRouter->set_orchestrator(this);
 }
 
+void RemOrchestrator::set_scanner(RemConnectionScanner *remScanner_)
+{
+    remScanner = remScanner_;
+    remScanner->set_orchestrator(this);
+}
 
 void RemOrchestrator::receive_fn(uint8_t *data, uint16_t size, void *arg)
 {

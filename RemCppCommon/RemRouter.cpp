@@ -27,7 +27,7 @@ void RemRouter::stop()
 void RemRouter::send_packet(uint8_t *data, uint16_t size)
 {
 
-    funcf("data  send_packet :  \t");
+    funcf("send_packet :                \t");
     for (uint8_t i = 0; i < size; i++)
         funcf("%d ", data[i]);
     funcf("\n");
@@ -62,7 +62,7 @@ void RemRouter::route_packet(uint8_t *data, uint16_t size)
 {
     // logf(" RECV   \n");
 
-    funcf("data  route_packet :       \t");
+    funcf("route_packet :               \t");
     for (uint8_t i = 0; i < size; i++)
         funcf("%d ", data[i]);
     funcf("\n");
@@ -93,7 +93,7 @@ void RemRouter::route_packet(uint8_t *data, uint16_t size)
 
 void RemRouter::process_packet(uint8_t *data, uint16_t size)
 {
-    funcf("data  process_packet :  \t");
+    funcf("process_packet :             \t");
     for (uint8_t i = 0; i < size; i++)
         funcf("%d ", data[i]);
     funcf("\n");
@@ -161,7 +161,7 @@ void RemRouter::update()
 //     }
 //     uint16_t packet_size = ostream.bytes_written + offsetHeader;
 
-//     funcf("data Send PING  \t");
+    // funcf("Send PING                     \t");
 //     for (uint8_t i = 0; i < packet_size; i++)
 //         funcf("%d ", pb_buffer[i]);
 //     funcf("\n");
@@ -197,7 +197,7 @@ void RemRouter::send_mesh_topo()
     debugf("RemBasicHeader size %d \n", offsetHeader);
     debugf("Protobuf size %d \n", (int)ostream.bytes_written);
 
-    funcf("data Send TOPO  \t");
+    funcf("Send TOPO                    \t");
     for (uint8_t i = 0; i < packet_size; i++)
         funcf("%d ", pb_buffer[i]);
     funcf("\n");
@@ -208,7 +208,7 @@ void RemRouter::send_mesh_topo()
 
 void RemRouter::handle_mesh_topo(uint8_t *data, size_t size)
 {
-    funcf("data  handle_mesh_topo got :  \t");
+    funcf("handle_mesh_topo got :       \t");
     for (uint8_t i = 0; i < size; i++)
         funcf("%d ", data[i]);
     funcf("\n");
@@ -254,7 +254,7 @@ void RemRouter::handle_mesh_topo(uint8_t *data, size_t size)
 
         uint16_t packet_size = ostream.bytes_written + offsetHeader;
 
-        funcf("data  handle_mesh_topo send :  \t");
+        funcf("handle_mesh_topo send:       \t");
         for (uint8_t i = 0; i < packet_size; i++)
             funcf("%d ", pb_buffer[i]);
         funcf("\n");
