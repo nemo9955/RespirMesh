@@ -23,8 +23,9 @@ void RemOrchestrator::stop()
 
     for (std::list<RemChannel *>::iterator it = channels.begin(); it != channels.end(); ++it)
     {
+        logf("STOPPING CHANNEL  %d  \n", (*it)->ch_info());
         (*it)->stop();
-        channels.erase(it++);
+        // channels.erase(it);
     }
 }
 
@@ -45,7 +46,7 @@ void RemOrchestrator::clean_channels()
         {
             logf("DELETING CHANNEL  %d  \n", (*it)->ch_info());
             (*it)->stop();
-            channels.erase(it++);
+            channels.erase(it);
         }
     }
 

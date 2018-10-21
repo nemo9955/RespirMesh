@@ -43,10 +43,10 @@ class x86LinuxHardware : public Hardware
 
     uint32_t time_milis()
     {
-        unsigned long milliseconds_since_epoch =
+        uint32_t milliseconds_since_epoch =
             std::chrono::system_clock::now().time_since_epoch() /
             std::chrono::milliseconds(1);
-        return milliseconds_since_epoch - 0;
+        return milliseconds_since_epoch;
     };
 
   private:
@@ -77,6 +77,11 @@ class x86LinuxClientChannel : public RemChannel
         is_connected = false;
     };
 
+    ~x86LinuxClientChannel()
+    {
+        stop();
+    };
+
     void init(char *_host, char *_port)
     {
         // strcpy(host, _host.c_str());
@@ -88,8 +93,8 @@ class x86LinuxClientChannel : public RemChannel
             logf("Local TCP started %s:%s \n", _host, _port);
             cli_sock = make_unique<libsocket::inet_stream>();
             cli_sock->connect(_host, _port, LIBSOCKET_IPv4);
-            ch_id = ch_id_common + chipID;
             ch_id_common++;
+            ch_id = ch_id_common + chipID;
             is_connected = true;
         }
         catch (const libsocket::socket_exception &exc)
@@ -254,6 +259,13 @@ class x86LinuxServerChannel : public RemChannel
     {
         is_connected = false;
     };
+
+    ~x86LinuxServerChannel()
+    {
+        stop();
+    };
+
+    int ch_info() { return chipID; };
 
     void init(char *_host, char *_port, RemOrchestrator *remOrch_)
     {
@@ -435,6 +447,13 @@ void sig_exit(int s)
 
 int main(int argc, char *argv[])
 {
+
+    // for (size_t i = 0; i < argc; i++)
+    // {
+    //     printf(" %d %s \n", i, argv[i]);
+    // }
+    // return 0;
+
     printf(" \n\n\n\n  STARTING !!!!!!!!!!!!!!!!!!!!! \n\n\n\n\n");
     if (argc < 6)
     {
@@ -476,12 +495,9 @@ int main(int argc, char *argv[])
 
     remOrch.start();
 
-    logf("Time : %d  \n", remOrch.basicHardware->time_milis());
+    logf("Time : %u  \n", remOrch.basicHardware->time_milis());
     logf("devID: %d == 0x%x \n", remOrch.basicHardware->device_id(), remOrch.basicHardware->device_id());
 
-    logf(" 1111111111 \n ");
-
-    logf(" 2222222 \n ");
     while (1)
     {
         remOrch.update();
@@ -489,9 +505,7 @@ int main(int argc, char *argv[])
     }
     // sleep(1);
     // remOrch.update();
-    logf(" 33333 \n ");
 
     remOrch.stop();
-    logf(" 444444444 \n ");
     return 0;
 }

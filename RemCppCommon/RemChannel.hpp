@@ -27,6 +27,12 @@ class RemChannel
         is_client = false;
         is_server = false;
     };
+
+    // virtual ~RemChannel()
+    // {
+    //     stop();
+    // };
+
     // virtual void init(char *address, int port)=0;
 
     virtual bool send(uint8_t *data, uint16_t size) = 0;
