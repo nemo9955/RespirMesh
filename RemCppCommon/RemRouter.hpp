@@ -1,15 +1,12 @@
 #ifndef RemRouter_HPP_
 #define RemRouter_HPP_
 
-
-
 #include "RemOrchestrator.hpp"
 #include "RemHeaderTypes.h"
 
 #include <list>
 #include <stdint.h>
 #include <stdio.h>
-
 
 #define errorf printf
 #define debugf printf
@@ -19,13 +16,12 @@
 
 #define INTERNAL_BUFFER_ZISE 64
 
-
-class RemOrchestrator ;
+class RemOrchestrator;
 class RemRouter
 {
-  private:
+  protected:
     // Hardware *hardware_;
-    RemOrchestrator *remOrch ;
+    RemOrchestrator *remOrch;
     uint8_t pb_buffer[INTERNAL_BUFFER_ZISE];
     int action_counter = 0;
     int32_t tmili;
@@ -54,7 +50,7 @@ class RemRouter
     void handle_mesh_topo(uint8_t *data, size_t len);
     void send_mesh_topo();
 
-    void handle_ping(uint8_t *data, uint16_t siz );
+    void handle_ping(uint8_t *data, uint16_t siz);
     // void send_ping(ForwardingType TO);
 
     void stop();

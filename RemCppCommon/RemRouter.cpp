@@ -1,36 +1,30 @@
 #include "RemRouter.hpp"
 #include <RemChannel.hpp>
 
-
 #include "mesh-packet.pb.h"
 #include <pb.h>
 #include <pb_decode.h>
 #include <pb_encode.h>
-
-
-
-void RemRouter::set_orchestrator(RemOrchestrator *remOrch_)
-{
-    remOrch = remOrch_;
-}
 
 // void RemRouter::set_hardware(Hardware *_hard)
 // {
 //     hardware_ = _hard;
 // }
 
+void RemRouter::stop(){};
 
-void RemRouter::stop()
+void RemRouter::set_orchestrator(RemOrchestrator *remOrch_)
 {
+    remOrch = remOrch_;
 };
 
 void RemRouter::send_packet(uint8_t *data, uint16_t size)
 {
 
-    funcf("send_packet :                \t");
-    for (uint8_t i = 0; i < size; i++)
-        funcf("%d ", data[i]);
-    funcf("\n");
+    // funcf("send_packet :                \t");
+    // for (uint8_t i = 0; i < size; i++)
+    //     funcf("%d ", data[i]);
+    // funcf("\n");
 
     RemBasicHeader *header = (RemBasicHeader *)data;
     switch (header->ForwardingType)
@@ -40,22 +34,27 @@ void RemRouter::send_packet(uint8_t *data, uint16_t size)
     case ForwardingType_TO_PARENT:
     case ForwardingType_TO_PARENT_TO_ROOT:
     case ForwardingType_TO_ROOT:
-        for (std::list<RemChannel *>::iterator it = remOrch->channels.begin(); it != remOrch->channels.end(); ++it)
+        for (auto it = remOrch->channels.begin(); it != remOrch->channels.end(); ++it)
+        {
             if ((*it)->connected_to_root)
             {
                 // logf(" P/TO_ROOT  \n");
                 (*it)->send(data, size);
                 //logf(" sendd ch %d   \n", (*it)->ch_info());
             }
+        }
         break;
 
     case ForwardingType_TO_NEIGHBORS:
     case ForwardingType_NEIGHBOR_TO_ROOT:
         // logf(" NEIGHBOR   \n");
-        for (std::list<RemChannel *>::iterator it = remOrch->channels.begin(); it != remOrch->channels.end(); ++it)
+        for (auto it = remOrch->channels.begin(); it != remOrch->channels.end(); ++it)
+        {
             (*it)->send(data, size);
+        }
         break;
     }
+    return;
 }
 
 void RemRouter::route_packet(uint8_t *data, uint16_t size)
@@ -74,7 +73,7 @@ void RemRouter::route_packet(uint8_t *data, uint16_t size)
 
     case ForwardingType_TO_ROOT:
     {
-        for (std::list<RemChannel *>::iterator it = remOrch->channels.begin(); it != remOrch->channels.end(); ++it)
+        for (auto it = remOrch->channels.begin(); it != remOrch->channels.end(); ++it)
         {
             if ((*it)->connected_to_root)
                 (*it)->send(data, size);
@@ -161,7 +160,7 @@ void RemRouter::update()
 //     }
 //     uint16_t packet_size = ostream.bytes_written + offsetHeader;
 
-    // funcf("Send PING                     \t");
+// funcf("Send PING                     \t");
 //     for (uint8_t i = 0; i < packet_size; i++)
 //         funcf("%d ", pb_buffer[i]);
 //     funcf("\n");
@@ -172,6 +171,8 @@ void RemRouter::update()
 
 void RemRouter::send_mesh_topo()
 {
+
+    remOrch->rlog->debug(" void RemRouter::send_mesh_topo() ");
 
     RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
     header->ForwardingType = ForwardingType_TO_PARENT_TO_ROOT;
@@ -357,7 +358,7 @@ void RemRouter::handle_mesh_topo(uint8_t *data, size_t size)
 // }
 // void RemRouter::sendPing()
 // {
-//     for (std::list<RemChannel *>::iterator it = channels.begin(); it !=
+//     for (auto it = channels.begin(); it !=
 //     channels.end(); ++it)
 //     {
 //         sendPingToNode((*it));

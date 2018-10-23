@@ -22,6 +22,9 @@ enum ForwardingType {
     PARENT_AND_BACK = 22;
 }
 
+// https://jpa.kapsi.fi/nanopb/docs/reference.html#proto-file-options
+// int_size	Override the integer type of a field. (To use e.g. uint8_t to save RAM.)
+
 enum HeaderType {
     BASIC = 0;
     DATA_BYTE = 1;
@@ -36,14 +39,33 @@ enum ProtobufType {
     PONG = 3;
     MESH_TOPOLOGY = 4;
     INFO = 5;
+    LOG = 6;
 
     SYNC_LITTLE_BIG_ENDIAN=15;
+}
+
+enum LoggingLevel {
+    trace = 0 ;
+    debug = 1 ;
+    info = 2 ;
+    warn = 3 ;
+    error = 4 ;
+    fatal = 5 ;
 }
 
 message RespirMeshInfo {
     uint32 target_id = 1;
     uint32 source_id = 2;
     ProtobufType type = 3;
+}
+
+message RespirMeshLog {
+    uint32 source_time = 1;
+    uint32 source_id = 2;
+    // ProtobufType type = 3;
+    LoggingLevel log_level = 4;
+    string tags = 5;
+    string message = 6;
 }
 
 message RespirMeshTimeSync {

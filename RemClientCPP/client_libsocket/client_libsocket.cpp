@@ -18,6 +18,7 @@
 #include "RemOrchestrator.hpp"
 #include "RemRouter.hpp"
 #include "RemConnectionScanner.hpp"
+#include <RemLogger.hpp>
 
 #include <libsocket/inetclientstream.hpp>
 #include <libsocket/inetserverstream.hpp>
@@ -438,6 +439,7 @@ SimpleListScanner<x86LinuxClientChannel, x86LinuxServerChannel> parentScanner;
 x86LinuxHardware hardware_;
 RemRouter remRouter;
 RemOrchestrator remOrch;
+RemLogger rlog;
 
 void sig_exit(int s)
 {
@@ -448,13 +450,19 @@ void sig_exit(int s)
 int main(int argc, char *argv[])
 {
 
+    remOrch.set_router(&remRouter);
+    remOrch.set_scanner(&parentScanner);
+    remOrch.set_hardware(&hardware_);
+    remOrch.set_logger(&rlog);
+
     // for (size_t i = 0; i < argc; i++)
     // {
     //     printf(" %d %s \n", i, argv[i]);
     // }
     // return 0;
 
-    printf(" \n\n\n\n  STARTING !!!!!!!!!!!!!!!!!!!!! \n\n\n\n\n");
+    rlog.info("_ STARTING !!!!!!!!!!!!!!!!!!!!! _");
+
     if (argc < 6)
     {
         printf("First 2 arguments specify host and port of the server \n");
@@ -489,9 +497,6 @@ int main(int argc, char *argv[])
     // clientTcp.init(client_host, client_port);
     // serverTcp.init(server_host, server_port, &remOrch);
 
-    remOrch.set_hardware(&hardware_);
-    remOrch.set_router(&remRouter);
-    remOrch.set_scanner(&parentScanner);
 
     remOrch.start();
 

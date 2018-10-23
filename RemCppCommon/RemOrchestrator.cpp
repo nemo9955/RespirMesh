@@ -53,6 +53,12 @@ void RemOrchestrator::clean_channels()
     logf("CHs size  %d  \n", channels.size());
 }
 
+void RemOrchestrator::set_logger(RemLogger *remLogger_)
+{
+    rlog = remLogger_;
+    rlog->set_orchestrator(this);
+}
+
 void RemOrchestrator::set_hardware(Hardware *hardware_)
 {
     basicHardware = hardware_;

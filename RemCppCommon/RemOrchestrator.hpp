@@ -4,10 +4,14 @@
 #include "RemRouter.hpp"
 #include "RemConnectionScanner.hpp"
 #include <RemChannel.hpp>
+#include <RemLogger.hpp>
 #include <list>
 #include <stdint.h>
 #include <stdio.h>
 
+class RemRouter;
+class RemLogger;
+class RemConnectionScanner;
 
 class Hardware
 {
@@ -15,9 +19,6 @@ class Hardware
     virtual uint32_t device_id() = 0;
     virtual uint32_t time_milis() = 0;
 };
-
-class RemRouter;
-class RemConnectionScanner;
 
 class RemOrchestrator
 {
@@ -33,6 +34,7 @@ class RemOrchestrator
     void set_hardware(Hardware *);
     void set_router(RemRouter *);
     void set_scanner(RemConnectionScanner *);
+    void set_logger(RemLogger *);
     void init();
     void start();
     void stop();
@@ -40,6 +42,7 @@ class RemOrchestrator
 
     Hardware *basicHardware;
     RemRouter *remRouter;
+    RemLogger *rlog;
     RemConnectionScanner *remScanner;
     std::list<RemChannel *> channels;
     void add_channel(RemChannel *channel);

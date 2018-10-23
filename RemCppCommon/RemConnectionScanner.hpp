@@ -2,7 +2,7 @@
 #define REMCONNECTIONSCANNER_HPP_
 
 #include "RemOrchestrator.hpp"
-class RemOrchestrator ;
+class RemOrchestrator;
 
 class RemConnectionScanner
 {
@@ -11,16 +11,11 @@ class RemConnectionScanner
     virtual void scan_clients() = 0;
     virtual void update() = 0;
 
-    virtual void set_orchestrator(RemOrchestrator *remOrch_)
-    {
-        remOrch = remOrch_;
-    };
+    virtual void set_orchestrator(RemOrchestrator *remOrch_) { remOrch = remOrch_; };
 
   private:
-
   protected:
     RemOrchestrator *remOrch;
-
 };
 
 #endif /* !REMCONNECTIONSCANNER_HPP_ */
