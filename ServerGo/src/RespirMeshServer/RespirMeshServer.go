@@ -132,6 +132,34 @@ func (s *RmServer) handlePingPong(allData []byte, c *tcp_server.Client) {
 	// c.SendBytes(respPacket)
 }
 
+func (s *RmServer) handle_logs(allData []byte, c *tcp_server.Client) {
+	header := headertypes.RemBasicHeader{}
+	buf := bytes.NewReader(allData)
+	err := binary.Read(buf, binary.LittleEndian, &header)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	offsetHeader := unsafe.Sizeof(header)
+	packetData := allData[offsetHeader:]
+	// packetDataSize := unsafe.Sizeof(packetData)
+
+	remLog := &rem.RespirMeshLog{}
+	err = proto.Unmarshal(packetData, remLog)
+	if err != nil {
+		fmt.Println("unmarshaling error on RemLog: ", err)
+		return
+	}
+
+	fmt.Print("\n")
+	fmt.Println("  GetSourceTime ", strconv.FormatInt(int64(remLog.GetSourceTime()), 10))
+	fmt.Println("  GetSourceId   ", strconv.FormatInt(int64(remLog.GetSourceId()), 10))
+	fmt.Println("  GetLogLevel   ", strconv.FormatInt(int64(remLog.GetLogLevel()), 10))
+	fmt.Println("  GetTags       ", remLog.GetTags())
+	fmt.Println("  GetMessage    ", remLog.GetMessage())
+}
+
 func (s *RmServer) handle_mesh_topo(allData []byte, c *tcp_server.Client) {
 	header := headertypes.RemBasicHeader{}
 	buf := bytes.NewReader(allData)
@@ -143,11 +171,12 @@ func (s *RmServer) handle_mesh_topo(allData []byte, c *tcp_server.Client) {
 
 	offsetHeader := unsafe.Sizeof(header)
 	packetData := allData[offsetHeader:]
+	// packetDataSize := unsafe.Sizeof(packetData)
 
 	meshTopo := &rem.RespirMeshInfo{}
 	err = proto.Unmarshal(packetData, meshTopo)
 	if err != nil {
-		fmt.Println("unmarshaling error on PingPong: ", err)
+		fmt.Println("unmarshaling error on Mesh Topology: ", err)
 		return
 	}
 	// fmt.Println("direct TargetId    ", meshTopo.TargetId)
@@ -207,48 +236,10 @@ func (s *RmServer) onNewBytes(c *tcp_server.Client, allData []byte) {
 			}
 			s.handlePingPong(allData, c)
 		case rem.ProtobufType_MESH_TOPOLOGY:
-			// offsetHeader := unsafe.Sizeof(header)
-			// packetData := allData[offsetHeader:]
-			// meshTopo := &rem.RespirMeshInfo{}
-			// err := proto.Unmarshal(packetData, meshTopo)
-
-			// if err != nil {
-			// 	fmt.Println("unmarshaling error on PingPong: ", err)
-			// 	return
-			// }
 			s.handle_mesh_topo(allData, c)
+		case rem.ProtobufType_LOG:
+			s.handle_logs(allData, c)
 		}
-		// 	switch rem.ProtobufType(header.ProtobufType) {
-		// 	case rem.ProtobufType_MESH_TOPOLOGY:
-		// offsetHeader := unsafe.Sizeof(header)
-		// packetData := allData[offsetHeader:]
-		// 		meshTopo := &rem.RespirMeshInfo{}
-		// 		err := proto.Unmarshal(packetData, meshTopo)
-		// 		// fmt.Println("direct TargetId    ", meshTopo.TargetId)
-		// 		if meshTopo.GetTargetId() == 0 {
-		// 			meshTopo.TargetId = s.ServerSesionUUID
-		// 		}
-
-		// 		if err != nil {
-		// 			fmt.Println("unmarshaling error on PingPong: ", err)
-		// 			return
-		// 		}
-		// 		s.handle_mesh_topo(meshTopo, &header)
-		// 	}
-
-		// case rem.ForwardingType_TO_NEIGHBORS:
-		// 	switch rem.ProtobufType(header.ProtobufType) {
-		// 	case rem.ProtobufType_PING:
-		// 		header := headertypes.RemDataHeaderByte{}
-		// 		buf := bytes.NewReader(allData)
-		// 		// err := binary.Read(buf, binary.BigEndian, &header)
-		// 		err := binary.Read(buf, binary.LittleEndian, &header)
-		// 		if err != nil {
-		// 			fmt.Println(err)
-		// 			return
-		// 		}
-		// 		s.handlePingPong(allData, c)
-		// 	}
 	}
 
 }

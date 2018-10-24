@@ -7,8 +7,9 @@ syntax = "proto3";
 option go_package = "rem" ;
 
 enum ForwardingType {
-    TO_ROOT = 0;
-    RTN_HEADER_QUEUE = 1;
+    no_FORWARD = 0;
+    TO_ROOT = 1;
+    RTN_HEADER_QUEUE = 2;
 
     TO_PARENT_TO_ROOT = 3;
     TO_PARENT = 4;
@@ -26,8 +27,9 @@ enum ForwardingType {
 // int_size	Override the integer type of a field. (To use e.g. uint8_t to save RAM.)
 
 enum HeaderType {
-    BASIC = 0;
-    DATA_BYTE = 1;
+    NO_HEADER = 0;
+    BASIC = 1;
+    DATA_BYTE = 2;
     LITTLE_BIG_ENDIAN_SYNC=15;
 }
 

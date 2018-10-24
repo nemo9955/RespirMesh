@@ -18,12 +18,12 @@ void RemOrchestrator::update()
 
 void RemOrchestrator::stop()
 {
-    funcf("RemOrchestrator::stop() \n");
+    log->warn("RemOrchestrator::stop() \n");
     remRouter->stop();
 
     for (std::list<RemChannel *>::iterator it = channels.begin(); it != channels.end(); ++it)
     {
-        logf("STOPPING CHANNEL  %d  \n", (*it)->ch_info());
+        log->warn("STOPPING CHANNEL  %d  \n", (*it)->ch_info());
         (*it)->stop();
         // channels.erase(it);
     }
@@ -32,7 +32,7 @@ void RemOrchestrator::stop()
 void RemOrchestrator::add_channel(RemChannel *channel)
 {
     channel->set_receiver(receive_fn, this);
-    logf("ADDED ch %d  \n", channel->ch_info());
+    log->info("ADDED ch %d  \n", channel->ch_info());
     channels.push_back(std::move(channel));
     // clean_channels();
 }
@@ -44,19 +44,19 @@ void RemOrchestrator::clean_channels()
     {
         if ((*it)->is_ok() == false)
         {
-            logf("DELETING CHANNEL  %d  \n", (*it)->ch_info());
+            log->info("DELETING CHANNEL  %d  \n", (*it)->ch_info());
             (*it)->stop();
             channels.erase(it);
         }
     }
 
-    logf("CHs size  %d  \n", channels.size());
+    log->info("CHs size  %d  \n", channels.size());
 }
 
 void RemOrchestrator::set_logger(RemLogger *remLogger_)
 {
-    rlog = remLogger_;
-    rlog->set_orchestrator(this);
+    log = remLogger_;
+    log->set_orchestrator(this);
 }
 
 void RemOrchestrator::set_hardware(Hardware *hardware_)
@@ -79,10 +79,10 @@ void RemOrchestrator::set_scanner(RemConnectionScanner *remScanner_)
 void RemOrchestrator::receive_fn(uint8_t *data, uint16_t size, void *arg)
 {
 
-    funcf("data  receive_fn :      \t");
-    for (uint8_t i = 0; i < size; i++)
-        funcf("%d ", data[i]);
-    funcf("\n");
+    // funcf("data  receive_fn :      \t");
+    // for (uint8_t i = 0; i < size; i++)
+    //     funcf("%d ", data[i]);
+    // funcf("\n");
 
     // RemRouter *rm = (RemRouter *)arg;
     RemOrchestrator *rorch = (RemOrchestrator *)arg;

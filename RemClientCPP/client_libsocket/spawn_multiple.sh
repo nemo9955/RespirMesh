@@ -56,7 +56,7 @@ echo ""
 
 # set -o xtrace
 
-for i in {1..60} ; do
+for i in {1..10} ; do
     sleep 0.1 ; ($CDIR/client_libsocket.o "0.0.0.0" $(nxt_port) $(lst_port)     $(rnd_ports)         )&
 done
 

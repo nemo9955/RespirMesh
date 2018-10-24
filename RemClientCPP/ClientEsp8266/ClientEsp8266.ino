@@ -46,11 +46,11 @@ class ESP8266_TCPASYNC_CLIENT : public RemChannel
     int ch_info() { return 500; }
     void init(int socket)
     {
-        logf("Local TCP started in socket:%d \n", socket);
+        remOrch->log->info("Local TCP started in socket:%d \n", socket);
     }
     void init(const char *address, int port)
     {
-        logf("Local TCP started %s:%d \n", address, port);
+        remOrch->log->info("Local TCP started %s:%d \n", address, port);
     }
 
     bool send(uint8_t *data, uint16_t size)
@@ -66,7 +66,7 @@ class ESP8266_TCPASYNC_CLIENT : public RemChannel
 
     void stop()
     {
-        logf("Local TCP exiting \n");
+        remOrch->log->info("Local TCP exiting \n");
     }
 };
 

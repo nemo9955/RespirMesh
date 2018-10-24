@@ -42,7 +42,7 @@ class RemOrchestrator
 
     Hardware *basicHardware;
     RemRouter *remRouter;
-    RemLogger *rlog;
+    RemLogger *log;
     RemConnectionScanner *remScanner;
     std::list<RemChannel *> channels;
     void add_channel(RemChannel *channel);

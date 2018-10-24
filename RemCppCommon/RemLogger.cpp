@@ -73,11 +73,10 @@ int RemLogger::logger(LoggingLevel log_level, const char *wFormat, const char *a
     va_start(argptr, aFormat);
 
     int asize, psize;
-    asize = vsnprintf(log_buffer, REM_LOG_STRING_BUFFER_SIZE, aFormat, argptr);
-    // wsize = snprintf(log_buffer, REM_LOG_STRING_BUFFER_SIZE, wFormat, asize, log_buffer_bk);
-
+    // weird segmentaion fault on vsnprintf if called before connections to clients is estalished
+    asize = vsnprintf(log_buffer, sizeof(log_buffer), aFormat, argptr);
     psize = send_log_packet(log_level, wFormat, log_buffer, asize);
-    printf("%s %d %d\t%s\n", wFormat,asize,psize, aFormat);
+    printf("%s %d %d\t%s\n", wFormat, asize, psize, aFormat);
 
     va_end(argptr);
     return psize;
@@ -96,9 +95,8 @@ int RemLogger::send_log_packet(LoggingLevel log_level, const char *wFormat, cons
     mesh_log_data.source_id = remOrch->basicHardware->device_id();
     // mesh_log_data.type = ProtobufType_LOG;
     mesh_log_data.log_level = log_level;
-    strcpy( mesh_log_data.tags , wFormat);
-    strcpy( mesh_log_data.message , log_message);
-
+    strcpy(mesh_log_data.tags, wFormat);
+    strcpy(mesh_log_data.message, log_message);
 
     // logf(" *******  %d  %d  %d  \n", sizeof(*header), sizeof(RemDataHeaderByte), sizeof(RemBasicHeader));
     uint16_t offsetHeader = sizeof(*header);
@@ -107,7 +105,7 @@ int RemLogger::send_log_packet(LoggingLevel log_level, const char *wFormat, cons
 
     if (!pb_status)
     {
-        errorf("Encoding Mesh Topology failed: %s\n", PB_GET_ERROR(&ostream));
+        remOrch->log->error("Encoding Mesh Topology failed: %s\n", PB_GET_ERROR(&ostream));
         return -1;
     }
     uint16_t packet_size = ostream.bytes_written + offsetHeader;
@@ -119,9 +117,8 @@ int RemLogger::send_log_packet(LoggingLevel log_level, const char *wFormat, cons
 
     remOrch->remRouter->send_packet(pb_buffer, packet_size);
     // // handle_mesh_topo(pb_buffer, packet_size);
-    return packet_size ;
+    return packet_size;
 }
-
 
 void RemLogger::set_orchestrator(RemOrchestrator *remOrch_)
 {

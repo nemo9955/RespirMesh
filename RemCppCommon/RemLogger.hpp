@@ -1,10 +1,9 @@
 #ifndef REMLOGGER_HPP_
 #define REMLOGGER_HPP_
 
-#define REM_LOG_STRING_BUFFER_SIZE 64
+#define REM_LOG_STRING_BUFFER_SIZE 128
 
 #include <stdint.h>
-
 
 #include "mesh-packet.pb.h"
 #include <pb.h>
@@ -30,7 +29,8 @@ class RemLogger
     int logger(LoggingLevel log_level, const char *wFormat, const char *aFormat, ...);
     int send_log_packet(LoggingLevel log_level, const char *wFormat, const char *log_message, int log_size);
 
-    void set_orchestrator(RemOrchestrator *remOrch_) ;
+    void set_orchestrator(RemOrchestrator *remOrch_);
+
   protected:
     char log_buffer[REM_LOG_STRING_BUFFER_SIZE];
 

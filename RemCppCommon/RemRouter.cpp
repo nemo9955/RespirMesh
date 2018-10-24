@@ -38,16 +38,13 @@ void RemRouter::send_packet(uint8_t *data, uint16_t size)
         {
             if ((*it)->connected_to_root)
             {
-                // logf(" P/TO_ROOT  \n");
                 (*it)->send(data, size);
-                //logf(" sendd ch %d   \n", (*it)->ch_info());
             }
         }
         break;
 
     case ForwardingType_TO_NEIGHBORS:
     case ForwardingType_NEIGHBOR_TO_ROOT:
-        // logf(" NEIGHBOR   \n");
         for (auto it = remOrch->channels.begin(); it != remOrch->channels.end(); ++it)
         {
             (*it)->send(data, size);
@@ -59,12 +56,10 @@ void RemRouter::send_packet(uint8_t *data, uint16_t size)
 
 void RemRouter::route_packet(uint8_t *data, uint16_t size)
 {
-    // logf(" RECV   \n");
-
-    funcf("route_packet :               \t");
-    for (uint8_t i = 0; i < size; i++)
-        funcf("%d ", data[i]);
-    funcf("\n");
+    // funcf("route_packet :               \t");
+    // for (uint8_t i = 0; i < size; i++)
+    //     funcf("%d ", data[i]);
+    // funcf("\n");
 
     RemBasicHeader *header = (RemBasicHeader *)data;
 
@@ -92,10 +87,10 @@ void RemRouter::route_packet(uint8_t *data, uint16_t size)
 
 void RemRouter::process_packet(uint8_t *data, uint16_t size)
 {
-    funcf("process_packet :             \t");
-    for (uint8_t i = 0; i < size; i++)
-        funcf("%d ", data[i]);
-    funcf("\n");
+    // funcf("process_packet :             \t");
+    // for (uint8_t i = 0; i < size; i++)
+    //     funcf("%d ", data[i]);
+    // funcf("\n");
 
     RemBasicHeader *header = (RemBasicHeader *)data;
 
@@ -110,22 +105,22 @@ void RemRouter::process_packet(uint8_t *data, uint16_t size)
 
 void RemRouter::update()
 {
-    // logf(" Time: %d  \n", remOrch->basicHardware->time_milis());
+    logf(" Time: %u  \n", remOrch->basicHardware->time_milis());
 
     action_counter++;
 
     if (action_counter % 7 == 3)
     {
-        logf("\n");
+        // remOrch->log->trace(" 7 == 3");
         send_mesh_topo();
-        logf("\n");
     }
     else if (action_counter % 5 == 4)
     {
-        // logf("\n");
+        // remOrch->log->trace(" 5 == 4");
     }
     else if (action_counter % 4 == 2)
     {
+        // remOrch->log->trace(" 4 == 2");
         // logf("\n");
         // send_ping(ForwardingType_TO_ROOT);
         // send_ping(ForwardingType_TO_NEIGHBORS);
@@ -172,7 +167,7 @@ void RemRouter::update()
 void RemRouter::send_mesh_topo()
 {
 
-    remOrch->rlog->debug(" void RemRouter::send_mesh_topo() ");
+    remOrch->log->debug(" void RemRouter::send_mesh_topo() ");
 
     RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
     header->ForwardingType = ForwardingType_TO_PARENT_TO_ROOT;
@@ -195,13 +190,13 @@ void RemRouter::send_mesh_topo()
     }
     uint16_t packet_size = ostream.bytes_written + offsetHeader;
 
-    debugf("RemBasicHeader size %d \n", offsetHeader);
-    debugf("Protobuf size %d \n", (int)ostream.bytes_written);
+    // debugf("RemBasicHeader size %d \n", offsetHeader);
+    // debugf("Protobuf size %d \n", (int)ostream.bytes_written);
 
-    funcf("Send TOPO                    \t");
-    for (uint8_t i = 0; i < packet_size; i++)
-        funcf("%d ", pb_buffer[i]);
-    funcf("\n");
+    // funcf("Send TOPO                    \t");
+    // for (uint8_t i = 0; i < packet_size; i++)
+    //     funcf("%d ", pb_buffer[i]);
+    // funcf("\n");
 
     send_packet(pb_buffer, packet_size);
     // handle_mesh_topo(pb_buffer, packet_size);
@@ -209,10 +204,10 @@ void RemRouter::send_mesh_topo()
 
 void RemRouter::handle_mesh_topo(uint8_t *data, size_t size)
 {
-    funcf("handle_mesh_topo got :       \t");
-    for (uint8_t i = 0; i < size; i++)
-        funcf("%d ", data[i]);
-    funcf("\n");
+//     funcf("handle_mesh_topo got :       \t");
+//     for (uint8_t i = 0; i < size; i++)
+//         funcf("%d ", data[i]);
+//     funcf("\n");
 
     uint16_t offsetHeader = sizeof(RemBasicHeader);
     memcpy(pb_buffer, data, offsetHeader);
@@ -255,10 +250,10 @@ void RemRouter::handle_mesh_topo(uint8_t *data, size_t size)
 
         uint16_t packet_size = ostream.bytes_written + offsetHeader;
 
-        funcf("handle_mesh_topo send:       \t");
-        for (uint8_t i = 0; i < packet_size; i++)
-            funcf("%d ", pb_buffer[i]);
-        funcf("\n");
+        // funcf("handle_mesh_topo send:       \t");
+        // for (uint8_t i = 0; i < packet_size; i++)
+        //     funcf("%d ", pb_buffer[i]);
+        // funcf("\n");
         send_packet(pb_buffer, packet_size);
     }
     // else if (header->ForwardingType == ForwardingType_TO_PARENT)
