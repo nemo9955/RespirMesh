@@ -32,7 +32,7 @@ void RemOrchestrator::stop()
 void RemOrchestrator::add_channel(RemChannel *channel)
 {
     channel->set_receiver(receive_fn, this);
-    log->info("ADDED ch %d  \n", channel->ch_info());
+    log->info("ADDED ch %u  \n", channel->ch_info());
     channels.push_back(std::move(channel));
     // clean_channels();
 }

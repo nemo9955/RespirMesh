@@ -13,6 +13,8 @@
 #include <utility> // std::pair, std::make_pair
 #include <fcntl.h>
 
+#include <unistd.h>
+
 #include "mesh-packet.pb.h"
 #include "RemHeaderTypes.h"
 #include "RemChannel.hpp"
@@ -27,7 +29,6 @@
 #include <libsocket/socket.hpp>
 #include <libsocket/select.hpp>
 
-
 uint32_t chipID = 0;
 
 using namespace std;
@@ -36,10 +37,13 @@ void sig_exit(int s);
 class x86LinuxHardware : public Hardware
 {
   public:
-    x86LinuxHardware(){
-        // hard_id = chipID;
-    };
+    x86LinuxHardware(){};
     uint32_t device_id() { return chipID; };
+
+    uint32_t sleep_milis(uint32_t duration)
+    {
+        usleep(duration);
+    };
 
     uint32_t time_milis()
     {
@@ -162,6 +166,9 @@ class x86LinuxClientChannel : public RemChannel
             //     funcf("%d ", data[i]);
 
             act_size = cli_sock->snd((void *)data, size);
+            // if the server receives to fast ... it combines the 2 packets
+            remOrch->basicHardware->sleep_milis(5);
+
         }
         catch (const libsocket::socket_exception &exc)
         {

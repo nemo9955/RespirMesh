@@ -127,7 +127,6 @@ func (s *RmServer) handlePingPong(allData []byte, c *tcp_server.Client) {
 	pingpong.Type = rem.ProtobufType_PONG
 	pingpong.TargetId = pingpong.GetSourceId()
 
-	// fmt.Printf(" --------- [% d]\n", respPacket)
 	// respPacket := assembleStructByte(&header, pingpong)
 	// c.SendBytes(respPacket)
 }
@@ -212,6 +211,8 @@ func (s *RmServer) onNewBytes(c *tcp_server.Client, allData []byte) {
 	fmt.Println("ProtobufType    ", header.ProtobufType, rem.ProtobufType(header.ProtobufType))
 	// fmt.Println("Testing16Number    ", header.Testing16Number)
 	// fmt.Println("Testing32Number    ", header.Testing32Number)
+
+	fmt.Printf(">>> [% d]\n", allData)
 
 	// offsetHeader := unsafe.Sizeof(header)
 	// packetData := allData[offsetHeader:]

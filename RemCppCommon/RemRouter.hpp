@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define funcf //   printf
+#define funcf   printf
 #define debugf   printf
 #define infof   printf
 #define logf       printf
