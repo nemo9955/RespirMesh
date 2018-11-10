@@ -46,14 +46,26 @@ enum ProtobufType {
     SYNC_LITTLE_BIG_ENDIAN=15;
 }
 
-enum LoggingLevel {
-    trace = 0 ;
-    debug = 1 ;
-    info = 2 ;
-    warn = 3 ;
-    error = 4 ;
-    fatal = 5 ;
+
+// 0       Emergency           emerg
+// 1       Alert               alert
+// 2       Critical            crit
+// 3       Error               err
+// 4       Warning             warning
+// 5       Notice              notice
+// 6       Informational       info
+// 7       Debug               debug
+enum Severity {
+    emerg = 0 ;
+    alert = 1 ;
+    crit = 2 ;
+    err = 3 ;
+    warning = 4 ;
+    notice = 5 ;
+    info = 6 ;
+    debug = 7 ;
 }
+
 
 message RespirMeshInfo {
     uint32 target_id = 1;
@@ -62,11 +74,11 @@ message RespirMeshInfo {
 }
 
 message RespirMeshLog {
-    uint32 source_time = 1;
+    uint32 source_timestamp = 1;
     uint32 source_id = 2;
-    // ProtobufType type = 3;
-    LoggingLevel log_level = 4;
-    string tags = 5;
+
+    Severity severity = 4;
+
     string message = 6;
 }
 

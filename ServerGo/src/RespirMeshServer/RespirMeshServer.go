@@ -12,6 +12,7 @@ import (
 
 	"../../../protobuf/rem_go_pb"
 	"../HeaderTypes"
+	"../RemLogs"
 	"../RemTopology"
 	"../tcp_server"
 
@@ -23,6 +24,7 @@ type RmServer struct {
 	timeoutDuration  time.Duration
 	tcpServer        *tcp_server.TcpServer
 	RemTopo          *remtopo.RemTopology
+	RemLogs          *remlogs.RemLogs
 	ServerSesionUUID uint32
 	upTimeMils       int64
 	RootUpdateFreq   time.Duration
@@ -131,72 +133,7 @@ func (s *RmServer) handlePingPong(allData []byte, c *tcp_server.Client) {
 	// c.SendBytes(respPacket)
 }
 
-func (s *RmServer) handle_logs(allData []byte, c *tcp_server.Client) {
-	header := headertypes.RemBasicHeader{}
-	buf := bytes.NewReader(allData)
-	err := binary.Read(buf, binary.LittleEndian, &header)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	offsetHeader := unsafe.Sizeof(header)
-	packetData := allData[offsetHeader:]
-	// packetDataSize := unsafe.Sizeof(packetData)
-
-	remLog := &rem.RespirMeshLog{}
-	err = proto.Unmarshal(packetData, remLog)
-	if err != nil {
-		fmt.Println("unmarshaling error on RemLog: ", err)
-		return
-	}
-
-	fmt.Print("\n")
-	fmt.Println("  GetSourceTime ", strconv.FormatInt(int64(remLog.GetSourceTime()), 10))
-	fmt.Println("  GetSourceId   ", strconv.FormatInt(int64(remLog.GetSourceId()), 10))
-	fmt.Println("  GetLogLevel   ", strconv.FormatInt(int64(remLog.GetLogLevel()), 10))
-	fmt.Println("  GetTags       ", remLog.GetTags())
-	fmt.Println("  GetMessage    ", remLog.GetMessage())
-}
-
-func (s *RmServer) handle_mesh_topo(allData []byte, c *tcp_server.Client) {
-	header := headertypes.RemBasicHeader{}
-	buf := bytes.NewReader(allData)
-	err := binary.Read(buf, binary.LittleEndian, &header)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	offsetHeader := unsafe.Sizeof(header)
-	packetData := allData[offsetHeader:]
-	// packetDataSize := unsafe.Sizeof(packetData)
-
-	meshTopo := &rem.RespirMeshInfo{}
-	err = proto.Unmarshal(packetData, meshTopo)
-	if err != nil {
-		fmt.Println("unmarshaling error on Mesh Topology: ", err)
-		return
-	}
-	// fmt.Println("direct TargetId    ", meshTopo.TargetId)
-	if header.ForwardingType == uint8(rem.ForwardingType_TO_PARENT_TO_ROOT) && meshTopo.GetTargetId() == 0 {
-		meshTopo.TargetId = s.ServerSesionUUID
-	}
-
-	fmt.Println("  MESH TOPOLOGY: ", meshTopo.GetType())
-	fmt.Println("       TargetId: ", "0x"+strconv.FormatInt(int64(meshTopo.GetTargetId()), 16))
-	fmt.Println("       SourceId: ", "0x"+strconv.FormatInt(int64(meshTopo.GetSourceId()), 16))
-	fmt.Println("       TargetId: ", strconv.FormatInt(int64(meshTopo.GetTargetId()), 10))
-	fmt.Println("       SourceId: ", strconv.FormatInt(int64(meshTopo.GetSourceId()), 10))
-
-	targetNode := s.RemTopo.ObtainNode(meshTopo.GetSourceId())
-	sourceNode := s.RemTopo.ObtainNode(meshTopo.GetTargetId())
-	s.RemTopo.MakeEdgeFromIDs(targetNode.ID, sourceNode.ID)
-
-}
-
 func (s *RmServer) onNewBytes(c *tcp_server.Client, allData []byte) {
-	fmt.Print("\n")
 	header := headertypes.RemBasicHeader{}
 	buf := bytes.NewReader(allData)
 	err := binary.Read(buf, binary.LittleEndian, &header)
@@ -205,10 +142,17 @@ func (s *RmServer) onNewBytes(c *tcp_server.Client, allData []byte) {
 		return
 	}
 
-	// fmt.Println("ForwardingType HeaderType ProtobufType ", rem.ForwardingType(header.ForwardingType), rem.HeaderType(header.HeaderType), rem.ProtobufType(header.ProtobufType))
+	fmt.Print("\n")
+	fmt.Print("\n")
+	fmt.Print("\n")
+	fmt.Print("\n")
+	fmt.Print("\n")
 	fmt.Println("ForwardingType  ", header.ForwardingType, rem.ForwardingType(header.ForwardingType))
 	fmt.Println("HeaderType      ", header.HeaderType, rem.HeaderType(header.HeaderType))
 	fmt.Println("ProtobufType    ", header.ProtobufType, rem.ProtobufType(header.ProtobufType))
+	// fmt.Printf("%+v\n", header)
+	// utils.PrettyPrint("RemBasicHeader", header)
+	// fmt.Println("ForwardingType HeaderType ProtobufType ", rem.ForwardingType(header.ForwardingType), rem.HeaderType(header.HeaderType), rem.ProtobufType(header.ProtobufType))
 	// fmt.Println("Testing16Number    ", header.Testing16Number)
 	// fmt.Println("Testing32Number    ", header.Testing32Number)
 
@@ -237,9 +181,9 @@ func (s *RmServer) onNewBytes(c *tcp_server.Client, allData []byte) {
 			}
 			s.handlePingPong(allData, c)
 		case rem.ProtobufType_MESH_TOPOLOGY:
-			s.handle_mesh_topo(allData, c)
+			s.RemTopo.Handle(allData, s.ServerSesionUUID, c)
 		case rem.ProtobufType_LOG:
-			s.handle_logs(allData, c)
+			s.RemLogs.Handle(allData, c)
 		}
 	}
 
@@ -258,11 +202,13 @@ func (s *RmServer) onClientConnectionClosed(c *tcp_server.Client, err error) {
 	fmt.Println("client Disconnected !")
 }
 
+// StartRemServer hold comment
 func (s *RmServer) StartRemServer() {
 	go s.tcpServer.Listen()
 	fmt.Println("TCP server started", s.tcpServer)
 }
 
+// UpdateRootNodePeriodically hold comment
 func (s *RmServer) UpdateRootNodePeriodically() {
 	go func() {
 		for {
@@ -272,7 +218,7 @@ func (s *RmServer) UpdateRootNodePeriodically() {
 	}()
 }
 
-// Create and run (in the background) a RespirMeshServer
+// New Create and run (in the background) a RespirMeshServer
 func New(address string, timeoutDuration time.Duration) *RmServer {
 
 	// log.Println("server Started !!")
@@ -286,6 +232,7 @@ func New(address string, timeoutDuration time.Duration) *RmServer {
 		upTimeMils:       time.Now().Unix() / int64(time.Microsecond),
 		RemTopo:          remtopo.New(),
 		RootUpdateFreq:   3 * time.Second,
+		RemLogs:          remlogs.New(),
 	}
 
 	log.Println("DONE creating rmServer", rmServer)

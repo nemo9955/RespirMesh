@@ -1,7 +1,7 @@
 #ifndef REMLOGGER_HPP_
 #define REMLOGGER_HPP_
 
-#define REM_LOG_STRING_BUFFER_SIZE 128
+#define REM_LOG_STRING_BUFFER_SIZE 512
 
 #include <stdint.h>
 
@@ -19,15 +19,26 @@ class RemLogger
     RemLogger();
     ~RemLogger();
 
-    int trace(const char *aFormat, ...);
-    int debug(const char *aFormat, ...);
-    int info(const char *aFormat, ...);
-    int warn(const char *aFormat, ...);
-    int error(const char *aFormat, ...);
-    int fatal(const char *aFormat, ...);
+    // 0       Emergency           emerg
+    // 1       Alert               alert
+    // 2       Critical            crit
+    // 3       Error               err
+    // 4       Warning             warning
+    // 5       Notice              notice
+    // 6       Informational       info
+    // 7       Debug               debug
 
-    int logger(LoggingLevel log_level, const char *wFormat, const char *aFormat, ...);
-    int send_log_packet(LoggingLevel log_level, const char *wFormat, const char *log_message, int log_size);
+    int emerg(const char *aFormat, ...);
+    int alert(const char *aFormat, ...);
+    int crit(const char *aFormat, ...);
+    int error(const char *aFormat, ...);
+    int warn(const char *aFormat, ...);
+    int notice(const char *aFormat, ...);
+    int info(const char *aFormat, ...);
+    int debug(const char *aFormat, ...);
+
+    int logger(Severity severity_level, const char *lTags, const char *aFormat, va_list args  );
+    int send_log_packet(Severity severity_level, const char *lTags, const char *log_message, int log_size);
 
     void set_orchestrator(RemOrchestrator *remOrch_);
 

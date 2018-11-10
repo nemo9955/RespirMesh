@@ -8,9 +8,11 @@ watch:
 	$(info Requires https://github.com/canthefason/go-watcher)
 	$(info go get github.com/gorilla/websocket)
 	$(info go get github.com/canthefason/go-watcher)
+	$(info go get github.com/influxdata/influxdb/client/v2)
 	$(info go install github.com/canthefason/go-watcher/cmd/watcher)
 	$(info )
-	cd  $(dir  $(mkfile_path) ) ;
+	cd  $(dir  $(mkfile_path) ) ; \
+	export INFLUX_URL="http://192.168.1.150:8086" ; \
 	watcher init.go;
 
 run:

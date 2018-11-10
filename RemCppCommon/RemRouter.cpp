@@ -21,10 +21,10 @@ void RemRouter::set_orchestrator(RemOrchestrator *remOrch_)
 void RemRouter::send_packet(uint8_t *data, uint16_t size)
 {
 
-    funcf("send_packet :                \t");
-    for (uint8_t i = 0; i < size; i++)
-        funcf("%d ", data[i]);
-    funcf("\n");
+    // funcf("send_packet :                \t");
+    // for (uint8_t i = 0; i < size; i++)
+    //     funcf("%d ", data[i]);
+    // funcf("\n");
 
     RemBasicHeader *header = (RemBasicHeader *)data;
     switch (header->ForwardingType)
@@ -105,7 +105,7 @@ void RemRouter::process_packet(uint8_t *data, uint16_t size)
 
 void RemRouter::update()
 {
-    logf(" Time: %u  \n", remOrch->basicHardware->time_milis());
+    // logf(" Time: %u  \n", remOrch->basicHardware->time_milis());
 
     action_counter++;
 
@@ -167,7 +167,7 @@ void RemRouter::update()
 void RemRouter::send_mesh_topo()
 {
 
-    remOrch->log->debug(" void RemRouter::send_mesh_topo() ");
+    // remOrch->log->debug(" void RemRouter::send_mesh_topo() ");
 
     RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
     header->ForwardingType = ForwardingType_TO_PARENT_TO_ROOT;

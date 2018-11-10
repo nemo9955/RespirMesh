@@ -1,10 +1,20 @@
 package remtopo
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"strconv"
 	"time"
+	"unsafe"
+
+	"github.com/golang/protobuf/proto"
+
+	"../../../protobuf/rem_go_pb"
+	"../HeaderTypes"
+	"../tcp_server"
 )
 
 // Node generic node structure
@@ -38,11 +48,14 @@ type RemTopology struct {
 	Edges []*Edge
 }
 
+// NodesToUintList hold comment
 func NodesToUintList(n1 *Node, nodes ...*Node) []uint32 {
 	T := []uint32{}
 	T = append(T, n1.ID)
 	return append(T, (NodesToUintList(nodes[0], nodes[1:]...))...)
 }
+
+// GetWayTo hold comment
 func (g *RemTopology) GetWayTo(N1 *Node, N2 *Node) []*Node {
 	NodeArray := []*Node{}
 	NodeArray = append(NodeArray, N1)
@@ -346,6 +359,7 @@ func (g *RemTopology) GetRoots() []*Node {
 	return rootsArray
 }
 
+// UpdateTopoPeriodically hold comment
 func (g *RemTopology) UpdateTopoPeriodically() {
 	go func() {
 		for {
@@ -355,6 +369,7 @@ func (g *RemTopology) UpdateTopoPeriodically() {
 	}()
 }
 
+// New hold comment
 func New() *RemTopology {
 	remTopo := &RemTopology{
 		TopoCleanFreq:          1 * time.Second,
@@ -367,4 +382,41 @@ func New() *RemTopology {
 	remTopo.UpdateTopoPeriodically()
 
 	return remTopo
+}
+
+// Handle hold comment
+func (g *RemTopology) Handle(allData []byte, serverSesionUUID uint32, c *tcp_server.Client) {
+	header := headertypes.RemBasicHeader{}
+	buf := bytes.NewReader(allData)
+	err := binary.Read(buf, binary.LittleEndian, &header)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	offsetHeader := unsafe.Sizeof(header)
+	packetData := allData[offsetHeader:]
+	// packetDataSize := unsafe.Sizeof(packetData)
+
+	meshTopo := &rem.RespirMeshInfo{}
+	err = proto.Unmarshal(packetData, meshTopo)
+	if err != nil {
+		fmt.Println("unmarshaling error on Mesh Topology: ", err)
+		return
+	}
+	// fmt.Println("direct TargetId    ", meshTopo.TargetId)
+	if header.ForwardingType == uint8(rem.ForwardingType_TO_PARENT_TO_ROOT) && meshTopo.GetTargetId() == 0 {
+		meshTopo.TargetId = serverSesionUUID
+	}
+
+	fmt.Println("  MESH TOPOLOGY: ", meshTopo.GetType())
+	fmt.Println("       TargetId: ", "0x"+strconv.FormatInt(int64(meshTopo.GetTargetId()), 16))
+	fmt.Println("       SourceId: ", "0x"+strconv.FormatInt(int64(meshTopo.GetSourceId()), 16))
+	fmt.Println("       TargetId: ", strconv.FormatInt(int64(meshTopo.GetTargetId()), 10))
+	fmt.Println("       SourceId: ", strconv.FormatInt(int64(meshTopo.GetSourceId()), 10))
+
+	targetNode := g.ObtainNode(meshTopo.GetSourceId())
+	sourceNode := g.ObtainNode(meshTopo.GetTargetId())
+	g.MakeEdgeFromIDs(targetNode.ID, sourceNode.ID)
+
 }

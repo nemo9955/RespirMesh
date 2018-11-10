@@ -23,7 +23,8 @@ void RemOrchestrator::stop()
 
     for (std::list<RemChannel *>::iterator it = channels.begin(); it != channels.end(); ++it)
     {
-        log->warn("STOPPING CHANNEL  %d  \n", (*it)->ch_info());
+        printf( "-------------   %d    %u  \n",(*it)->ch_info() ,(*it)->ch_info());
+        log->warn("STOPPING CHANNEL  %u  \n", (*it)->ch_info());
         (*it)->stop();
         // channels.erase(it);
     }
@@ -32,7 +33,10 @@ void RemOrchestrator::stop()
 void RemOrchestrator::add_channel(RemChannel *channel)
 {
     channel->set_receiver(receive_fn, this);
-    log->info("ADDED ch %u  \n", channel->ch_info());
+
+        printf( "-------------   %d    %u  \n",  channel->ch_info()    ,    channel->ch_info()    );
+
+    log->info("ADDED ch %d  \n", channel->ch_info());
     channels.push_back(std::move(channel));
     // clean_channels();
 }

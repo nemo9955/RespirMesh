@@ -388,7 +388,7 @@ class SimpleListScanner : public RemConnectionScanner
 
     void start_servers()
     {
-        remOrch->log->info(" SimpleListScanner::start_servers servers_list  size  %d  \n", servers_list.size());
+        remOrch->log->info(" SimpleListScanner::start_servers servers_list  size  %u  \n", servers_list.size());
         for (auto it = servers_list.begin(); it != servers_list.end(); ++it)
         {
             // remOrch->log->info("\n\n\nTrying to start server %s:%s   \n", it->first.c_str(), it->second.c_str());
@@ -408,7 +408,7 @@ class SimpleListScanner : public RemConnectionScanner
 
     void scan_clients()
     {
-        remOrch->log->info(" SimpleListScanner::scan_clients  clients_list  size  %d  ", clients_list.size());
+        remOrch->log->info(" SimpleListScanner::scan_clients  clients_list  size  %u  ", clients_list.size());
 
         for (auto it = clients_list.begin(); it != clients_list.end(); ++it)
         {
