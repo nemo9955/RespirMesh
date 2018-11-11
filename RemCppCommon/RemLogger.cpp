@@ -1,9 +1,6 @@
-
 #include "RemHeaderTypes.h"
 #include <RemLogger.hpp>
 
-#include <stdio.h>
-#include <stdarg.h>
 
 RemLogger::RemLogger()
 {
@@ -85,8 +82,7 @@ int RemLogger::debug(const char *aFormat, ...)
     return rv;
 }
 
-
-int RemLogger::logger(Severity severity_level, const char *lTags, const char *aFormat, va_list args )
+int RemLogger::logger(Severity severity_level, const char *lTags, const char *aFormat, va_list args)
 {
     va_list args1;
     // va_list args2;
@@ -105,8 +101,6 @@ int RemLogger::logger(Severity severity_level, const char *lTags, const char *aF
     va_end(args1);
     psize = send_log_packet(severity_level, lTags, log_buffer, asize);
     printf("%s %d %d\t%s\n", lTags, asize, psize, log_buffer);
-
-
 
     return psize;
 }
@@ -134,7 +128,7 @@ int RemLogger::send_log_packet(Severity severity_level, const char *lTags, const
 
     if (!pb_status)
     {
-        remOrch->log->error("Encoding Mesh Topology failed: %s\n", PB_GET_ERROR(&ostream));
+        remOrch->logs->error("Encoding Mesh Topology failed: %s\n", PB_GET_ERROR(&ostream));
         return -1;
     }
     uint16_t packet_size = ostream.bytes_written + offsetHeader;

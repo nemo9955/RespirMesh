@@ -5,6 +5,7 @@
 #include "RemConnectionScanner.hpp"
 #include <RemChannel.hpp>
 #include <RemLogger.hpp>
+#include "RemHeaderTypes.h"
 #include <list>
 #include <stdint.h>
 #include <stdio.h>
@@ -43,7 +44,7 @@ class RemOrchestrator
 
     Hardware *basicHardware;
     RemRouter *remRouter;
-    RemLogger *log;
+    RemLogger *logs;
     RemConnectionScanner *remScanner;
     std::list<RemChannel *> channels;
     void add_channel(RemChannel *channel);

@@ -8,11 +8,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define funcf   printf
-#define debugf   printf
-#define infof   printf
-#define logf       printf
-#define errorf   printf
+
 
 
 #define INTERNAL_BUFFER_ZISE 64

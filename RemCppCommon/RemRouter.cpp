@@ -111,16 +111,16 @@ void RemRouter::update()
 
     if (action_counter % 7 == 3)
     {
-        // remOrch->log->trace(" 7 == 3");
+        // remOrch->logs->trace(" 7 == 3");
         send_mesh_topo();
     }
     else if (action_counter % 5 == 4)
     {
-        // remOrch->log->trace(" 5 == 4");
+        // remOrch->logs->trace(" 5 == 4");
     }
     else if (action_counter % 4 == 2)
     {
-        // remOrch->log->trace(" 4 == 2");
+        // remOrch->logs->trace(" 4 == 2");
         // logf("\n");
         // send_ping(ForwardingType_TO_ROOT);
         // send_ping(ForwardingType_TO_NEIGHBORS);
@@ -167,7 +167,7 @@ void RemRouter::update()
 void RemRouter::send_mesh_topo()
 {
 
-    // remOrch->log->debug(" void RemRouter::send_mesh_topo() ");
+    // remOrch->logs->debug(" void RemRouter::send_mesh_topo() ");
 
     RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
     header->ForwardingType = ForwardingType_TO_PARENT_TO_ROOT;

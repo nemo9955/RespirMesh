@@ -13,6 +13,8 @@
 </style> -->
 <!-- <svg width="800" height="600"></svg> -->
 <svg width="400" height="300"></svg>
+
+
 <script src="https://d3js.org/d3.v5.min.js"></script>
 <script>
 
@@ -20,7 +22,7 @@
     function start_ws() {
         var server_ip = window.location.hostname
         if (server_ip == "") {
-            server_ip = "192.168.1.100"
+            server_ip = "192.168.1.150"
         }
         console.log(server_ip);
         console.log(window.location);
@@ -156,18 +158,21 @@
     var linkForce = d3
         .forceLink()
         .id(function (link) { return link.id })
-        .strength(function (link) { return link.strength })
+    // .strength(function (link) { return link.strength })
 
     var simulation = d3
         .forceSimulation()
         .force('link', linkForce)
         .force('charge', d3.forceManyBody().strength(-500))
         .force('center', d3.forceCenter(width / 2, height / 2))
+        .force("x", d3.forceX())
+        .force("y", d3.forceY());
 
 
 
     var dragDrop = d3.drag()
         .on('start', function (node) {
+            // if (!d3.event.active)                 simulation.alphaTarget(0.3).restart();
             node.fx = node.x
             node.fy = node.y
         }).on('drag', function (node) {
@@ -186,23 +191,24 @@
     // we either update the data according to the selection
     // or reset the data if the same node is clicked twice
     function selectNode(selectedNode) {
-        if (selectedId === selectedNode.id) {
-            selectedId = undefined
-            resetData()
-            updateSimulation()
-        } else {
-            selectedId = selectedNode.id
-            updateData(selectedNode)
-            updateSimulation()
-        }
+        console.log(selectedNode)
+        // if (selectedId === selectedNode.id) {
+        //     selectedId = undefined
+        //     resetData()
+        //     updateSimulation()
+        // } else {
+        //     selectedId = selectedNode.id
+        //     updateData(selectedNode)
+        //     updateSimulation()
+        // }
 
-        var neighbors = getNeighbors(selectedNode)
+        // var neighbors = getNeighbors(selectedNode)
 
-        // we modify the styles to highlight selected nodes
-        nodeElements.attr('fill', node => getNodeColor(node, neighbors))
-        textElements.attr('fill', node => getTextColor(node, neighbors))
-        linkElements.attr('stroke', link => getLinkColor(selectedNode, link))
-        linkElements.attr('stroke-width', link => getLinkWidth(selectedNode, link))
+        // // we modify the styles to highlight selected nodes
+        // nodeElements.attr('fill', node => getNodeColor(node, neighbors))
+        // textElements.attr('fill', node => getTextColor(node, neighbors))
+        // linkElements.attr('stroke', link => getLinkColor(selectedNode, link))
+        // linkElements.attr('stroke-width', link => getLinkWidth(selectedNode, link))
     }
 
 

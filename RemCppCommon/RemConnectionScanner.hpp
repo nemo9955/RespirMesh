@@ -2,7 +2,8 @@
 #define REMCONNECTIONSCANNER_HPP_
 
 #include "RemOrchestrator.hpp"
-#include <iostream>
+#include "RemHeaderTypes.h"
+
 
 class RemOrchestrator;
 
@@ -10,12 +11,12 @@ class RemConnectionScanner
 {
   public:
     // virtual void add_client_host(char *_host, char *_port) = 0;
-    virtual void scan_clients() = 0;
+    // virtual void scan_clients() = 0;
     virtual void update() = 0;
 
     virtual void set_orchestrator(RemOrchestrator *remOrch_)
     {
-        printf("  RemConnectionScanner : set_orchestrator \n");
+        logf("  RemConnectionScanner : set_orchestrator \n");
         remOrch = remOrch_;
     };
 

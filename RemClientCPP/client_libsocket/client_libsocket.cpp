@@ -96,7 +96,7 @@ class x86LinuxClientChannel : public RemChannel
         try
         {
             connected_to_root = true;
-            // remOrch->log->info("Local TCP started %s:%s \n", _host, _port);
+            remOrch->logs->info("Local TCP started %s:%s \n", _host, _port);
             cli_sock = make_unique<libsocket::inet_stream>();
             cli_sock->connect(_host, _port, LIBSOCKET_IPv4);
             ch_id_common++;
@@ -184,7 +184,7 @@ class x86LinuxClientChannel : public RemChannel
 
     void stop()
     {
-        remOrch->log->info("x86LinuxClientChannel::stop \n");
+        remOrch->logs->info("x86LinuxClientChannel::stop \n");
         if (is_connected == true)
             cli_sock->shutdown();
     };
@@ -201,7 +201,7 @@ class x86LinuxClientChannel : public RemChannel
                 if (recvbyt == 0)
                 {
                     managed_to_send = false;
-                    remOrch->log->error(" x86LinuxClientChannel :       void receive_loop() STOPPED the socket ");
+                    remOrch->logs->error(" x86LinuxClientChannel :       void receive_loop() STOPPED the socket ");
                     stop();
 
                     if (connected_to_root == true)
@@ -277,7 +277,7 @@ class x86LinuxServerChannel : public RemChannel
 
         try
         {
-            // remOrch->log->info("Server TCP setup %s:%s \n", _host, _port);
+            remOrch->logs->info("Server TCP setup %s:%s \n", _host, _port);
             serv_sock.setup(_host, _port, LIBSOCKET_IPv4);
             is_connected = true;
         }
@@ -306,7 +306,7 @@ class x86LinuxServerChannel : public RemChannel
 
     void stop()
     {
-        remOrch->log->info("x86LinuxServerChannel::stop \n");
+        remOrch->logs->info("x86LinuxServerChannel::stop \n");
         serv_sock.destroy();
     };
 
@@ -364,7 +364,7 @@ class SimpleListScanner : public RemConnectionScanner
     void add_client_host(char *_host, char *_port)
     {
 
-        // remOrch->log->info("adding client  %s : %s ", _host, _port);
+        remOrch->logs->info("adding client  %s : %s ", _host, _port);
         clients_list.push_back(std::make_pair(_host, _port));
     };
 
@@ -388,10 +388,10 @@ class SimpleListScanner : public RemConnectionScanner
 
     void start_servers()
     {
-        remOrch->log->info(" SimpleListScanner::start_servers servers_list  size  %u  \n", servers_list.size());
+        remOrch->logs->info(" SimpleListScanner::start_servers servers_list  size  %u  \n", servers_list.size());
         for (auto it = servers_list.begin(); it != servers_list.end(); ++it)
         {
-            // remOrch->log->info("\n\n\nTrying to start server %s:%s   \n", it->first.c_str(), it->second.c_str());
+            remOrch->logs->info("\n\n\nTrying to start server %s:%s   \n", it->first.c_str(), it->second.c_str());
             SERVER *server_ = new SERVER();
             server_->init(
                 const_cast<char *>(it->first.c_str()),
@@ -408,11 +408,11 @@ class SimpleListScanner : public RemConnectionScanner
 
     void scan_clients()
     {
-        remOrch->log->info(" SimpleListScanner::scan_clients  clients_list  size  %u  ", clients_list.size());
+        remOrch->logs->info(" SimpleListScanner::scan_clients  clients_list  size  %u  ", clients_list.size());
 
         for (auto it = clients_list.begin(); it != clients_list.end(); ++it)
         {
-            // remOrch->log->info("\n\n\nTrying to connect to  %s:%s   \n", it->first.c_str(), it->second.c_str());
+            remOrch->logs->info("\n\n\nTrying to connect to  %s:%s   \n", it->first.c_str(), it->second.c_str());
 
             CLIENT *client_ = new CLIENT();
             client_->init(
@@ -434,7 +434,7 @@ SimpleListScanner<x86LinuxClientChannel, x86LinuxServerChannel> parentScanner;
 x86LinuxHardware hardware_;
 RemRouter remRouter;
 RemOrchestrator remOrch;
-RemLogger log;
+RemLogger logs;
 
 void sig_exit(int s)
 {
@@ -448,7 +448,7 @@ int main(int argc, char *argv[])
     remOrch.set_router(&remRouter);
     remOrch.set_scanner(&parentScanner);
     remOrch.set_hardware(&hardware_);
-    remOrch.set_logger(&log);
+    remOrch.set_logger(&logs);
 
     // for (size_t i = 0; i < argc; i++)
     // {
@@ -456,7 +456,7 @@ int main(int argc, char *argv[])
     // }
     // return 0;
 
-    log.info("_ STARTING !!!!!!!!!!!!!!!!!!!!! _");
+    logs.info("_ STARTING !!!!!!!!!!!!!!!!!!!!! _");
 
     if (argc < 6)
     {
@@ -495,7 +495,7 @@ int main(int argc, char *argv[])
     {
         remOrch.update();
         sleep(1);
-        // log.trace("main loop update");
+        // logs.trace("main loop update");
     }
     // sleep(1);
     // remOrch.update();

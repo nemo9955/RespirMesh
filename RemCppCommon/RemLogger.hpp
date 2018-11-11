@@ -3,13 +3,19 @@
 
 #define REM_LOG_STRING_BUFFER_SIZE 512
 
-#include <stdint.h>
 
 #include "mesh-packet.pb.h"
 #include <pb.h>
 #include <pb_decode.h>
 #include <pb_encode.h>
 #include "RemOrchestrator.hpp"
+#include "RemHeaderTypes.h"
+
+#ifdef ESP8266
+#include <cstdarg>
+#else
+#include <stdint.h>
+#endif
 
 class RemOrchestrator;
 

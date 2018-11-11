@@ -60,7 +60,7 @@ echo ""
 
 set -o xtrace
 
-for i in {1..5} ; do
+for i in {1..30} ; do
     sleep 0.3 ; (   $(nxt_port)  ; fuser -k -n tcp $(lst_port)  ; $CDIR/client_libsocket.o "0.0.0.0" $(lst_port) $(lst_port)     $(rnd_ports)       )&
 done
 

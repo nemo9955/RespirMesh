@@ -3,6 +3,7 @@
         "*.tmpl": "go",
         "Dockerfile-armv7l": "dockerfile",
         "Dockerfile-x86_64": "dockerfile",
-        "cstdio": "cpp"
+        "cstdio": "cpp",
+        "*.tcc": "cpp"
     }
 }
