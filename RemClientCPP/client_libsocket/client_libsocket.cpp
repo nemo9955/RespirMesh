@@ -352,9 +352,17 @@ class SimpleListScanner : public RemConnectionScanner
 
     bool is_client_connected;
     bool is_server_started;
-    // RemOrchestrator *remOrch;
+    RemOrchestrator *remOrch;
 
   public:
+
+
+    void set_orchestrator(RemOrchestrator *remOrch_)
+    {
+        logf("  SimpleWiFiScanner : set_orchestrator \n");
+        remOrch = remOrch_;
+    };
+
     SimpleListScanner()
     {
         is_client_connected = false;

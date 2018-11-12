@@ -11,11 +11,11 @@
 #include "RemOrchestrator.hpp"
 #include "RemHeaderTypes.h"
 
-#ifdef ESP8266
 #include <cstdarg>
-#else
-#include <stdint.h>
-#endif
+// #include <stdint.h>
+// #ifdef ESP8266
+// #else
+// #endif
 
 class RemOrchestrator;
 

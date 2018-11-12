@@ -14,15 +14,15 @@ class RemConnectionScanner
     // virtual void scan_clients() = 0;
     virtual void update() = 0;
 
-    virtual void set_orchestrator(RemOrchestrator *remOrch_)
-    {
-        logf("  RemConnectionScanner : set_orchestrator \n");
-        remOrch = remOrch_;
-    };
+    virtual void set_orchestrator(RemOrchestrator *remOrch_) =0;
+    // {
+    //     logf("  RemConnectionScanner : set_orchestrator \n");
+    //     remOrch = remOrch_;
+    // };
 
   private:
   protected:
-    RemOrchestrator *remOrch;
+    // RemOrchestrator *remOrch;
 };
 
 #endif /* !REMCONNECTIONSCANNER_HPP_ */

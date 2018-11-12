@@ -89,4 +89,4 @@ message RespirMeshTimeSync {
     uint32 response_sent_time = 4;
     uint32 request_arrive_time = 5;
     uint32 server_timestamp_unix = 6;
-  }
+}
