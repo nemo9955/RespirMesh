@@ -2,7 +2,9 @@
 #define SIMPLEWIFISCANNER_HPP_
 
 #include <ESP8266WiFi.h>
-#include <WiFiClient.h>
+// #include <WiFiClient.h>
+// #include <IPAddress.h>
+#include <Arduino.h>
 
 #include "RemOrchestrator.hpp"
 #include "RemHeaderTypes.h"
@@ -26,6 +28,17 @@ enum WiFIClientState
     full_available,
 };
 
+enum WiFIServerState
+{
+    unknown_ap,
+    wifi_off_ap,
+    server_off_ap,
+    starting_server_ap,
+    no_clients_ap,
+    some_clients_ap,
+    max_clients_ap,
+};
+
 typedef struct _ApConnData
 {
     uint8_t netIndex;
@@ -36,6 +49,16 @@ class RemOrchestrator;
 
 class SimpleWiFiScanner : public RemConnectionScanner
 {
+
+  private:
+    uint32_t rescan_timestamp_milis = 0;
+    uint32_t ap_server_start_ts = 0;
+    uint32_t rescan_interval = 10;
+
+    IPAddress APlocal_IP ;
+    IPAddress APgateway ;
+    IPAddress APsubnet ;
+    char __esp_host[10] ;
 
   private:
     RemOrchestrator *remOrch;
@@ -57,12 +80,13 @@ class SimpleWiFiScanner : public RemConnectionScanner
   private:
     static SimpleWiFiScanner *singleton;
     WiFIClientState client_state;
+    WiFIServerState server_state;
 
   public:
     static void wifi_scan_done_wrapper(int networksCount)
     {
         singleton->wifi_scan_done(networksCount);
-    }
+    };
 
     static void onStationGotIP_wrapper(const WiFiEventStationModeGotIP &evt)
     {
@@ -95,6 +119,7 @@ class SimpleWiFiScanner : public RemConnectionScanner
     void resetIndexedValidAps();
     bool apValidSSID(String qssid);
     void wifi_scan_done(int networksCount);
+    void ap_server_start();
 };
 
 #endif /* !SIMPLEWIFISCANNER_HPP_ */
