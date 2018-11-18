@@ -1,6 +1,14 @@
 #ifndef ESPUTILS_HPP_
 #define ESPUTILS_HPP_
 
+
+// typedef struct _RemClientData
+// {
+//     uint8_t netIndex;
+//     int16_t rssi;
+// } RemClientData;
+
+
 // String macToStr(const unsigned char *mac)
 // {
 //     char buf[20];

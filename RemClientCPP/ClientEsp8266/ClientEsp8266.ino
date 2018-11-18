@@ -12,15 +12,20 @@
 #include "RemLogger.hpp"
 #include "RemRouter.hpp"
 #include "RemChannel.hpp"
+#include "TaskLooper.hpp"
 
-#import "ESP8266/SimpleWiFiScanner.hpp"
+#include "ESP8266/SimpleWiFiScanner.hpp"
+#include "ESP8266/EspAsyncServer.hpp"
+#include "ESP8266/EspAsyncClient.hpp"
 // #import "ESP8266/EspUtils.hpp"
 
 #include <ESP8266mDNS.h>
+#include <ESPAsyncTCP.h>
 
 void setup();
-void espSetHost();
 void loop();
+
+TaskLooper update_looper;
 
 const char __wifi_ssid[] = _S_WIFI_SSID;
 const char __wifi_pass[] = _S_WIFI_PASS;
@@ -29,10 +34,6 @@ const char __ota_http_pass[] = _S_OTA_HTTP_PASS;
 const char __ota_http_path[] = _S_OTA_HTTP_PATH;
 char __esp_host[10] = "rspm-";
 // const size_t __server_port = _SERVER_PORT;
-
-unsigned long previousMillis = 0;
-unsigned long currentMillis = 0;
-const long interval = 1000;
 
 bool IS_LEVEL_R1 = false;
 IPAddress rootIP(_SERVER_IP);
@@ -43,9 +44,7 @@ IPAddress APlocal_IP(192, 168, 4, 22);
 IPAddress APgateway(192, 168, 4, 9);
 IPAddress APsubnet(255, 255, 255, 0);
 
-
 uint16_t succesfullPongFromServer = 1;
-
 
 uint8_t chClientsCnt = 0;
 
@@ -71,116 +70,36 @@ class ESP8266_HARDWARE : public Hardware
     };
 };
 
-class ESP8266_TCPASYNC_CLIENT : public RemChannel
-{
-  private:
-    // AsyncClient parClient;
-    RemOrchestrator *remOrch;
-
-  public:
-    ESP8266_TCPASYNC_CLIENT(){};
-
-    int ch_info() { return 500; }
-    void init(int socket, RemOrchestrator *remOrch_)
-    {
-        remOrch = remOrch_;
-        remOrch->logs->info("Local TCP started in socket:%d \n", socket);
-    }
-    void init(const char *address, int port, RemOrchestrator *remOrch_)
-    {
-        remOrch = remOrch_;
-        remOrch->logs->info("Local TCP started %s:%d \n", address, port);
-    }
-
-    bool send(uint8_t *data, uint16_t size)
-    {
-        //logf("Client TCP sending .... \n");
-        return 0;
-    }
-
-    bool is_ok()
-    {
-        return 1;
-    };
-
-    void stop()
-    {
-        remOrch->logs->info("Local TCP exiting \n");
-    }
-};
-
-class ESP8266_TCPASYNC_SERVER : public RemChannel
-{
-  private:
-    // AsyncClient parClient;
-    RemOrchestrator *remOrch;
-
-  public:
-    ESP8266_TCPASYNC_SERVER(){};
-
-    int ch_info() { return 500; }
-
-    void init(const char *address, int port, RemOrchestrator *remOrch_)
-    {
-        remOrch = remOrch_;
-        remOrch->logs->info("Server TCP started %s:%d \n", address, port);
-    }
-
-    bool send(uint8_t *data, uint16_t size)
-    {
-        //logf("Client TCP sending .... \n");
-        return 0;
-    }
-
-    bool is_ok()
-    {
-        return 1;
-    };
-
-    void stop()
-    {
-        remOrch->logs->info("Server TCP exiting \n");
-    }
-};
-
+void async_server_init();
+void async_client_init();
 
 SimpleWiFiScanner parentScanner;
-// SimpleWiFiScanner<ESP8266_TCPASYNC_CLIENT, ESP8266_TCPASYNC_SERVER> parentScanner;
 
 ESP8266_HARDWARE hardware_;
 RemRouter remRouter;
 RemOrchestrator remOrch;
 RemLogger logs;
 
-void espSetHost()
-{
-    String idStr = String(ESP.getChipId(), HEX);
-    uint8_t len = idStr.length();
-    __esp_host[0 + 5] = idStr.charAt(len - 1 - 3);
-    __esp_host[1 + 5] = idStr.charAt(len - 1 - 2);
-    __esp_host[2 + 5] = idStr.charAt(len - 1 - 1);
-    __esp_host[3 + 5] = idStr.charAt(len - 1 - 0);
-
-    __esp_host[9] = '\0';
-    logs.info("ESP HOST IS : %s \n", __esp_host);
-}
-
 void setup()
 {
+    remOrch.set_hardware(&hardware_);
     remOrch.set_logger(&logs);
     remOrch.set_router(&remRouter);
     remOrch.set_scanner(&parentScanner);
-    remOrch.set_hardware(&hardware_);
+
+    parentScanner.set_client_func(&async_client_init);
+    parentScanner.set_server_func(&async_server_init);
 
     Serial.begin(115200);
     Serial.println();
-    espSetHost();
 
     randomSeed(analogRead(0));
 
     MDNS.begin(__esp_host);
 
-    parentScanner.begin();
+    remOrch.begin();
+    update_looper.begin(remOrch.basicHardware);
+    update_looper.set(1000);
 
     // mesh.set_hardware(&hardware_);
     // mesh.add_channel(&espTcpClient);
@@ -192,20 +111,37 @@ bool ap_started = false;
 
 void loop()
 {
-    currentMillis = millis();
-    if (currentMillis - previousMillis >= interval)
+    if (update_looper.check())
     {
-        previousMillis = currentMillis;
         remOrch.update();
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#define MAX_AP_CLIENTS 8
+EspAsyncClient chClients[MAX_AP_CLIENTS];
+uint8_t conectedCClientsCnt = 0;
+
+void async_server_init()
+{
+    remOrch.logs->info(" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! async_server_init \n");
+}
+
+void async_client_init()
+{
+    remOrch.logs->info(" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! async_client_init \n");
+
+    // chClients[conectedCClientsCnt] = new EspAsyncClient();
+    IPAddress rem_server_ip(192, 168, 1, 17);
+    chClients[conectedCClientsCnt].init(
+        &rem_server_ip,
+        9995,
+        &remOrch);
+
+    remOrch.add_channel(&chClients[conectedCClientsCnt]);
+    conectedCClientsCnt++;
+    // if (client_->is_connected == true)
+    // {
+    //     remOrch->add_channel(move(client_));
+    //     is_client_connected = true;
+    // }
+}

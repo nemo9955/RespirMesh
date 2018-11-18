@@ -19,7 +19,7 @@ class Hardware
   public:
     virtual uint32_t device_id() = 0;
     virtual uint32_t time_milis() = 0;
-    virtual uint32_t sleep_milis(uint32_t ) = 0;
+    virtual uint32_t sleep_milis(uint32_t) = 0;
 };
 
 class RemOrchestrator
@@ -37,8 +37,7 @@ class RemOrchestrator
     void set_router(RemRouter *);
     void set_scanner(RemConnectionScanner *);
     void set_logger(RemLogger *);
-    void init();
-    void start();
+    void begin();
     void stop();
     void update();
 
@@ -49,7 +48,6 @@ class RemOrchestrator
     std::list<RemChannel *> channels;
     void add_channel(RemChannel *channel);
     void clean_channels();
-
 
   private:
     static void receive_fn(uint8_t *data, uint16_t size, void *arg);

@@ -8,6 +8,7 @@
 
 #include "RemOrchestrator.hpp"
 #include "RemHeaderTypes.h"
+#include "TaskLooper.hpp"
 
 #import "ESP8266/EspUtils.hpp"
 
@@ -46,19 +47,29 @@ typedef struct _ApConnData
 } ApConnData;
 
 class RemOrchestrator;
+class TaskLooper;
+
+typedef void (*client_func_def)();
+typedef void (*server_func_def)();
 
 class SimpleWiFiScanner : public RemConnectionScanner
 {
 
   private:
-    uint32_t rescan_timestamp_milis = 0;
-    uint32_t ap_server_start_ts = 0;
-    uint32_t rescan_interval = 10;
+    // uint32_t rescan_timestamp_milis = 0;
+    // uint32_t ap_server_start_ts = 0;
+    // uint32_t rescan_interval = 10;
 
-    IPAddress APlocal_IP ;
-    IPAddress APgateway ;
-    IPAddress APsubnet ;
-    char __esp_host[10] ;
+    TaskLooper rescan_looper;
+    TaskLooper servap_looper;
+
+    client_func_def create_client_func_ptr;
+    server_func_def create_server_func_ptr;
+
+    IPAddress APlocal_IP;
+    IPAddress APgateway;
+    IPAddress APsubnet;
+    char __esp_host[10];
 
   private:
     RemOrchestrator *remOrch;
@@ -120,6 +131,10 @@ class SimpleWiFiScanner : public RemConnectionScanner
     bool apValidSSID(String qssid);
     void wifi_scan_done(int networksCount);
     void ap_server_start();
+    void espSetHost();
+    void client_status();
+    void set_client_func(client_func_def);
+    void set_server_func(server_func_def);
 };
 
 #endif /* !SIMPLEWIFISCANNER_HPP_ */

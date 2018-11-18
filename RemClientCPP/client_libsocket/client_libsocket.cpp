@@ -498,7 +498,7 @@ int main(int argc, char *argv[])
     logf("Time : %u  \n", remOrch.basicHardware->time_milis());
     logf("devID: %d == 0x%x \n", remOrch.basicHardware->device_id(), remOrch.basicHardware->device_id());
 
-    remOrch.start();
+    remOrch.begin();
     while (1)
     {
         remOrch.update();

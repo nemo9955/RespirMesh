@@ -2,12 +2,9 @@
 
 #include "RemOrchestrator.hpp"
 
-void RemOrchestrator::init()
+void RemOrchestrator::begin()
 {
-}
-
-void RemOrchestrator::start()
-{
+    remScanner->begin();
 }
 
 void RemOrchestrator::update()
@@ -23,7 +20,7 @@ void RemOrchestrator::stop()
 
     for (std::list<RemChannel *>::iterator it = channels.begin(); it != channels.end(); ++it)
     {
-        printf( "-------------   %d    %u  \n",(*it)->ch_info() ,(*it)->ch_info());
+        printf(" -------------   %d    %u  \n", (*it)->ch_info(), (*it)->ch_info());
         logs->warn("STOPPING CHANNEL  %u  \n", (*it)->ch_info());
         (*it)->stop();
         // channels.erase(it);
@@ -34,7 +31,7 @@ void RemOrchestrator::add_channel(RemChannel *channel)
 {
     channel->set_receiver(receive_fn, this);
 
-        printf( "-------------   %d    %u  \n",  channel->ch_info()    ,    channel->ch_info()    );
+    printf(" -------------   %d    %u  \n", channel->ch_info(), channel->ch_info());
 
     logs->info("ADDED ch %d  \n", channel->ch_info());
     channels.push_back(std::move(channel));

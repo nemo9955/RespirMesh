@@ -1,6 +1,7 @@
 #import "SimpleWiFiScanner.hpp"
 
 #include <WiFiClient.h>
+
 /*
 client_state
 enum WiFIClientState
@@ -56,8 +57,14 @@ SimpleWiFiScanner::~SimpleWiFiScanner(){};
 
 void SimpleWiFiScanner::begin()
 {
-    remOrch->logs->info("SimpleWiFiScanner::begin");
-    strcpy(__esp_host, "rspm-");
+    // remOrch->logs->info("SimpleWiFiScanner::begin");
+    espSetHost();
+
+    rescan_looper.begin(remOrch->basicHardware);
+    rescan_looper.set_fast();
+    servap_looper.begin(remOrch->basicHardware);
+    servap_looper.set(15 * 1000);
+
     // char __esp_host[10] = "rspm-      ";
 
     WiFi.mode(WIFI_OFF);
@@ -70,9 +77,11 @@ void SimpleWiFiScanner::begin()
     logf("client_state = %d \n", client_state);
     server_state = server_off_ap;
 
-    rescan_interval = 5;
-    rescan_timestamp_milis = remOrch->basicHardware->time_milis() + rescan_interval * 1000;
-    ap_server_start_ts = remOrch->basicHardware->time_milis() + 10 * 1000;
+    // rescan_interval = 5;
+    // rescan_timestamp_milis = remOrch->basicHardware->time_milis() + rescan_interval * 1000;
+    // remOrch->logs->info("rescan_timestamp_milis ... %u", rescan_timestamp_milis);
+    // ap_server_start_ts = remOrch->basicHardware->time_milis() + 20 * 1000;
+    // remOrch->logs->info("ap_server_start_ts ... %u", ap_server_start_ts);
 
     // remOrch->basicHardware->sleep_milis(1);
     // WiFi.reconnect();
@@ -83,6 +92,16 @@ void SimpleWiFiScanner::set_orchestrator(RemOrchestrator *remOrch_)
 {
     logf("  SimpleWiFiScanner : set_orchestrator \n");
     remOrch = remOrch_;
+};
+
+void SimpleWiFiScanner::set_client_func(client_func_def f_ptr)
+{
+    create_client_func_ptr = f_ptr;
+};
+
+void SimpleWiFiScanner::set_server_func(server_func_def f_ptr)
+{
+    create_server_func_ptr = f_ptr;
 };
 
 // void add_client_host(char *_host, char *_port)
@@ -100,7 +119,7 @@ void SimpleWiFiScanner::set_orchestrator(RemOrchestrator *remOrch_)
 void SimpleWiFiScanner::update()
 {
 
-    // remOrch->logs->info("  RemConnectionScanner update ");
+    // remOrch->logs->info("  RemConnectionScanner update  %u ", remOrch->basicHardware->time_milis());
     // if (client_state < scanning)
     // {
     //     // if (wifi_scanning_now == false)
@@ -109,17 +128,22 @@ void SimpleWiFiScanner::update()
     //     // }
     // }
 
-    if (rescan_timestamp_milis > 0 && remOrch->basicHardware->time_milis() > rescan_timestamp_milis)
+    // if (rescan_timestamp_milis > 0 && remOrch->basicHardware->time_milis() > rescan_timestamp_milis)
+    if (rescan_looper.check())
     {
-        remOrch->logs->info("rescan_timestamp_milis scanning for new APs");
+        // remOrch->logs->info("rescan_timestamp_milis scanning for new APs ... %u", rescan_timestamp_milis);
         wifi_scan_beggin();
     }
 
-    if (ap_server_start_ts > 0 && remOrch->basicHardware->time_milis() > ap_server_start_ts)
+    if (servap_looper.check())
     {
-        remOrch->logs->info("ap_server_start_ts starting server AP");
-        ap_server_start();
-        ap_server_start_ts=0;
+        // servap_looper.set_slow();
+        servap_looper.set_norm();
+        if (server_state < starting_server_ap)
+        {
+            ap_server_start();
+        }
+        client_status();
     }
 
     // if (client_state < scanning)
@@ -192,7 +216,10 @@ void SimpleWiFiScanner::onStationGotIP(const WiFiEventStationModeGotIP &evt)
     // Serial.println(rootIP);
 
     is_client_connected = true;
-    rescan_interval = 30;
+    // rescan_interval = 30;
+    // rescan_looper.set_slow();
+    rescan_looper.set_norm();
+    create_client_func_ptr();
 
     // //  if (evt.gw[2] == 1 && evt.gw[3] == 254)
     // // if (evt.gw[2] == 1 && evt.gw[3] == 13)
@@ -236,19 +263,13 @@ void SimpleWiFiScanner::onStationDisconnected(const WiFiEventStationModeDisconne
 
     // wifi_ap_connecting = false;
     is_client_connected = false;
-    rescan_interval = 15;
-
-    // wifiCheckTask.setInterval(WIFI_CHECK_INTERVAL_FAST * TASK_SECOND);
-    // wifiCheckTask.forceNextIteration();
-
-    // // remPingPongTask.disable();
-    // remPacketSendTestTask.disable();
-    // remTimeSyncTask.disable();
+    // rescan_interval = 15;
+    rescan_looper.set_fast();
 };
 
 void SimpleWiFiScanner::wifi_scan_beggin()
 {
-    remOrch->logs->info("wifi_scan_beggin");
+    remOrch->logs->info(" ======================== wifi_scan_beggin");
 
     if (((WiFi.getMode() & WIFI_STA) != 0))
         WiFi.enableSTA(true);
@@ -258,7 +279,7 @@ void SimpleWiFiScanner::wifi_scan_beggin()
     client_state = scanning;
     logf("client_state = %d \n", client_state);
 
-    rescan_timestamp_milis = remOrch->basicHardware->time_milis() + rescan_interval * 1000;
+    // rescan_timestamp_milis = remOrch->basicHardware->time_milis() + rescan_interval * 1000;
 };
 
 void SimpleWiFiScanner::resetIndexedValidAps()
@@ -274,7 +295,7 @@ void SimpleWiFiScanner::resetIndexedValidAps()
 
 bool SimpleWiFiScanner::apValidSSID(String qssid)
 {
-    remOrch->logs->info("apValidSSID");
+    remOrch->logs->info("apValidSSID %s", qssid.c_str());
 
     if (qssid.startsWith(_S_WIFI_SSID))
         return true;
@@ -338,7 +359,7 @@ void SimpleWiFiScanner::wifi_scan_done(int networksCount)
 
 void SimpleWiFiScanner::ap_server_start()
 {
-    logf(" SimpleWiFiScanner::ap_server_start \n");
+    logf(" ======================== ap_server_start \n");
     server_state = starting_server_ap;
 
     Serial.print("APlocal_IP: ");
@@ -360,4 +381,74 @@ void SimpleWiFiScanner::ap_server_start()
     Serial.println(WiFi.softAPIP());
     accessPointCrated = true;
     server_state = no_clients_ap;
+
+    create_server_func_ptr();
+
+
+};
+
+void SimpleWiFiScanner::espSetHost()
+{
+
+    strcpy(__esp_host, "rspm-");
+    String idStr = String(ESP.getChipId(), HEX);
+    uint8_t len = idStr.length();
+    __esp_host[0 + 5] = idStr.charAt(len - 1 - 3);
+    __esp_host[1 + 5] = idStr.charAt(len - 1 - 2);
+    __esp_host[2 + 5] = idStr.charAt(len - 1 - 1);
+    __esp_host[3 + 5] = idStr.charAt(len - 1 - 0);
+
+    __esp_host[4 + 5] = '\0';
+    logf(" SimpleWiFiScanner::espSetHost() ESP HOST IS : %s \n", __esp_host);
+};
+
+void SimpleWiFiScanner::client_status()
+{
+    logf(" ======================== client_status \n");
+
+    unsigned char number_client;
+    struct station_info *stat_info;
+
+    struct ip_addr *IPaddress;
+    IPAddress address;
+    int i = 1;
+
+    number_client = wifi_softap_get_station_num();
+    stat_info = wifi_softap_get_station_info();
+
+    Serial.print(" Total Connected Clients are = ");
+    Serial.println(number_client);
+
+    while (stat_info != NULL)
+    {
+
+        IPaddress = &stat_info->ip;
+        address = IPaddress->addr;
+
+        Serial.print("client= ");
+
+        Serial.print(i);
+        Serial.print(" IP adress is = ");
+        Serial.print((address));
+        Serial.print(" with MAC adress is = ");
+
+        Serial.print(stat_info->bssid[0], HEX);
+        Serial.print(" ");
+        Serial.print(stat_info->bssid[1], HEX);
+        Serial.print(" ");
+        Serial.print(stat_info->bssid[2], HEX);
+        Serial.print(" ");
+        Serial.print(stat_info->bssid[3], HEX);
+        Serial.print(" ");
+        Serial.print(stat_info->bssid[4], HEX);
+        Serial.print(" ");
+        Serial.print(stat_info->bssid[5], HEX);
+        Serial.print(" ");
+
+        stat_info = STAILQ_NEXT(stat_info, next);
+        i++;
+        Serial.println();
+    }
+
+    delay(500);
 };
