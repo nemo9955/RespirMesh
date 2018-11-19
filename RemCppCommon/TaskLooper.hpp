@@ -1,10 +1,9 @@
 #ifndef TASKLOOPER_HPP_
 #define TASKLOOPER_HPP_
 
-#include "RemOrchestrator.hpp"
-#include "RemHeaderTypes.h"
-
-class RemOrchestrator;
+#include "RemHardware.hpp"
+// #include "RemHeaderTypes.h"
+class RemHardware;
 
 class TaskLooper
 {
@@ -12,7 +11,7 @@ class TaskLooper
     TaskLooper();
     ~TaskLooper();
 
-    void begin(Hardware *remHw_);
+    void begin(RemHardware *remHw_);
     void set(uint16_t milis);
     void set_slow();
     void set_norm();
@@ -20,9 +19,10 @@ class TaskLooper
     bool check();
     void start();
     void stop();
+    void now();
 
   protected:
-    Hardware *remHw;
+    RemHardware *remHw;
 
   private:
     uint32_t next_ts;

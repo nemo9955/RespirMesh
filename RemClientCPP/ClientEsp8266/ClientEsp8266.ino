@@ -13,11 +13,12 @@
 #include "RemRouter.hpp"
 #include "RemChannel.hpp"
 #include "TaskLooper.hpp"
+#include "RemHardware.hpp"
 
 #include "ESP8266/SimpleWiFiScanner.hpp"
 #include "ESP8266/EspAsyncServer.hpp"
 #include "ESP8266/EspAsyncClient.hpp"
-// #import "ESP8266/EspUtils.hpp"
+#import "ESP8266/EspUtils.hpp"
 
 #include <ESP8266mDNS.h>
 #include <ESPAsyncTCP.h>
@@ -48,7 +49,7 @@ uint16_t succesfullPongFromServer = 1;
 
 uint8_t chClientsCnt = 0;
 
-class ESP8266_HARDWARE : public Hardware
+class ESP8266_HARDWARE : public RemHardware
 {
   private:
   public:
@@ -71,7 +72,7 @@ class ESP8266_HARDWARE : public Hardware
 };
 
 void async_server_init();
-void async_client_init();
+void async_client_init(RemClientInfo *client_info);
 
 SimpleWiFiScanner parentScanner;
 
@@ -123,19 +124,28 @@ uint8_t conectedCClientsCnt = 0;
 
 void async_server_init()
 {
-    remOrch.logs->info(" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! async_server_init \n");
+    remOrch.logs->info("async_server_init");
 }
 
-void async_client_init()
+void async_client_init(RemClientInfo *client_info)
 {
-    remOrch.logs->info(" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! async_client_init \n");
+    remOrch.logs->info("async_client_init root %u  ip %u.%u.%u.%u : %u \n",
+                       client_info->connected_to_root,
+                       client_info->ip0, client_info->ip1, client_info->ip2, client_info->ip3,
+                       client_info->port);
 
     // chClients[conectedCClientsCnt] = new EspAsyncClient();
+
+    // IPAddress rem_server_ip(client_info->ip0 ,client_info->ip1 ,client_info->ip2 ,client_info->ip3 );
+    // client_info->port
+
     IPAddress rem_server_ip(192, 168, 1, 17);
     chClients[conectedCClientsCnt].init(
         &rem_server_ip,
         9995,
         &remOrch);
+
+    chClients[conectedCClientsCnt].connected_to_root = client_info->connected_to_root;
 
     remOrch.add_channel(&chClients[conectedCClientsCnt]);
     conectedCClientsCnt++;

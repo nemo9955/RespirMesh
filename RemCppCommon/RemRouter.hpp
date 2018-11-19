@@ -1,6 +1,7 @@
 #ifndef RemRouter_HPP_
 #define RemRouter_HPP_
 
+#include "TaskLooper.hpp"
 #include "RemOrchestrator.hpp"
 #include "RemHeaderTypes.h"
 
@@ -8,22 +9,24 @@
 #include <stdint.h>
 #include <stdio.h>
 
-
-
-
 #define INTERNAL_BUFFER_ZISE 64
 
 class RemOrchestrator;
+// class TaskLooper;
+
 class RemRouter
 {
+  private:
+    TaskLooper mesh_topo_looper;
+
   protected:
     // Hardware *hardware_;
     RemOrchestrator *remOrch;
     uint8_t pb_buffer[INTERNAL_BUFFER_ZISE];
-    int action_counter = 0;
     int32_t tmili;
     uint8_t nrping;
     uint8_t nrpingSendTopo;
+
 
   public:
     RemRouter()
@@ -51,6 +54,7 @@ class RemRouter
     // void send_ping(ForwardingType TO);
 
     void stop();
+    void begin();
 
     //   void handle_pong(uint8_t *data, uint16_t size);
     //   void send_info(RemChannel *rc);

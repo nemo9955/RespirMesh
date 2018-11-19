@@ -1,7 +1,7 @@
 #ifndef REMLOGGER_HPP_
 #define REMLOGGER_HPP_
 
-#define REM_LOG_STRING_BUFFER_SIZE 512
+#define REM_LOG_STRING_BUFFER_SIZE 300
 
 
 #include "mesh-packet.pb.h"

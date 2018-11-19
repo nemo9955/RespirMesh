@@ -22,6 +22,8 @@
 #include "RemRouter.hpp"
 #include "RemConnectionScanner.hpp"
 #include <RemLogger.hpp>
+#include "TaskLooper.hpp"
+#include "RemHardware.hpp"
 
 #include <libsocket/inetclientstream.hpp>
 #include <libsocket/inetserverstream.hpp>
@@ -34,7 +36,7 @@ uint32_t chipID = 0;
 using namespace std;
 void sig_exit(int s);
 
-class x86LinuxHardware : public Hardware
+class x86LinuxHardware : public RemHardware
 {
   public:
     x86LinuxHardware(){};
@@ -153,34 +155,33 @@ class x86LinuxClientChannel : public RemChannel
         return managed_to_send;
     };
 
-    bool send(uint8_t *data, uint16_t size)
+    uint16_t send(uint8_t *data, uint16_t size)
     {
         // logf("\t cli send  \n");
         ssize_t act_size;
 
         try
         {
-            // logf("SENd ch %d [%d] %s \n", this->ch_info(), size, (uint8_t *)data);
-            // funcf("chn %d send client [size %zu] \t", ch_info(), size);
+            // logf("SENd ch %d [%d] %s \n", this->ch_id(), size, (uint8_t *)data);
+            // funcf("chn %d send client [size %zu] \t", ch_id(), size);
             // for (uint8_t i = 0; i < size; i++)
             //     funcf("%d ", data[i]);
 
             act_size = cli_sock->snd((void *)data, size);
             // if the server receives to fast ... it combines the 2 packets
             remOrch->basicHardware->sleep_milis(5);
-
         }
         catch (const libsocket::socket_exception &exc)
         {
             managed_to_send = false;
-            cout << " x86LinuxClientChannel :    bool send(uint8_t *data, uint16_t size)" << endl;
+            cout << " x86LinuxClientChannel :    uint16_t send(uint8_t *data, uint16_t size)" << endl;
             cerr << exc.mesg;
             return false;
         }
         return act_size > 0;
     };
 
-    int ch_info() { return ch_id; };
+    uint16_t ch_id() { return ch_id; };
 
     void stop()
     {
@@ -214,7 +215,7 @@ class x86LinuxClientChannel : public RemChannel
                 {
                     buf[recvbyt] = '\0';
 
-                    // funcf("chn %d recv client [size %zu]  \t", ch_info(), recvbyt);
+                    // funcf("chn %d recv client [size %zu]  \t", ch_id(), recvbyt);
                     // for (uint8_t i = 0; i < recvbyt; i++)
                     //     funcf("%d ", buf[i]);
                     // funcf("\n");
@@ -264,7 +265,7 @@ class x86LinuxServerChannel : public RemChannel
         stop();
     };
 
-    int ch_info() { return chipID; };
+    uint16_t ch_id() { return chipID; };
 
     void init(char *_host, char *_port, RemOrchestrator *remOrch_)
     {
@@ -299,9 +300,9 @@ class x86LinuxServerChannel : public RemChannel
         return true;
     };
 
-    bool send(uint8_t *data, uint16_t size)
+    uint16_t send(uint8_t *data, uint16_t size)
     {
-        return true;
+        return 0;
     };
 
     void stop()
@@ -323,7 +324,7 @@ class x86LinuxServerChannel : public RemChannel
 
                 // funcf("\n");
                 // funcf("\n");
-                // funcf("Server accepted client %d \n", chan_client_->ch_info());
+                // funcf("Server accepted client %d \n", chan_client_->ch_id());
                 remOrch->add_channel(move(chan_client_));
             }
             catch (const libsocket::socket_exception &exc)
@@ -355,8 +356,6 @@ class SimpleListScanner : public RemConnectionScanner
     RemOrchestrator *remOrch;
 
   public:
-
-
     void set_orchestrator(RemOrchestrator *remOrch_)
     {
         logf("  SimpleWiFiScanner : set_orchestrator \n");
@@ -444,6 +443,8 @@ RemRouter remRouter;
 RemOrchestrator remOrch;
 RemLogger logs;
 
+TaskLooper update_looper;
+
 void sig_exit(int s)
 {
     remOrch.stop();
@@ -457,6 +458,9 @@ int main(int argc, char *argv[])
     remOrch.set_scanner(&parentScanner);
     remOrch.set_hardware(&hardware_);
     remOrch.set_logger(&logs);
+
+    update_looper.begin(remOrch->basicHardware);
+    update_looper.set(1 * 1000);
 
     // for (size_t i = 0; i < argc; i++)
     // {
@@ -501,8 +505,11 @@ int main(int argc, char *argv[])
     remOrch.begin();
     while (1)
     {
-        remOrch.update();
-        sleep(1);
+        if (update_looper.check())
+        {
+            remOrch.update();
+        }
+        sleep(0.5);
         // logs.trace("main loop update");
     }
     // sleep(1);

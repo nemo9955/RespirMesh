@@ -5,6 +5,7 @@
 void RemOrchestrator::begin()
 {
     remScanner->begin();
+    remRouter->begin();
 }
 
 void RemOrchestrator::update()
@@ -20,8 +21,8 @@ void RemOrchestrator::stop()
 
     for (std::list<RemChannel *>::iterator it = channels.begin(); it != channels.end(); ++it)
     {
-        printf(" -------------   %d    %u  \n", (*it)->ch_info(), (*it)->ch_info());
-        logs->warn("STOPPING CHANNEL  %u  \n", (*it)->ch_info());
+        printf(" -------------   %d    %u  \n", (*it)->ch_id(), (*it)->ch_id());
+        logs->warn("STOPPING CHANNEL  %u  \n", (*it)->ch_id());
         (*it)->stop();
         // channels.erase(it);
     }
@@ -31,9 +32,9 @@ void RemOrchestrator::add_channel(RemChannel *channel)
 {
     channel->set_receiver(receive_fn, this);
 
-    printf(" -------------   %d    %u  \n", channel->ch_info(), channel->ch_info());
+    printf(" -------------   %d    %u  \n", channel->ch_id(), channel->ch_id());
 
-    logs->info("ADDED ch %d  \n", channel->ch_info());
+    logs->info("ADDED ch %d  \n", channel->ch_id());
     channels.push_back(std::move(channel));
     // clean_channels();
 }
@@ -45,7 +46,7 @@ void RemOrchestrator::clean_channels()
     {
         if ((*it)->is_ok() == false)
         {
-            logs->info("DELETING CHANNEL  %d  \n", (*it)->ch_info());
+            logs->info("DELETING CHANNEL  %d  \n", (*it)->ch_id());
             (*it)->stop();
             channels.erase(it);
         }
@@ -60,7 +61,7 @@ void RemOrchestrator::set_logger(RemLogger *remLogger_)
     logs->set_orchestrator(this);
 }
 
-void RemOrchestrator::set_hardware(Hardware *hardware_)
+void RemOrchestrator::set_hardware(RemHardware *hardware_)
 {
     basicHardware = hardware_;
 }

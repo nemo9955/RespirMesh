@@ -1,10 +1,11 @@
 #ifndef REMORCHESTRATOR_HPP_
 #define REMORCHESTRATOR_HPP_
 
+#include "RemHardware.hpp"
 #include "RemRouter.hpp"
 #include "RemConnectionScanner.hpp"
-#include <RemChannel.hpp>
-#include <RemLogger.hpp>
+#include "RemChannel.hpp"
+#include "RemLogger.hpp"
 #include "RemHeaderTypes.h"
 #include <list>
 #include <stdint.h>
@@ -13,14 +14,7 @@
 class RemRouter;
 class RemLogger;
 class RemConnectionScanner;
-
-class Hardware
-{
-  public:
-    virtual uint32_t device_id() = 0;
-    virtual uint32_t time_milis() = 0;
-    virtual uint32_t sleep_milis(uint32_t) = 0;
-};
+class RemHardware;
 
 class RemOrchestrator
 {
@@ -33,7 +27,7 @@ class RemOrchestrator
 
     };
 
-    void set_hardware(Hardware *);
+    void set_hardware(RemHardware *);
     void set_router(RemRouter *);
     void set_scanner(RemConnectionScanner *);
     void set_logger(RemLogger *);
@@ -41,7 +35,7 @@ class RemOrchestrator
     void stop();
     void update();
 
-    Hardware *basicHardware;
+    RemHardware *basicHardware;
     RemRouter *remRouter;
     RemLogger *logs;
     RemConnectionScanner *remScanner;

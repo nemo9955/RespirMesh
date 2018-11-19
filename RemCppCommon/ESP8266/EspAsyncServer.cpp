@@ -8,7 +8,7 @@ EspAsyncServer::~EspAsyncServer(){
 
 };
 
-int EspAsyncServer::ch_info() { return 500; };
+uint16_t EspAsyncServer::ch_id() { return 500; };
 
 void EspAsyncServer::init(int socket, RemOrchestrator *remOrch_)
 {
@@ -22,7 +22,7 @@ void EspAsyncServer::init(IPAddress *address, int port, RemOrchestrator *remOrch
     remOrch->logs->info("   SERVER TCP started %u.%u.%u.%u:%d \n", (*address)[0], (*address)[1], (*address)[2], (*address)[3], port);
 };
 
-bool EspAsyncServer::send(uint8_t *data, uint16_t size)
+uint16_t EspAsyncServer::send(uint8_t *data, uint16_t size)
 {
     //logf("Client TCP sending .... \n");
     return 0;

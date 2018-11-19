@@ -9,7 +9,7 @@ TaskLooper::TaskLooper()
     stop();
 };
 
-void TaskLooper::begin(Hardware *remHw_)
+void TaskLooper::begin(RemHardware *remHw_)
 {
     remHw = remHw_;
     set_norm();
@@ -35,6 +35,18 @@ void TaskLooper::start()
     if (remHw)
     {
         next_ts = remHw->time_milis() + tl_interval;
+    }
+    else
+    {
+        stop();
+    }
+};
+
+void TaskLooper::now()
+{
+    if (remHw)
+    {
+        next_ts = remHw->time_milis();
     }
     else
     {

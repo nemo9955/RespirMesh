@@ -13,10 +13,10 @@ class EspAsyncServer : public RemChannel
     EspAsyncServer();
     ~EspAsyncServer();
 
-    int ch_info();
+    uint16_t ch_id();
     void init(int socket, RemOrchestrator *remOrch_);
     void init(IPAddress *address, int port, RemOrchestrator *remOrch_);
-    bool send(uint8_t *data, uint16_t size);
+    uint16_t send(uint8_t *data, uint16_t size);
     bool is_ok();
     void stop();
 

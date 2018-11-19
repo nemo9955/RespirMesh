@@ -43,7 +43,7 @@ class x86LinuxClientChannel : public RemChannel
     TCPClient tcpParent;
     x86LinuxClientChannel(){};
 
-    int ch_info() { return 500; }
+    uint16_t ch_id() { return 500; }
     void init(int socket)
     {
         logf("Local TCP started in socket:%d \n", socket);
@@ -67,7 +67,7 @@ class x86LinuxClientChannel : public RemChannel
         pthread_detach(paren);
     }
 
-    bool send(uint8_t *data, uint16_t size)
+    uint16_t send(uint8_t *data, uint16_t size)
     {
         // logf("Client TCP sending .... \n");
         return tcpParent.Send((void *)data, size);
@@ -114,7 +114,7 @@ class x86LinuxServerChannel : public RemChannel
     TCPServer tcpSrv;
     x86LinuxServerChannel(){};
 
-    int ch_info() { return 100; }
+    uint16_t ch_id() { return 100; }
     void init(int port)
     {
         logf("Local TCP started:%d \n", port);
@@ -126,7 +126,7 @@ class x86LinuxServerChannel : public RemChannel
         pthread_detach(paren);
     }
 
-    bool send(uint8_t *data, uint16_t size)
+    uint16_t send(uint8_t *data, uint16_t size)
     {
         // logf("Server TCP sending .... \n");
         for (std::list<RemChannel *>::iterator it = channels.begin();

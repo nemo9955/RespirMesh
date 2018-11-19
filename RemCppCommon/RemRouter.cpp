@@ -6,17 +6,18 @@
 #include <pb_decode.h>
 #include <pb_encode.h>
 
-// void RemRouter::set_hardware(Hardware *_hard)
-// {
-//     hardware_ = _hard;
-// }
-
 void RemRouter::stop(){};
 
 void RemRouter::set_orchestrator(RemOrchestrator *remOrch_)
 {
     remOrch = remOrch_;
 };
+
+void RemRouter::begin()
+{
+    mesh_topo_looper.begin(remOrch->basicHardware);
+    mesh_topo_looper.set(8 * 1000);
+}
 
 void RemRouter::send_packet(uint8_t *data, uint16_t size)
 {
@@ -39,6 +40,7 @@ void RemRouter::send_packet(uint8_t *data, uint16_t size)
             if ((*it)->connected_to_root)
             {
                 (*it)->send(data, size);
+                remOrch->basicHardware->sleep_milis(1);
             }
         }
         break;
@@ -48,6 +50,7 @@ void RemRouter::send_packet(uint8_t *data, uint16_t size)
         for (auto it = remOrch->channels.begin(); it != remOrch->channels.end(); ++it)
         {
             (*it)->send(data, size);
+            remOrch->basicHardware->sleep_milis(1);
         }
         break;
     }
@@ -107,24 +110,29 @@ void RemRouter::update()
 {
     // logf(" Time: %u  \n", remOrch->basicHardware->time_milis());
 
-    action_counter++;
-
-    if (action_counter % 7 == 3)
+    if (mesh_topo_looper.check())
     {
-        // remOrch->logs->trace(" 7 == 3");
         send_mesh_topo();
     }
-    else if (action_counter % 5 == 4)
-    {
-        // remOrch->logs->trace(" 5 == 4");
-    }
-    else if (action_counter % 4 == 2)
-    {
-        // remOrch->logs->trace(" 4 == 2");
-        // logf("\n");
-        // send_ping(ForwardingType_TO_ROOT);
-        // send_ping(ForwardingType_TO_NEIGHBORS);
-    }
+
+    // action_counter++;
+
+    // if (action_counter % 7 == 3)
+    // {
+    //     // remOrch->logs->trace(" 7 == 3");
+    //     send_mesh_topo();
+    // }
+    // else if (action_counter % 5 == 4)
+    // {
+    //     // remOrch->logs->trace(" 5 == 4");
+    // }
+    // else if (action_counter % 4 == 2)
+    // {
+    //     // remOrch->logs->trace(" 4 == 2");
+    //     // logf("\n");
+    //     // send_ping(ForwardingType_TO_ROOT);
+    //     // send_ping(ForwardingType_TO_NEIGHBORS);
+    // }
     // else
     // {
     //     send_ping_to_server();
@@ -134,7 +142,6 @@ void RemRouter::update()
 // void RemRouter::send_ping(ForwardingType forward_type)
 // {
 //     RemDataHeaderByte *header = (RemDataHeaderByte *)pb_buffer;
-//     // uint8_t ActionSize = sizeof(action_counter);
 //     header->ForwardingType = forward_type;
 //     header->HeaderType = HeaderType_DATA_BYTE;
 //     header->ProtobufType = ProtobufType_PING;
@@ -204,10 +211,10 @@ void RemRouter::send_mesh_topo()
 
 void RemRouter::handle_mesh_topo(uint8_t *data, size_t size)
 {
-//     funcf("handle_mesh_topo got :       \t");
-//     for (uint8_t i = 0; i < size; i++)
-//         funcf("%d ", data[i]);
-//     funcf("\n");
+    //     funcf("handle_mesh_topo got :       \t");
+    //     for (uint8_t i = 0; i < size; i++)
+    //         funcf("%d ", data[i]);
+    //     funcf("\n");
 
     uint16_t offsetHeader = sizeof(RemBasicHeader);
     memcpy(pb_buffer, data, offsetHeader);

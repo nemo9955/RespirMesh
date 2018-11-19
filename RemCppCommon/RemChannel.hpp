@@ -35,11 +35,11 @@ class RemChannel
 
     // virtual void init(char *address, int port)=0;
 
-    virtual bool send(uint8_t *data, uint16_t size) = 0;
+    virtual uint16_t send(uint8_t *data, uint16_t size) = 0;
     virtual void stop() = 0;
     virtual bool is_ok() = 0;
 
-    virtual int ch_info() { return 1; };
+    virtual uint16_t ch_id() { return 1; };
 
     virtual void received(uint8_t *data, uint16_t size)
     {

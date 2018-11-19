@@ -49,7 +49,7 @@ typedef struct _ApConnData
 class RemOrchestrator;
 class TaskLooper;
 
-typedef void (*client_func_def)();
+typedef void (*client_func_def)(RemClientInfo *client_info);
 typedef void (*server_func_def)();
 
 class SimpleWiFiScanner : public RemConnectionScanner

@@ -1,13 +1,16 @@
 #ifndef ESPUTILS_HPP_
 #define ESPUTILS_HPP_
 
+typedef struct _RemClientInfo
+{
+    bool connected_to_root;
+    int16_t port;
+    uint8_t ip0;
+    uint8_t ip1;
+    uint8_t ip2;
+    uint8_t ip3;
 
-// typedef struct _RemClientData
-// {
-//     uint8_t netIndex;
-//     int16_t rssi;
-// } RemClientData;
-
+} RemClientInfo;
 
 // String macToStr(const unsigned char *mac)
 // {
