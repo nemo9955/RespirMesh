@@ -1,14 +1,15 @@
 #ifndef ESPUTILS_HPP_
 #define ESPUTILS_HPP_
 
+
+#include <IPAddress.h>
+
 typedef struct _RemClientInfo
 {
     bool connected_to_root;
     int16_t port;
-    uint8_t ip0;
-    uint8_t ip1;
-    uint8_t ip2;
-    uint8_t ip3;
+    IPAddress rem_server_ip;
+
 
 } RemClientInfo;
 

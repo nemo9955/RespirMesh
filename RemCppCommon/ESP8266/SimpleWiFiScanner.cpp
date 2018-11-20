@@ -44,8 +44,8 @@ SimpleWiFiScanner::SimpleWiFiScanner()
     client_state = unknown;
     server_state = unknown_ap;
 
-    APlocal_IP = IPAddress(192, 168, 4, 22);
-    APgateway = IPAddress(192, 168, 4, 9);
+    APlocal_IP = IPAddress(192, 168, 4, 1);
+    APgateway = IPAddress(192, 168, 4, 1);
     APsubnet = IPAddress(255, 255, 255, 0);
 
     stationGotIPHandler = WiFi.onStationModeGotIP(&SimpleWiFiScanner::onStationGotIP_wrapper);
@@ -63,10 +63,11 @@ void SimpleWiFiScanner::begin()
     rescan_looper.begin(remOrch->basicHardware);
     rescan_looper.now();
     servap_looper.begin(remOrch->basicHardware);
-    servap_looper.set(15 * 1000);
+    servap_looper.stop();
 
     // char __esp_host[10] = "rspm-      ";
 
+    WiFi.persistent(false);
     WiFi.mode(WIFI_OFF);
     client_state = wifi_off;
     // logf("client_state = %d \n", client_state);
@@ -205,15 +206,11 @@ void SimpleWiFiScanner::onStationConnected(const WiFiEventStationModeConnected &
 
 void SimpleWiFiScanner::onStationGotIP(const WiFiEventStationModeGotIP &evt)
 {
-    RemClientInfo rcl_info;
     rcl_info.connected_to_root = true;
-    rcl_info.ip0 = evt.gw[0];
-    rcl_info.ip1 = evt.gw[1];
-    rcl_info.ip2 = evt.gw[2];
-    rcl_info.ip3 = evt.gw[3];
+    rcl_info.rem_server_ip = evt.gw;
     create_client_func_ptr(&rcl_info);
 
-    remOrch->logs->notice("onStationGotIP  ip_%s mask_%s gw_%s ", evt.ip.toString().c_str(), evt.mask.toString().c_str(), evt.gw.toString().c_str());
+    remOrch->logs->notice("onStationGotIP \n\t ip %s \n\t mask %s \n\t gw %s ", evt.ip.toString().c_str(), evt.mask.toString().c_str(), evt.gw.toString().c_str());
 
     client_state = full_available;
     // logf("client_state = %d \n", client_state);
@@ -230,6 +227,7 @@ void SimpleWiFiScanner::onStationGotIP(const WiFiEventStationModeGotIP &evt)
     // rescan_interval = 30;
     // rescan_looper.set_slow();
     rescan_looper.set(60 * 1000);
+    servap_looper.set(1 * 1000);
 
 
     // //  if (evt.gw[2] == 1 && evt.gw[3] == 254)
@@ -362,7 +360,6 @@ void SimpleWiFiScanner::wifi_scan_done(int networksCount)
             client_state = selecting_ap;
             // logf("client_state = %d \n", client_state);
         }
-
     }
 };
 
@@ -391,6 +388,7 @@ void SimpleWiFiScanner::ap_server_start()
     accessPointCrated = true;
     server_state = no_clients_ap;
 
+    servap_looper.stop();
     create_server_func_ptr();
 };
 

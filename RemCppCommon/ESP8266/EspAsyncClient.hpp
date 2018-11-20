@@ -13,8 +13,8 @@ class EspAsyncClient : public RemChannel
     EspAsyncClient();
     ~EspAsyncClient();
 
-    void init(int socket, RemOrchestrator *remOrch_);
-    void init(IPAddress *address, int port, RemOrchestrator *remOrch_);
+    void init(AsyncClient *client, RemOrchestrator *remOrch_);
+    void init(IPAddress *address, uint16_t port, RemOrchestrator *remOrch_);
     uint16_t send(uint8_t *data, uint16_t size);
     uint16_t ch_id() { return channel_id; };
     bool is_ok();

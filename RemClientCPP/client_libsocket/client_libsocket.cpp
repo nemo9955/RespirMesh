@@ -70,7 +70,7 @@ class x86LinuxClientChannel : public RemChannel
 {
   private:
     unique_ptr<libsocket::inet_stream> cli_sock;
-    int ch_id;
+    int chip_id;
     bool managed_to_send;
     RemOrchestrator *remOrch;
 
@@ -102,7 +102,7 @@ class x86LinuxClientChannel : public RemChannel
             cli_sock = make_unique<libsocket::inet_stream>();
             cli_sock->connect(_host, _port, LIBSOCKET_IPv4);
             ch_id_common++;
-            ch_id = ch_id_common + chipID;
+            chip_id = ch_id_common + chipID;
             is_connected = true;
         }
         catch (const libsocket::socket_exception &exc)
@@ -124,7 +124,7 @@ class x86LinuxClientChannel : public RemChannel
         managed_to_send = true;
         try
         {
-            ch_id = ch_id_common + chipID;
+            chip_id = ch_id_common + chipID;
             ch_id_common++;
             connected_to_root = false;
             // cli_sock = _sock_client;
@@ -181,7 +181,7 @@ class x86LinuxClientChannel : public RemChannel
         return act_size > 0;
     };
 
-    uint16_t ch_id() { return ch_id; };
+    uint16_t ch_id() { return chip_id; };
 
     void stop()
     {
@@ -368,6 +368,7 @@ class SimpleListScanner : public RemConnectionScanner
         is_server_started = false;
     };
 
+    void begin(){} ;
     void add_client_host(char *_host, char *_port)
     {
 
@@ -459,7 +460,7 @@ int main(int argc, char *argv[])
     remOrch.set_hardware(&hardware_);
     remOrch.set_logger(&logs);
 
-    update_looper.begin(remOrch->basicHardware);
+    update_looper.begin(remOrch.basicHardware);
     update_looper.set(1 * 1000);
 
     // for (size_t i = 0; i < argc; i++)

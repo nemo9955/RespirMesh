@@ -1,8 +1,9 @@
 #include "EspAsyncServer.hpp"
 
-EspAsyncServer::EspAsyncServer(){
-
-};
+EspAsyncServer::EspAsyncServer()
+    : myTCPServer(_SERVER_PORT){
+          // myTCPServer = AsyncServer(_SERVER_PORT);
+      };
 
 EspAsyncServer::~EspAsyncServer(){
 
@@ -14,6 +15,7 @@ void EspAsyncServer::init(int socket, RemOrchestrator *remOrch_)
 {
     remOrch = remOrch_;
     remOrch->logs->info("   SERVER TCP started in socket:%d \n", socket);
+    // myTCPServer.onClient(onClientConnected_wrapper, this);
 };
 
 void EspAsyncServer::init(IPAddress *address, int port, RemOrchestrator *remOrch_)
@@ -21,6 +23,10 @@ void EspAsyncServer::init(IPAddress *address, int port, RemOrchestrator *remOrch
     remOrch = remOrch_;
     remOrch->logs->info("   SERVER TCP started %u.%u.%u.%u:%d \n", (*address)[0], (*address)[1], (*address)[2], (*address)[3], port);
 };
+
+// void EspAsyncServer::onClientConnected(AsyncClient *client){
+
+// };
 
 uint16_t EspAsyncServer::send(uint8_t *data, uint16_t size)
 {

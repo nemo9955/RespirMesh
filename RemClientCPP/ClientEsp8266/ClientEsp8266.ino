@@ -129,29 +129,34 @@ void async_server_init()
 
 void async_client_init(RemClientInfo *client_info)
 {
-    remOrch.logs->info("async_client_init root %u  ip %u.%u.%u.%u : %u \n",
-                       client_info->connected_to_root,
-                       client_info->ip0, client_info->ip1, client_info->ip2, client_info->ip3,
-                       client_info->port);
+    if (WiFi.SSID().startsWith(_S_WIFI_SSID))
+    {
+        client_info->rem_server_ip = IPAddress(_SERVER_IP);
+    }
+    client_info->port = 9995;
 
-    // chClients[conectedCClientsCnt] = new EspAsyncClient();
+    remOrch.logs->notice("async_client_init root %u  ip %u.%u.%u.%u : %u \n",
+                         client_info->connected_to_root,
+                         client_info->rem_server_ip[0],
+                         client_info->rem_server_ip[1],
+                         client_info->rem_server_ip[2],
+                         client_info->rem_server_ip[3],
+                         client_info->port);
 
-    // IPAddress rem_server_ip(client_info->ip0 ,client_info->ip1 ,client_info->ip2 ,client_info->ip3 );
-    // client_info->port
-
-    IPAddress rem_server_ip(192, 168, 1, 17);
     chClients[conectedCClientsCnt].init(
-        &rem_server_ip,
-        9995,
+        &client_info->rem_server_ip,
+        client_info->port,
         &remOrch);
 
     chClients[conectedCClientsCnt].connected_to_root = client_info->connected_to_root;
 
     remOrch.add_channel(&chClients[conectedCClientsCnt]);
     conectedCClientsCnt++;
+
     // if (client_->is_connected == true)
     // {
     //     remOrch->add_channel(move(client_));
     //     is_client_connected = true;
     // }
 }
+

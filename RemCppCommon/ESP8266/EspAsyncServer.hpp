@@ -20,8 +20,17 @@ class EspAsyncServer : public RemChannel
     bool is_ok();
     void stop();
 
+    // void onClientConnected(AsyncClient *client);
+
+    // static void onClientConnected_wrapper(void *arg, AsyncClient *client)
+    // {
+    //     ((EspAsyncServer *)arg)->onClientConnected(client);
+    // };
+
   protected:
   private:
+    AsyncServer myTCPServer;
+    // AsyncServer myTCPServer;
     RemOrchestrator *remOrch;
 };
 

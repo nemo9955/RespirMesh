@@ -4,7 +4,7 @@
 #include <ESP8266WiFi.h>
 // #include <WiFiClient.h>
 // #include <IPAddress.h>
-#include <Arduino.h>
+// #include <Arduino.h>
 
 #include "RemOrchestrator.hpp"
 #include "RemHeaderTypes.h"
@@ -70,6 +70,7 @@ class SimpleWiFiScanner : public RemConnectionScanner
     IPAddress APgateway;
     IPAddress APsubnet;
     char __esp_host[10];
+    RemClientInfo rcl_info;
 
   private:
     RemOrchestrator *remOrch;

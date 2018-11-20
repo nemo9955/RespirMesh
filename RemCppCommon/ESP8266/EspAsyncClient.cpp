@@ -17,26 +17,27 @@ EspAsyncClient::~EspAsyncClient(){
 
 };
 
-void EspAsyncClient::init(int socket, RemOrchestrator *remOrch_)
+void EspAsyncClient::init(AsyncClient *client, RemOrchestrator *remOrch_)
 {
     remOrch = remOrch_;
-    remOrch->logs->info("Local TCP started in socket:%d \n", socket);
+    remOrch->logs->info("Local TCP started from SERVER !!! ");
+    ascl_core = *client;
 };
 
-void EspAsyncClient::init(IPAddress *address, int port, RemOrchestrator *remOrch_)
+void EspAsyncClient::init(IPAddress *address, uint16_t port, RemOrchestrator *remOrch_)
 {
     remOrch = remOrch_;
-    remOrch->logs->info("Local TCP started %u.%u.%u.%u:%d \n", (*address)[0], (*address)[1], (*address)[2], (*address)[3], port);
+    remOrch->logs->info("Local TCP started %u.%u.%u.%u:%d ", (*address)[0], (*address)[1], (*address)[2], (*address)[3], port);
 
     // if (!ascl_core.connected() && !ascl_core.connecting())
     // {
     ascl_core.connect((*address), port);
 
-    Serial.print("(*address): ");
-    (*address).printTo(Serial);
-    Serial.printf("\n port %d \n", port);
+    // Serial.print("(*address): ");
+    // (*address).printTo(Serial);
+    // Serial.printf("\n port %d \n", port);
 
-    remOrch->basicHardware->sleep_milis(1);
+    // remOrch->basicHardware->sleep_milis(1);
     // }
 };
 

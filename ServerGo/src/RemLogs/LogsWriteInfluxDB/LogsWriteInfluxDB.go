@@ -92,9 +92,12 @@ func WriteLog(remLog *rem.RespirMeshLog) {
 		// "facility_code":    14,
 		// "version":          1,
 		// "procid":           "123",
-		"source_timestamp": remLog.GetSourceTimestamp(),
-		"severity_code":    rem.Severity_value[remLog.GetSeverity().String()],
-		"message":          strings.TrimSpace(remLog.GetMessage()),
+		// "source_timestamp": remLog.GetSourceTimestamp(),
+		// "source_timestamp": time.Now().Unix(),
+		// "timestamp":     int64(time.Now().UnixNano() / int64(time.Millisecond)),
+		"timestamp":     int64(time.Now().UnixNano()),
+		"severity_code": rem.Severity_value[remLog.GetSeverity().String()],
+		"message":       strings.TrimSpace(remLog.GetMessage()),
 	}
 
 	pt, err := client.NewPoint("syslog", tags, fields, time.Now())
