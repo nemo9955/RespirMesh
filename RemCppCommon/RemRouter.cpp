@@ -17,6 +17,7 @@ void RemRouter::begin()
 {
     mesh_topo_looper.begin(remOrch->basicHardware);
     mesh_topo_looper.set(8 * 1000);
+    mesh_topo_looper.now();
 }
 
 void RemRouter::send_packet(uint8_t *data, uint16_t size)
@@ -119,7 +120,6 @@ void RemRouter::update()
 
     // if (action_counter % 7 == 3)
     // {
-    //     // remOrch->logs->trace(" 7 == 3");
     //     send_mesh_topo();
     // }
     // else if (action_counter % 5 == 4)
@@ -174,7 +174,7 @@ void RemRouter::update()
 void RemRouter::send_mesh_topo()
 {
 
-    // remOrch->logs->debug(" void RemRouter::send_mesh_topo() ");
+    remOrch->logs->debug(" ---- RemRouter::send_mesh_topo() ");
 
     RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
     header->ForwardingType = ForwardingType_TO_PARENT_TO_ROOT;

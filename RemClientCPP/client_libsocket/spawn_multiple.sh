@@ -39,9 +39,9 @@ function nxt_port(){
 
 function rnd_ports(){
     the_clients=" "
-    the_clients+=$(echo " \t localhost \t " $(tail -15 $CDIR/ports.txt| head -5  | shuf | tail -1))
-    the_clients+=$(echo " \t localhost \t " $(tail -15 $CDIR/ports.txt| head -5  | shuf | tail -1))
-    the_clients+=$(echo " \t localhost \t " $(tail -15 $CDIR/ports.txt| head -5  | shuf | tail -1))
+    the_clients+=$(echo " \t localhost \t " $(tail -10 $CDIR/ports.txt| head -5  | shuf | tail -1))
+    the_clients+=$(echo " \t localhost \t " $(tail -10 $CDIR/ports.txt| head -5  | shuf | tail -1))
+    the_clients+=$(echo " \t localhost \t " $(tail -10 $CDIR/ports.txt| head -5  | shuf | tail -1))
     echo -e "$the_clients"
 }
 
@@ -58,10 +58,10 @@ echo ""
 echo ""
 echo ""
 
-set -o xtrace
+# set -o xtrace
 
 for i in {1..30} ; do
-    sleep 0.3 ; (   $(nxt_port)  ; fuser -k -n tcp $(lst_port)  ; $CDIR/client_libsocket.o "0.0.0.0" $(lst_port) $(lst_port)     $(rnd_ports)       )&
+    sleep 0.5 ; (   $(nxt_port)  ; fuser -k -n tcp $(lst_port)  ; $CDIR/client_libsocket.o "0.0.0.0" $(lst_port) $(lst_port)     $(rnd_ports)       )&
 done
 
 [[ $1 ]] || read asdf

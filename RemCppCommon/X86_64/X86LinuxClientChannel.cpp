@@ -32,6 +32,7 @@ void X86LinuxClientChannel::init(char *_host, char *_port, RemOrchestrator *remO
         ch_id_common++;
         chip_id = ch_id_common + remOrch->basicHardware->device_id();
         is_connected = true;
+        conn_listener->on_conn_start(this);
     }
     catch (const libsocket::socket_exception &exc)
     {
@@ -58,6 +59,7 @@ void X86LinuxClientChannel::init(std::unique_ptr<libsocket::inet_stream> _sock_c
         // cli_sock = _sock_client;
         cli_sock = std::move(_sock_client);
         is_connected = true;
+        conn_listener->on_conn_start(this);
     }
     catch (const libsocket::socket_exception &exc)
     {
@@ -130,11 +132,12 @@ void X86LinuxClientChannel::receive_loop()
                 managed_to_send = false;
                 remOrch->logs->error(" X86LinuxClientChannel :       void receive_loop() STOPPED the socket ");
                 stop();
+                conn_listener->on_conn_lost(this);
 
-                if (connected_to_root == true)
-                {
-                    // sig_exit(42);
-                }
+                // if (connected_to_root == true)
+                // {
+                //     // sig_exit(42);
+                // }
                 return;
             }
             if (recvbyt > 0)

@@ -2,7 +2,9 @@
 #define X86LINUXSERVERCHANNEL_HPP_
 
 #include <libsocket/inetserverstream.hpp>
+
 #include "RemChannel.hpp"
+#include "ConnectionListener.hpp"
 
 class X86LinuxServerChannel : public RemChannel
 {
@@ -14,6 +16,7 @@ class X86LinuxServerChannel : public RemChannel
     RemOrchestrator *remOrch;
     // char host[32];
     // char port[8];
+    ConnectionListener *conn_listener;
 
   public:
     bool is_connected;
@@ -34,8 +37,12 @@ class X86LinuxServerChannel : public RemChannel
     //     return nullptr;
     // };
 
-  private:
+    void set_conn_listener(ConnectionListener *_conn_lsn)
+    {
+        conn_listener = _conn_lsn;
+    };
 
+  private:
     template <typename T, typename... Args>
     std::unique_ptr<T> make_unique(Args &&... args)
     {

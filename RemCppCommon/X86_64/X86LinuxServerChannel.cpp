@@ -17,6 +17,7 @@ uint16_t X86LinuxServerChannel::ch_id_common = 0;
 X86LinuxServerChannel::X86LinuxServerChannel() : serv_sock()
 {
     is_connected = false;
+    is_server = true;
     ch_id_common++;
 };
 
@@ -39,6 +40,7 @@ void X86LinuxServerChannel::init(char *_host, char *_port, RemOrchestrator *remO
         remOrch->logs->info("Server TCP setup %s:%s \n", _host, _port);
         serv_sock.setup(_host, _port, LIBSOCKET_IPv4);
         is_connected = true;
+        conn_listener->on_conn_start(this);
     }
     catch (const libsocket::socket_exception &exc)
     {

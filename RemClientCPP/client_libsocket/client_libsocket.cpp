@@ -3,15 +3,6 @@
 #include <pb.h>
 
 #include <signal.h>
-// #include <iostream>
-// #include <string>
-// #include <unistd.h>
-// #include <stdlib.h>
-// #include <memory>
-// #include <list>
-// #include <utility> // std::pair, std::make_pair
-// #include <fcntl.h>
-// #include <unistd.h>
 
 #include "mesh-packet.pb.h"
 #include "RemHeaderTypes.h"
@@ -28,15 +19,8 @@
 #include "X86_64/SimpleListChnCtrl.hpp"
 #include "X86_64/X86LinuxHardware.hpp"
 
-// #include <libsocket/inetclientstream.hpp>
-// #include <libsocket/inetserverstream.hpp>
-// #include <libsocket/exception.hpp>
-// #include <libsocket/socket.hpp>
-// #include <libsocket/select.hpp>
-
 uint32_t chipID = 0;
 
-// using namespace std;
 void sig_exit(int s);
 
 SimpleListChnCtrl parentScanner;

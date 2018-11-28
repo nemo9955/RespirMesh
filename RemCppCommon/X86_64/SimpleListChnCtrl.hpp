@@ -5,13 +5,14 @@
 #include "RemConnectionController.hpp"
 #include "RemOrchestrator.hpp"
 #include "RemChannel.hpp"
+#include "ConnectionListener.hpp"
 
 // typedef RemChannel *(*instantiate_channel)();
 
 class X86LinuxServerChannel ;
 class X86LinuxClientChannel ;
 
-class SimpleListChnCtrl : public RemConnectionController
+class SimpleListChnCtrl : public RemConnectionController , public ConnectionListener
 {
   public:
     SimpleListChnCtrl();
@@ -25,6 +26,9 @@ class SimpleListChnCtrl : public RemConnectionController
     void add_server_host(char *_host, char *_port);
     void start_servers();
     void scan_clients();
+
+    void on_conn_lost(void* _chan);
+    void on_conn_start(void* _chan);
 
     // void set_inst_server(instantiate_channel inst_fun)
     // {

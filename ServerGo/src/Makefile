@@ -13,9 +13,10 @@ watch:
 	$(info )
 	cd  $(dir  $(mkfile_path) ) ; \
 	export INFLUX_URL="http://192.168.1.150:8086" ; \
-	watcher init.go;
+	watcher init.go ;
 
 run:
-	cd  $(dir  $(mkfile_path) ) ;
-	go run init.go
+	cd  $(dir  $(mkfile_path) ) ; \
+	export INFLUX_URL="http://192.168.1.150:8086" ; \
+	go run -race init.go
 

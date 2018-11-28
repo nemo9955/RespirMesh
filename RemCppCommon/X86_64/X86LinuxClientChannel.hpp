@@ -2,6 +2,7 @@
 #define X86LINUXCLIENTCHANNEL_HPP_
 
 #include "RemChannel.hpp"
+#include "ConnectionListener.hpp"
 
 // #include <libsocket/inetclientstream.hpp>
 #include <libsocket/inetserverstream.hpp>
@@ -12,6 +13,8 @@
 #include <utility> // std::pair, std::make_pair
 #include <memory>
 
+// typedef void (*callback_conn_lost)();
+
 class X86LinuxClientChannel : public RemChannel
 {
   private:
@@ -20,6 +23,8 @@ class X86LinuxClientChannel : public RemChannel
     int chip_id;
     bool managed_to_send;
     RemOrchestrator *remOrch;
+
+    ConnectionListener *conn_listener;
 
   public:
     bool is_connected;
@@ -36,6 +41,18 @@ class X86LinuxClientChannel : public RemChannel
     void stop();
     void receive_loop();
 
+    void set_conn_listener(ConnectionListener *_conn_lsn)
+    {
+        conn_listener = _conn_lsn;
+    };
+
+    // template <class LISTEN>
+    // void add_connection_lost_listener(callback_conn_lost _cb_listener)
+    // {
+    //     con_lost_func = _cb_listener;
+    //     // ((LISTEN *)_this)->receive_loop();
+    // };
+
     // static RemChannel *instantiate()
     // {
     //     // return new X86LinuxClientChannel();
@@ -43,6 +60,8 @@ class X86LinuxClientChannel : public RemChannel
     // };
 
   private:
+    // callback_conn_lost con_lost_func;
+
     template <typename T, typename... Args>
     std::unique_ptr<T> make_unique(Args &&... args)
     {
