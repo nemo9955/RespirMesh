@@ -120,7 +120,7 @@ void SimpleWiFiScanner::set_server_func(server_func_def f_ptr)
 void SimpleWiFiScanner::update()
 {
 
-    // remOrch->logs->info("  RemConnectionScanner update  %u ", remOrch->basicHardware->time_milis());
+    // remOrch->logs->info("  RemConnectionController update  %u ", remOrch->basicHardware->time_milis());
     // if (client_state < scanning)
     // {
     //     // if (wifi_scanning_now == false)

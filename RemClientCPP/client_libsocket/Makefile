@@ -5,6 +5,8 @@ all:
 	-I../../RemCppCommon/ \
 	$(wildcard ../../RemCppCommon/**.cpp)  \
 	$(wildcard ../../RemCppCommon/**.c)  \
+	$(wildcard ../../RemCppCommon/X86_64/**.cpp)  \
+	$(wildcard ../../RemCppCommon/X86_64/**.c)  \
 	\
 	-I../../protobuf/rem_nanopb_pb/ \
 	$(wildcard ../../protobuf/rem_nanopb_pb/**.c)  \

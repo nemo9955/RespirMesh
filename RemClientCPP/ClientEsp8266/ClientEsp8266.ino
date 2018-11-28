@@ -60,7 +60,7 @@ class ESP8266_HARDWARE : public RemHardware
         return ESP.getChipId();
     }
 
-    uint32_t sleep_milis(uint32_t duration)
+    void sleep_milis(uint32_t duration)
     {
         delay(duration);
     };
@@ -159,4 +159,3 @@ void async_client_init(RemClientInfo *client_info)
     //     is_client_connected = true;
     // }
 }
-

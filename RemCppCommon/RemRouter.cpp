@@ -40,7 +40,7 @@ void RemRouter::send_packet(uint8_t *data, uint16_t size)
             if ((*it)->connected_to_root)
             {
                 (*it)->send(data, size);
-                remOrch->basicHardware->sleep_milis(1);
+                remOrch->basicHardware->sleep_milis(3);
             }
         }
         break;
@@ -50,7 +50,7 @@ void RemRouter::send_packet(uint8_t *data, uint16_t size)
         for (auto it = remOrch->channels.begin(); it != remOrch->channels.end(); ++it)
         {
             (*it)->send(data, size);
-            remOrch->basicHardware->sleep_milis(1);
+            remOrch->basicHardware->sleep_milis(3);
         }
         break;
     }

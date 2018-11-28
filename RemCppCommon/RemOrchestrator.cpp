@@ -72,7 +72,7 @@ void RemOrchestrator::set_router(RemRouter *remRouter_)
     remRouter->set_orchestrator(this);
 }
 
-void RemOrchestrator::set_scanner(RemConnectionScanner *remScanner_)
+void RemOrchestrator::set_scanner(RemConnectionController *remScanner_)
 {
     remScanner = remScanner_;
     remScanner->set_orchestrator(this);

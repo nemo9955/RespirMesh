@@ -1,9 +1,10 @@
 #ifndef REMORCHESTRATOR_HPP_
 #define REMORCHESTRATOR_HPP_
 
+#include "RemChannel.hpp"
 #include "RemHardware.hpp"
 #include "RemRouter.hpp"
-#include "RemConnectionScanner.hpp"
+#include "RemConnectionController.hpp"
 #include "RemChannel.hpp"
 #include "RemLogger.hpp"
 #include "RemHeaderTypes.h"
@@ -13,8 +14,9 @@
 
 class RemRouter;
 class RemLogger;
-class RemConnectionScanner;
+class RemConnectionController;
 class RemHardware;
+class RemChannel;
 
 class RemOrchestrator
 {
@@ -29,7 +31,7 @@ class RemOrchestrator
 
     void set_hardware(RemHardware *);
     void set_router(RemRouter *);
-    void set_scanner(RemConnectionScanner *);
+    void set_scanner(RemConnectionController *);
     void set_logger(RemLogger *);
     void begin();
     void stop();
@@ -38,7 +40,7 @@ class RemOrchestrator
     RemHardware *basicHardware;
     RemRouter *remRouter;
     RemLogger *logs;
-    RemConnectionScanner *remScanner;
+    RemConnectionController *remScanner;
     std::list<RemChannel *> channels;
     void add_channel(RemChannel *channel);
     void clean_channels();

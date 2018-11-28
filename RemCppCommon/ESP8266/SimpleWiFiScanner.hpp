@@ -52,7 +52,7 @@ class TaskLooper;
 typedef void (*client_func_def)(RemClientInfo *client_info);
 typedef void (*server_func_def)();
 
-class SimpleWiFiScanner : public RemConnectionScanner
+class SimpleWiFiScanner : public RemConnectionController
 {
 
   private:

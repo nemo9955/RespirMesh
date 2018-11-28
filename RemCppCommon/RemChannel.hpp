@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "RemOrchestrator.hpp"
+
 typedef void (*ReceiveDataCallback)(uint8_t *data, uint16_t size, void *arg);
 
 // struct SelfReference
@@ -17,6 +19,8 @@ typedef void (*ReceiveDataCallback)(uint8_t *data, uint16_t size, void *arg);
 //     uint32_t id;
 // };
 // std::list<RemChannelAndId *> MapedChannels;
+
+class RemOrchestrator ;
 
 class RemChannel
 {
@@ -34,6 +38,9 @@ class RemChannel
     // };
 
     // virtual void init(char *address, int port)=0;
+
+    // virtual void init(char *_host, char *_port, RemOrchestrator *remOrch_) = 0;
+    // virtual void init(void *_clone, RemOrchestrator *remOrch_) = 0;
 
     virtual uint16_t send(uint8_t *data, uint16_t size) = 0;
     virtual void stop() = 0;
