@@ -7,7 +7,7 @@
 // #include <Arduino.h>
 
 #include "RemOrchestrator.hpp"
-#include "RemHeaderTypes.h"
+#include "RemHeaderTypes.hpp"
 #include "TaskLooper.hpp"
 
 #import "ESP8266/EspUtils.hpp"

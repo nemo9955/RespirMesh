@@ -7,7 +7,7 @@
 #include "RemConnectionController.hpp"
 #include "RemChannel.hpp"
 #include "RemLogger.hpp"
-#include "RemHeaderTypes.h"
+#include "RemHeaderTypes.hpp"
 #include <list>
 #include <stdint.h>
 #include <stdio.h>

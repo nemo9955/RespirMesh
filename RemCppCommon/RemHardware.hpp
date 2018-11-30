@@ -1,7 +1,7 @@
 #ifndef REMHARDWARE_HPP_
 #define REMHARDWARE_HPP_
 
-#include "RemHeaderTypes.h"
+#include "RemHeaderTypes.hpp"
 
 class RemHardware
 {

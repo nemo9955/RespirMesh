@@ -34,7 +34,7 @@ func (c *Client) listen() {
 		// message, err := reader.ReadString('\n')
 		c.conn.SetReadDeadline(time.Now().Add(c.server.timeoutDuration))
 
-		buf := make([]byte, 512)
+		buf := make([]byte, 2048)
 		n, err := reader.Read(buf)
 		bytes := buf[:n]
 
@@ -44,7 +44,8 @@ func (c *Client) listen() {
 			go c.server.onClientConnectionClosed(c, err)
 			return
 		}
-		go c.server.onNewBytes(c, bytes)
+		// go c.server.onNewBytes(c, bytes)
+		c.server.onNewBytes(c, bytes)
 	}
 }
 

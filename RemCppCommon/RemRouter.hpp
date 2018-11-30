@@ -3,7 +3,7 @@
 
 #include "TaskLooper.hpp"
 #include "RemOrchestrator.hpp"
-#include "RemHeaderTypes.h"
+#include "RemHeaderTypes.hpp"
 
 #include <list>
 #include <stdint.h>

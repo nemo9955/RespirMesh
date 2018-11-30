@@ -223,7 +223,7 @@ void sig_exit(int s)
 
 // #include <iostream>
 
-#include "RemHeaderTypes.h"
+#include "RemHeaderTypes.hpp"
 #include "mesh-packet.pb.h"
 #include <pb.h>
 #include <pb_decode.h>

@@ -7,13 +7,15 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"sync"
 	"time"
 	"unsafe"
+
+	"../RemHeaderTypes"
 
 	"github.com/golang/protobuf/proto"
 
 	"../../../protobuf/rem_go_pb"
-	"../HeaderTypes"
 	"../tcp_server"
 )
 
@@ -46,6 +48,7 @@ type RemTopology struct {
 
 	Nodes []*Node
 	Edges []*Edge
+	WGr   sync.WaitGroup
 }
 
 // NodesToUintList hold comment
@@ -124,6 +127,8 @@ func (g *RemTopology) GetEdgeFromID(source, target uint32) *Edge {
 func (g *RemTopology) ObtainEdge(source, target uint32) *Edge {
 	edge := g.GetEdgeFromID(source, target)
 
+	g.WGr.Wait()
+
 	if edge == nil {
 		tryUUID := rand.Int63()
 		for g.GetEdgeFromUUID(tryUUID) != nil {
@@ -142,7 +147,9 @@ func (g *RemTopology) ObtainEdge(source, target uint32) *Edge {
 		// edge.Source.lastUpdated = edge.lastUpdated
 		// edge.Target.lastUpdated = edge.lastUpdated
 
+		g.WGr.Add(1)
 		g.Edges = append(g.Edges, edge)
+		g.WGr.Done()
 	} else {
 		edge.lastUpdated = time.Now().Unix()
 		edge.isOld = false
@@ -159,6 +166,7 @@ func (g *RemTopology) ObtainEdge(source, target uint32) *Edge {
 func (g *RemTopology) ObtainNode(nodeID uint32) *Node {
 	node := g.GetNodeFromID(nodeID)
 
+	g.WGr.Wait()
 	if node == nil {
 		tryUUID := rand.Int63()
 		for g.GetNodeFromUUID(tryUUID) != nil {
@@ -173,7 +181,9 @@ func (g *RemTopology) ObtainNode(nodeID uint32) *Node {
 			IsRoot:      false,
 			isOld:       false,
 		}
+		g.WGr.Add(1)
 		g.Nodes = append(g.Nodes, node)
+		g.WGr.Done()
 	} else {
 		node.lastUpdated = time.Now().Unix()
 		node.isOld = false
@@ -264,6 +274,9 @@ func (g *RemTopology) AssembleJSON() []byte {
 		Edges: []_Edge{},
 	}
 
+	g.WGr.Wait()
+	g.WGr.Add(1)
+
 	for _, node := range g.Nodes {
 		mNode := _Node{
 			ID:     node.StrID(),
@@ -284,6 +297,7 @@ func (g *RemTopology) AssembleJSON() []byte {
 		}
 		rtop.Edges = append(rtop.Edges, mEdge)
 	}
+	g.WGr.Done()
 
 	jsonStr, _ := json.Marshal(&rtop)
 	return jsonStr
@@ -291,6 +305,9 @@ func (g *RemTopology) AssembleJSON() []byte {
 
 func (g *RemTopology) updateLifeDuration() {
 	tn := time.Now().Unix()
+
+	g.WGr.Wait()
+	g.WGr.Add(1)
 
 	for i, edge := range g.Edges {
 		if edge == nil {
@@ -325,6 +342,8 @@ func (g *RemTopology) updateLifeDuration() {
 
 		}
 	}
+
+	g.WGr.Done()
 }
 
 // GetRoots returns all roots or isolated nodes
@@ -386,7 +405,7 @@ func New() *RemTopology {
 
 // Handle hold comment
 func (g *RemTopology) Handle(allData []byte, serverSesionUUID uint32, c *tcp_server.Client) {
-	header := headertypes.RemBasicHeader{}
+	header := remheadertypes.RemBasicHeader{}
 	buf := bytes.NewReader(allData)
 	err := binary.Read(buf, binary.LittleEndian, &header)
 	if err != nil {

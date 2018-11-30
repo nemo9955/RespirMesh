@@ -7,11 +7,12 @@ import (
 	"log"
 	"math/rand"
 	"strconv"
+	"sync"
 	"time"
 	"unsafe"
 
 	"../../../protobuf/rem_go_pb"
-	"../HeaderTypes"
+	"../RemHeaderTypes"
 	"../RemLogs"
 	"../RemTopology"
 	"../tcp_server"
@@ -28,41 +29,42 @@ type RmServer struct {
 	ServerSesionUUID uint32
 	upTimeMils       int64
 	RootUpdateFreq   time.Duration
+	WGr              sync.WaitGroup
 }
 
 func (s *RmServer) getUpTimeDelta() uint32 {
 	return uint32(time.Now().Unix()/int64(time.Microsecond) - s.upTimeMils)
 }
 
-func headerToBytesBasic(header *headertypes.RemBasicHeader) []byte {
+func headerToBytesBasic(header *remheadertypes.RemBasicHeader) []byte {
 	buf := bytes.Buffer{}
 	binary.Write(&buf, binary.LittleEndian, header)
 	return buf.Bytes()
 }
 
-func assembleStructBasic(header *headertypes.RemBasicHeader, dataStruct proto.Message) []byte {
+func assembleStructBasic(header *remheadertypes.RemBasicHeader, dataStruct proto.Message) []byte {
 	dataBytes, _ := proto.Marshal(dataStruct)
 	headerBytes := headerToBytesBasic(header)
 	packetBytes := append(headerBytes, dataBytes...)
 	return packetBytes
 }
 
-func headerToBytesByte(header *headertypes.RemDataHeaderByte) []byte {
+func headerToBytesByte(header *remheadertypes.RemBasicHeader) []byte {
 	buf := bytes.Buffer{}
 	binary.Write(&buf, binary.LittleEndian, header)
 	return buf.Bytes()
 }
 
-func assembleStructByte(header *headertypes.RemDataHeaderByte, dataStruct proto.Message) []byte {
+func assembleStructByte(header *remheadertypes.RemBasicHeader, dataStruct proto.Message) []byte {
 	dataBytes, _ := proto.Marshal(dataStruct)
 	headerBytes := headerToBytesByte(header)
 	packetBytes := append(headerBytes, dataBytes...)
 	return packetBytes
 }
 
-// func (s *RmServer) handleTimeSync(allData []byte, header *headertypes.RemBasicHeader) {
+// func (s *RmServer) handleTimeSync(allData []byte, header *remheadertypes.RemBasicHeader) {
 func (s *RmServer) handleTimeSync(allData []byte, c *tcp_server.Client) {
-	header := headertypes.RemBasicHeader{}
+	header := remheadertypes.RemBasicHeader{}
 	buf := bytes.NewReader(allData)
 	err := binary.Read(buf, binary.LittleEndian, &header)
 	if err != nil {
@@ -99,7 +101,7 @@ func (s *RmServer) handleTimeSync(allData []byte, c *tcp_server.Client) {
 }
 
 func (s *RmServer) handlePingPong(allData []byte, c *tcp_server.Client) {
-	header := headertypes.RemDataHeaderByte{}
+	header := remheadertypes.RemBasicHeader{}
 	buf := bytes.NewReader(allData)
 	err := binary.Read(buf, binary.LittleEndian, &header)
 	if err != nil {
@@ -118,7 +120,6 @@ func (s *RmServer) handlePingPong(allData []byte, c *tcp_server.Client) {
 	}
 
 	fmt.Println("         Type: ", pingpong.GetType())
-	fmt.Println("        Data:  ", header.Data)
 	fmt.Println("     TargetId: ", "0x"+strconv.FormatInt(int64(pingpong.GetTargetId()), 16))
 	fmt.Println("     SourceId: ", "0x"+strconv.FormatInt(int64(pingpong.GetSourceId()), 16))
 	fmt.Println("     TargetId: ", strconv.FormatInt(int64(pingpong.GetTargetId()), 10))
@@ -134,19 +135,56 @@ func (s *RmServer) handlePingPong(allData []byte, c *tcp_server.Client) {
 }
 
 func (s *RmServer) onNewBytes(c *tcp_server.Client, allData []byte) {
-	header := headertypes.RemBasicHeader{}
-	buf := bytes.NewReader(allData)
-	err := binary.Read(buf, binary.LittleEndian, &header)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// s.WGr.Wait()
+	// s.WGr.Add(1)
 
-	fmt.Print("\n")
-	fmt.Print("\n")
-	fmt.Print("\n")
-	fmt.Print("\n")
-	fmt.Print("\n")
+	fmt.Print(" \n\n\n\n")
+	fmt.Print("\n =============================================================== \n")
+	fmt.Printf("\t onNewBytes   \n[% d]\n\n", allData)
+	fmt.Print(" =============================================================== \n\n")
+
+	firstChunk := remheadertypes.GetRemBasicHeader(allData)
+	headerSize := (int)(unsafe.Sizeof(firstChunk))
+	chBeg := 0
+	chEnd := 0
+
+	// fmt.Print("\n\n /////////////////////// \n")
+	// for chEnd < len(allData) {
+	// 	headerChunk := remheadertypes.GetRemBasicHeader(allData[chBeg:(chBeg + headerSize)])
+	// 	chunkSize := headerChunk.PacketSize()
+	// 	chEnd = chBeg + chunkSize
+	// 	fmt.Println(" ... chBeg     ", chBeg)
+	// 	fmt.Println(" ... chEnd     ", chEnd)
+	// 	fmt.Println(" ... chunkSize ", chunkSize)
+	// 	fmt.Printf("% d\n", allData[chBeg:chEnd])
+	// 	chBeg = chEnd
+	// }
+	// fmt.Print("\n /////////////////////// \n")
+
+	chBeg = 0
+	for chEnd < len(allData) {
+		headerChunk := remheadertypes.GetRemBasicHeader(allData[chBeg:(chBeg + headerSize)])
+		chunkSize := headerChunk.PacketSize()
+		chEnd = chBeg + chunkSize
+
+		fmt.Print("\n\n")
+		fmt.Println(" ... chBeg     ", chBeg)
+		fmt.Println(" ... chEnd     ", chEnd)
+		fmt.Println(" ... chunkSize ", chunkSize)
+		s.onNewPacket(c, allData[chBeg:chEnd])
+		chBeg = chEnd
+	}
+	// s.WGr.Done()
+	// s.WGr.Wait()
+}
+
+func (s *RmServer) onNewPacket(c *tcp_server.Client, allData []byte) {
+	fmt.Print("\n --------------------------------------------- \n")
+	fmt.Printf("\t onNewPacket   \n[% d]\n\n", allData)
+	fmt.Print(" --------------------------------------------- \n\n")
+	header := remheadertypes.GetRemBasicHeader(allData)
+
+	fmt.Println("PacketSize      ", header.PacketSize())
 	fmt.Println("ForwardingType  ", header.ForwardingType, rem.ForwardingType(header.ForwardingType))
 	fmt.Println("HeaderType      ", header.HeaderType, rem.HeaderType(header.HeaderType))
 	fmt.Println("ProtobufType    ", header.ProtobufType, rem.ProtobufType(header.ProtobufType))
@@ -156,7 +194,7 @@ func (s *RmServer) onNewBytes(c *tcp_server.Client, allData []byte) {
 	// fmt.Println("Testing16Number    ", header.Testing16Number)
 	// fmt.Println("Testing32Number    ", header.Testing32Number)
 
-	fmt.Printf(">>> [% d]\n", allData)
+	// fmt.Printf(">>> [% d]\n", allData)
 
 	// offsetHeader := unsafe.Sizeof(header)
 	// packetData := allData[offsetHeader:]
@@ -171,7 +209,7 @@ func (s *RmServer) onNewBytes(c *tcp_server.Client, allData []byte) {
 		case rem.ProtobufType_TIMESYNC:
 			s.handleTimeSync(allData, c)
 		case rem.ProtobufType_PING:
-			header := headertypes.RemDataHeaderByte{}
+			header := remheadertypes.RemBasicHeader{}
 			buf := bytes.NewReader(allData)
 			// err := binary.Read(buf, binary.BigEndian, &header)
 			err := binary.Read(buf, binary.LittleEndian, &header)

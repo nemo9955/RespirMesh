@@ -9,7 +9,7 @@
 #include <pb_decode.h>
 #include <pb_encode.h>
 #include "RemOrchestrator.hpp"
-#include "RemHeaderTypes.h"
+#include "RemHeaderTypes.hpp"
 
 #include <cstdarg>
 // #include <stdint.h>

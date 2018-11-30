@@ -99,7 +99,7 @@ uint16_t X86LinuxClientChannel::send(uint8_t *data, uint16_t size)
 
         act_size = cli_sock->snd((void *)data, size);
         // if the server receives to fast ... it combines the 2 packets
-        remOrch->basicHardware->sleep_milis(10);
+        // remOrch->basicHardware->sleep_milis(10);
     }
     catch (const libsocket::socket_exception &exc)
     {

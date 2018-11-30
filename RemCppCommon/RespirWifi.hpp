@@ -1,7 +1,7 @@
 #ifndef RESPIRWIFI_HPP_
 #define RESPIRWIFI_HPP_
 
-#include "RemHeaderTypes.h"
+#include "RemHeaderTypes.hpp"
 
 #include <pb_encode.h>
 #include <pb_decode.h>
@@ -35,14 +35,14 @@ class RespirWifi
 
         char __esp_host[10] = "rspm-";
         const size_t __server_port = _SERVER_PORT;
-    
-        
+
+
     public:
         void wifiCheckCallback();
         void wifiScanCallback(int);
 
 
-        
+
 };
 
 #endif /*End respir wifi*/

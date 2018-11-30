@@ -22,13 +22,14 @@ void RemRouter::begin()
 
 void RemRouter::send_packet(uint8_t *data, uint16_t size)
 {
+    RemBasicHeader *header = (RemBasicHeader *)data;
+    header->set_size(size);
 
     // funcf("send_packet :                \t");
     // for (uint8_t i = 0; i < size; i++)
     //     funcf("%d ", data[i]);
     // funcf("\n");
 
-    RemBasicHeader *header = (RemBasicHeader *)data;
     switch (header->ForwardingType)
     {
 
@@ -41,7 +42,7 @@ void RemRouter::send_packet(uint8_t *data, uint16_t size)
             if ((*it)->connected_to_root)
             {
                 (*it)->send(data, size);
-                remOrch->basicHardware->sleep_milis(3);
+                // remOrch->basicHardware->sleep_milis(3);
             }
         }
         break;
@@ -51,7 +52,7 @@ void RemRouter::send_packet(uint8_t *data, uint16_t size)
         for (auto it = remOrch->channels.begin(); it != remOrch->channels.end(); ++it)
         {
             (*it)->send(data, size);
-            remOrch->basicHardware->sleep_milis(3);
+            // remOrch->basicHardware->sleep_milis(3);
         }
         break;
     }
@@ -60,12 +61,14 @@ void RemRouter::send_packet(uint8_t *data, uint16_t size)
 
 void RemRouter::route_packet(uint8_t *data, uint16_t size)
 {
+
+    RemBasicHeader *header = (RemBasicHeader *)data;
+    header->set_size(size);
+
     // funcf("route_packet :               \t");
     // for (uint8_t i = 0; i < size; i++)
     //     funcf("%d ", data[i]);
     // funcf("\n");
-
-    RemBasicHeader *header = (RemBasicHeader *)data;
 
     switch (header->ForwardingType)
     {
@@ -174,7 +177,7 @@ void RemRouter::update()
 void RemRouter::send_mesh_topo()
 {
 
-    remOrch->logs->debug(" ---- RemRouter::send_mesh_topo() ");
+    // remOrch->logs->debug(" ---- RemRouter::send_mesh_topo() ");
 
     RemBasicHeader *header = (RemBasicHeader *)pb_buffer;
     header->ForwardingType = ForwardingType_TO_PARENT_TO_ROOT;

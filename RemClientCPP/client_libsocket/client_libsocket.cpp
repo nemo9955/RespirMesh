@@ -5,7 +5,7 @@
 #include <signal.h>
 
 #include "mesh-packet.pb.h"
-#include "RemHeaderTypes.h"
+#include "RemHeaderTypes.hpp"
 #include "RemChannel.hpp"
 #include "RemOrchestrator.hpp"
 #include "RemRouter.hpp"

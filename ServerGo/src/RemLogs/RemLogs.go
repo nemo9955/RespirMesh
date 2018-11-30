@@ -9,7 +9,7 @@ import (
 	"./LogsWriteInfluxDB"
 
 	"../../../protobuf/rem_go_pb"
-	"../HeaderTypes"
+	"../RemHeaderTypes"
 	"../Utils"
 	"../tcp_server"
 
@@ -23,7 +23,7 @@ type RemLogs struct {
 
 // Handle hold comment
 func (l *RemLogs) Handle(allData []byte, c *tcp_server.Client) {
-	header := headertypes.RemBasicHeader{}
+	header := remheadertypes.RemBasicHeader{}
 	buf := bytes.NewReader(allData)
 	err := binary.Read(buf, binary.LittleEndian, &header)
 	if err != nil {

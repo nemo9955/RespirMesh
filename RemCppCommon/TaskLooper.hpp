@@ -2,7 +2,7 @@
 #define TASKLOOPER_HPP_
 
 #include "RemHardware.hpp"
-// #include "RemHeaderTypes.h"
+// #include "RemHeaderTypes.hpp"
 class RemHardware;
 
 class TaskLooper

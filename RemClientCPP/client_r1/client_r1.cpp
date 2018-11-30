@@ -9,7 +9,7 @@
 #include <pb_decode.h>
 #include <pb.h>
 #include "mesh-packet.pb.h"
-#include "RemHeaderTypes.h"
+#include "RemHeaderTypes.hpp"
 
 int action_counter = 0;
 uint8_t pb_buffer[64];

@@ -2,7 +2,7 @@
 #define REMCONNECTIONCONTROLLER_HPP_
 
 #include "RemOrchestrator.hpp"
-#include "RemHeaderTypes.h"
+#include "RemHeaderTypes.hpp"
 
 class RemOrchestrator;
 
