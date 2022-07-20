@@ -62,7 +62,11 @@ def set_size(size, packet_):
     packet_[1] = (size >> (8 * 1)) & 0xff
 
 def get_size(packet_):
-    return packet_[0] | packet_[1]<<8
+    if len(packet_) >= 2 :
+        return packet_[0] | packet_[1]<<8
+    else:
+        # return -1
+        raise Exception(f"Invalid packet {packet_=}")
 
 
 def set_ForwardingType(packet_):

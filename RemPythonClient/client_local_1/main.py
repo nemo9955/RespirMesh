@@ -30,8 +30,9 @@ import utils
 import OSI4TcpClient
 import OSI4UdpClient
 import OSI4TcpServer
+import OSI4TcpServerAsync
+import OSI4TcpServerHelper
 import OSI4UdpServer
-
 
 
 
@@ -39,8 +40,8 @@ import OSI4UdpServer
 did_close=False
 def close_all(num=None, frame=None):
     global did_close
-    if did_close :
-        return
+    print(f"{did_close=} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    if did_close : return
     did_close=True
     print(f"server close_all() {os.getpid()=}  {device_id=} ")
     RemOrchestrator.stop()
@@ -48,7 +49,7 @@ def close_all(num=None, frame=None):
 
 
 # signal.signal(signal.SIGINT, close_all)
-signal.signal(signal.SIGTERM, close_all) # This seems to be enough
+# signal.signal(signal.SIGTERM, close_all) # This seems to be enough
 
 
 # print(f"{sys.argv=}")
@@ -71,17 +72,17 @@ if device_id == 0 :
 
 
 log.info(f"{connect_to_ip=}")
-log.info(f"{connect_to_port=}")
-log.info(f"{device_id=}")
 log.info(f"{my_server_ip=}")
+log.info(f"{connect_to_port=}")
 log.info(f"{my_server_port=}")
+log.info(f"{device_id=}")
 
 RemHardware.set_device_id(device_id)
 
-log.info(f"{RemHardware.device_id()=}")
-log.info(f"{RemHardware.time_milis()=}")
-RemHardware.sleep_milis(50)
-log.info(f"{RemHardware.time_milis()=}")
+# log.info(f"{RemHardware.device_id()=}")
+# log.info(f"{RemHardware.time_milis()=}")
+# RemHardware.sleep_milis(50)
+# log.info(f"{RemHardware.time_milis()=}")
 
 
 
@@ -112,8 +113,11 @@ manager = multiprocessing.Manager()
 packets_queue = manager.list()
 
 
+
 RemOrchestrator.set_packets_queue(packets_queue)
-RemOrchestrator.init_server_type_1(OSI4TcpServer, my_server_ip, server_port_tcp)
+# RemOrchestrator.init_server_type_1(OSI4TcpServer, my_server_ip, server_port_tcp)
+# RemOrchestrator.init_server_type_1(OSI4TcpServerAsync, my_server_ip, server_port_tcp)
+RemOrchestrator.init_server_type_1(OSI4TcpServerHelper, my_server_ip, server_port_tcp)
 RemOrchestrator.init_server_type_1(OSI4UdpServer, my_server_ip, server_port_udp)
 
 RemOrchestrator.init_client_type_1(OSI4TcpClient, connect_to_ip, connect_port_tcp)
@@ -126,10 +130,11 @@ RemOrchestrator.init_client_type_1(OSI4UdpClient, connect_to_ip, connect_port_ud
 
 
 def main():
-    limiter=5
+    limiter=10000
     RemOrchestrator.begin()
     RemRouter.send_ping()
     while limiter > 0:
+        # print(f"   {limiter=}")
         limiter-=1
         RemOrchestrator.update()
 

@@ -13,7 +13,7 @@ ls \
     ${REPO_BASE}/RemPythonClient/**/*.sh \
     ${REPO_BASE}/RemPythonCommon/**/*.py \
     \
-    | entr -r \
+    | entr -cr \
     \
     bash ${REPO_BASE}/RemPythonClient/client_local_1/run.sh "${@}"
 

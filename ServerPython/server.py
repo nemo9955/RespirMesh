@@ -33,6 +33,8 @@ import utils
 import OSI4TcpClient
 import OSI4UdpClient
 import OSI4TcpServer
+import OSI4TcpServerAsync
+import OSI4TcpServerHelper
 import OSI4UdpServer
 
 
@@ -42,8 +44,8 @@ print("\n\n\n")
 did_close=False
 def close_all(num=None, frame=None):
     global did_close
-    if did_close :
-        return
+    print(f"{did_close=} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    if did_close :return
     did_close=True
     print(f"server close_all() {os.getpid()=}  {device_id=} ")
     RemOrchestrator.stop()
@@ -51,6 +53,8 @@ def close_all(num=None, frame=None):
 
 # signal.signal(signal.SIGINT, close_all)
 signal.signal(signal.SIGTERM, close_all) # This seems to be enough
+
+
 
 
 
@@ -97,9 +101,10 @@ packets_queue = manager.list()
 
 
 RemOrchestrator.set_packets_queue(packets_queue)
-RemOrchestrator.init_server_type_1(OSI4TcpServer, server_ip, server_port_tcp)
+# RemOrchestrator.init_server_type_1(OSI4TcpServer, server_ip, server_port_tcp)
+# RemOrchestrator.init_server_type_1(OSI4TcpServerAsync, server_ip, server_port_tcp)
+RemOrchestrator.init_server_type_1(OSI4TcpServerHelper, server_ip, server_port_tcp)
 RemOrchestrator.init_server_type_1(OSI4UdpServer, server_ip, server_port_udp)
-
 
 
 
@@ -112,17 +117,17 @@ def main():
 
 
 
-
 try:
     main()
 except KeyboardInterrupt:
     print("Interrupt closing things")
-    close_all()
+    # close_all()
 except:
     traceback.print_exc()
 finally:
     print("Finally closing things")
     close_all()
+
 
 
 

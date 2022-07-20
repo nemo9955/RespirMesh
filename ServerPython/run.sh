@@ -4,7 +4,16 @@
 REPO_BASE="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
 # echo "REPO_BASE ${REPO_BASE}"
 
-python3 ${REPO_BASE}/ServerPython/server.py \
+
+echo -e " \n\n\n===============================\n"
+
+sleep 0.1
+
+fuser -k -n tcp 20001
+fuser -k -n udp 20002
+
+
+python3 -u ${REPO_BASE}/ServerPython/server.py \
     localhost 20000 \
     10
 

@@ -4,6 +4,7 @@
 import os
 import socket
 import multiprocessing
+import traceback
 
 # RemOrchestrator = None
 # EasyDict = None
@@ -14,6 +15,7 @@ import multiprocessing
 
 def start_auto(server_data):
     server_data.name = "UDP SERVER"
+    print(f" >>> {server_data.name} {server_data.server_ip} {server_data.server_port}")
 
     server_data.socket_obj = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
     server_data.socket_obj.bind((server_data.server_ip, server_data.server_port))
@@ -24,12 +26,17 @@ def start_auto(server_data):
     return server_data
 
 
+
 def stop(server_data):
-    server_data.socket_obj.close()
-    # print(f"********************** {os.getpid()=} {server_data.subprocess=}")
-    if server_data.subprocess and server_data.subprocess.is_alive() :
-        # server_data.subprocess.terminate()
-        server_data.subprocess.kill()
+    # server_data.socket_obj.shutdown(socket.SHUT_WR)
+    # server_data.socket_obj.close()
+    pass
+
+    # server_data.socket_obj.close()
+    # # print(f"********************** {os.getpid()=} {server_data.subprocess=}")
+    # if server_data.subprocess and server_data.subprocess.is_alive() :
+    #     # server_data.subprocess.terminate()
+    #     server_data.subprocess.kill()
 
 
 def server_listener(server_data):
@@ -48,6 +55,8 @@ def server_listener(server_data):
             # UDPServerSocket.sendto(bytesToSend, address)
     except KeyboardInterrupt:
         print(f" *** OSI4UdpServer.py KeyboardInterrupt")
+    except:
+        traceback.print_exc()
     finally:
         print(f" *** OSI4UdpServer.py finally")
         stop(server_data)

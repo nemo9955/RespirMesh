@@ -9,26 +9,38 @@ import socket
 
 def start_auto(client_data):
     client_data.name = "UDP CLIENT"
+    print(f" >>> {client_data.name} {client_data.server_ip} {client_data.server_port}")
 
     # Create a TCP/IP socket
     client_data.socket_obj = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 
     # Connect the socket to the port where the server is listening
-    client_data.socket_obj.connect((client_data.server_ip, client_data.server_port))
+    # client_data.socket_obj.connect((client_data.server_ip, client_data.server_port))
     return client_data
 
 
+
 def send_raw(client_data, packet_):
-    # print(f" -X-  AMHERE OSI4UdpClient 20 {packet_=}")
-    # bytes_sent = client_data.socket_obj.sendall(packet_)
-    bytes_sent = client_data.socket_obj.send(packet_)
-    # bytes_sent = client_data.socket_obj.sendto(packet_,(client_data.server_ip, client_data.server_port))
+    print(f" -X-  AMHERE OSI4UdpClient send_raw {packet_=}")
+    bytes_sent = -1
+    try:
+        # bytes_sent = client_data.socket_obj.sendall(packet_)
+        bytes_sent = client_data.socket_obj.sendto(packet_,(client_data.server_ip, client_data.server_port))
+        # bytes_sent = client_data.socket_obj.send(packet_)
+    except:
+        # client_data.socket_obj.close()
+        raise Exception(f"OSI4UdpClient ERROR {packet_=}")
+        # traceback.print_exc()
+    # print(f"{bytes_sent=}")
     return bytes_sent
 
 
 
+
+
 def stop(client_data):
-    client_data.socket_obj.close()
+    pass
+    # client_data.socket_obj.close()
     # print(f"********************** {os.getpid()=} {client_data.subprocess=}")
 
 

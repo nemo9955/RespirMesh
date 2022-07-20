@@ -84,7 +84,6 @@ def begin():
 
 
 def update():
-    # log.info(f"{rsleep=} {RemHardware.device_id()=}")
     orch_data.update_counter += 1
 
     while len(orch_data.packets_queue) > 0 :
@@ -96,11 +95,12 @@ def update():
 
 
     if orch_data.is_root == False :
-        if orch_data.update_counter % 3 == 1:
+        if orch_data.update_counter % 5 == 1:
             RemRouter.send_ping()
             # RemRouter.send_mesh_topo()
 
     rsleep = 100 + int(RemHardware.rand_float()*200)
+    # log.info(f"{rsleep=} {RemHardware.device_id()} {RemHardware.time_milis()}")
     RemHardware.sleep_milis(rsleep)
 
 
