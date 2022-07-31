@@ -29,10 +29,14 @@ import utils
 
 import OSI4TcpClient
 import OSI4UdpClient
-import OSI4TcpServer
-import OSI4TcpServerAsync
-import OSI4TcpServerHelper
-import OSI4UdpServer
+# import OSI4TcpServerMproc as OSI4TcpServer
+# import OSI4TcpServerAsync as OSI4TcpServer
+# import OSI4TcpServerHelper as OSI4TcpServer
+import OSI4TcpServerThread as OSI4TcpServer
+
+
+# import OSI4UdpServerMproc as OSI4UdpServer
+import OSI4UdpServerThread as OSI4UdpServer
 
 
 
@@ -109,19 +113,23 @@ connect_port_udp = connect_to_port + 2
 server_port_tcp = my_server_port + 1
 server_port_udp = my_server_port + 2
 
-manager = multiprocessing.Manager()
-packets_queue = manager.list()
 
+
+# manager = multiprocessing.Manager()
+# packets_queue = manager.list()
+packets_queue = list()
+logic_queue = list()
 
 
 RemOrchestrator.set_packets_queue(packets_queue)
-# RemOrchestrator.init_server_type_1(OSI4TcpServer, my_server_ip, server_port_tcp)
-# RemOrchestrator.init_server_type_1(OSI4TcpServerAsync, my_server_ip, server_port_tcp)
-RemOrchestrator.init_server_type_1(OSI4TcpServerHelper, my_server_ip, server_port_tcp)
-RemOrchestrator.init_server_type_1(OSI4UdpServer, my_server_ip, server_port_udp)
+RemOrchestrator.set_logic_queue(logic_queue)
 
+# RemOrchestrator.init_server_type_2(OSI4TcpServer, my_server_ip, server_port_tcp, OSI4TcpClient)
+RemOrchestrator.init_server_type_1(OSI4TcpServer, my_server_ip, server_port_tcp)
 RemOrchestrator.init_client_type_1(OSI4TcpClient, connect_to_ip, connect_port_tcp)
-RemOrchestrator.init_client_type_1(OSI4UdpClient, connect_to_ip, connect_port_udp)
+
+# RemOrchestrator.init_server_type_1(OSI4UdpServer, my_server_ip, server_port_udp)
+# RemOrchestrator.init_client_type_1(OSI4UdpClient, connect_to_ip, connect_port_udp)
 
 
 # print(f" 000 {os.getpid()=}  {device_id=}")

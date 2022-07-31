@@ -46,16 +46,16 @@ def stop(client_data):
 
 
 
-# if __name__ == "__main__":
-#     import os, sys
-#     rem_base_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-#     sys.path.append(f"{rem_base_path}/RemPythonCommon")
-#     from utils import EasyDict
+if __name__ == "__main__":
+    import os, sys
+    rem_base_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    sys.path.append(f"{rem_base_path}/RemPythonCommon")
+    from utils import EasyDict
 
-#     client_data_= EasyDict()
-#     client_data_.server_ip = "localhost"
-#     client_data_.server_port = 19000 + 2
+    client_data_= EasyDict()
+    client_data_.server_ip = "localhost"
+    client_data_.server_port = 20000 + 2
 
-#     start_auto(client_data_)
-#     send_raw(client_data_, b"TEMP UDP MESSAGE 1111111 !!!!!!!!!!!!!!")
-#     stop(client_data_)
+    start_auto(client_data_)
+    send_raw(client_data_, b"TEMP UDP MESSAGE 1111111 !!!!!!!!!!!!!!")
+    stop(client_data_)

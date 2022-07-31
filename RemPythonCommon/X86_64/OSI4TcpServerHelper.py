@@ -51,6 +51,9 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     client.
     """
 
+    allow_reuse_address = True
+
+
     def handle(self):
         # self.request is the TCP socket connected to the client
         self.data = self.request.recv(4096).strip()
@@ -70,6 +73,7 @@ def server_listener(server_data):
         # Activate the server; this will keep running until you
         # interrupt the program with Ctrl-C
         server.server_data = server_data
+        server.allow_reuse_address = True # allows to close existing socket
         server.serve_forever()
 
     # # Listen for incoming datagrams

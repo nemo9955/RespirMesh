@@ -32,10 +32,15 @@ import utils
 
 import OSI4TcpClient
 import OSI4UdpClient
-import OSI4TcpServer
-import OSI4TcpServerAsync
-import OSI4TcpServerHelper
-import OSI4UdpServer
+# import OSI4TcpServerMproc as OSI4TcpServer
+# import OSI4TcpServerAsync as OSI4TcpServer
+# import OSI4TcpServerHelper as OSI4TcpServer
+import OSI4TcpServerThread as OSI4TcpServer
+
+# import OSI4UdpServerMproc as OSI4UdpServer
+import OSI4UdpServerThread as OSI4UdpServer
+
+
 
 
 print("\n\n\n")
@@ -84,6 +89,7 @@ log.info(f"{server_port_udp=}")
 
 RemHardware.set_device_id(device_id)
 
+RemOrchestrator.set_orchestrator(RemOrchestrator)
 RemOrchestrator.set_hardware(RemHardware)
 RemOrchestrator.set_router(RemRouter)
 RemOrchestrator.set_logger(log)
@@ -96,16 +102,20 @@ RemOrchestrator.init() # needs to be done after linking modules
 RemOrchestrator.set_root()
 
 
-manager = multiprocessing.Manager()
-packets_queue = manager.list()
+# manager = multiprocessing.Manager()
+# packets_queue = manager.list()
+packets_queue = list()
+logic_queue = list()
 
 
 RemOrchestrator.set_packets_queue(packets_queue)
-# RemOrchestrator.init_server_type_1(OSI4TcpServer, server_ip, server_port_tcp)
-# RemOrchestrator.init_server_type_1(OSI4TcpServerAsync, server_ip, server_port_tcp)
-RemOrchestrator.init_server_type_1(OSI4TcpServerHelper, server_ip, server_port_tcp)
-RemOrchestrator.init_server_type_1(OSI4UdpServer, server_ip, server_port_udp)
+RemOrchestrator.set_logic_queue(logic_queue)
 
+# RemOrchestrator.init_server_type_1(OSI4TcpServer, server_ip, server_port_tcp)
+# RemOrchestrator.init_server_type_1(OSI4UdpServer, server_ip, server_port_udp)
+
+RemOrchestrator.init_server_type_2(OSI4TcpServer, server_ip, server_port_tcp, OSI4TcpClient)
+# RemOrchestrator.init_server_type_2(OSI4UdpServer, server_ip, server_port_udp, OSI4UdpClient)
 
 
 def main():
