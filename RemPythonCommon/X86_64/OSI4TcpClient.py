@@ -24,23 +24,34 @@ def set_orchestrator(remOrchestrator_):
 #             time.sleep_milis(500)
 #         raise Exception(f"Port not open {client_data}")
 
-def start_auto(client_data):
+def set_data(client_data):
     client_data.name = "TCP CLIENT"
-    print(f" >>>a> {client_data.name} {client_data.server_ip} {client_data.server_port}")
+    client_data.protocol = "ip_tcp"
+
+def start_auto(client_data):
+    # print(f" -X-  AMHERE OSI4TcpClient start_auto {client_data.name} {client_data.server_ip} {client_data.server_port} ")
 
     # Create a TCP/IP socket
     client_data.socket_obj = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Connect the socket to the port where the server is listening
     client_data.socket_obj.connect((client_data.server_ip, client_data.server_port))
+
+    client_data.status = "on"
+
     return client_data
 
 
 
 def send_raw(client_data, packet_):
     # print(f" -X-  AMHERE OSI4TcpClient send_raw {client_data.name} {packet_=}")
+
+    if client_data.status != "on" :
+        return
+
     bytes_sent = -1
     try:
+        packet_ = client_data.RemOrchestrator.RemHeaderTypes.encode(packet_)
         # bytes_sent = client_data.socket_obj.sendall(packet_)
         bytes_sent = client_data.socket_obj.send(packet_)
     except:

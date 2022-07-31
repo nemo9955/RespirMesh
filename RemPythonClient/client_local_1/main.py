@@ -90,7 +90,6 @@ RemHardware.set_device_id(device_id)
 
 
 
-RemOrchestrator.set_orchestrator(RemOrchestrator)
 RemOrchestrator.set_hardware(RemHardware)
 RemOrchestrator.set_router(RemRouter)
 RemOrchestrator.set_logger(log)
@@ -98,6 +97,7 @@ RemOrchestrator.set_logger(log)
 RemOrchestrator.set_channel(RemChannel)
 RemOrchestrator.set_header(RemHeaderTypes)
 RemOrchestrator.set_utils(utils)
+RemOrchestrator.set_orchestrator(RemOrchestrator)
 
 
 
@@ -106,17 +106,11 @@ RemOrchestrator.init() # needs to be done after linking modules
 
 
 connect_port_tcp = connect_to_port + 1
-connect_port_udp = connect_to_port + 2
-
-
-
 server_port_tcp = my_server_port + 1
+
+connect_port_udp = connect_to_port + 2
 server_port_udp = my_server_port + 2
 
-
-
-# manager = multiprocessing.Manager()
-# packets_queue = manager.list()
 packets_queue = list()
 logic_queue = list()
 
@@ -124,18 +118,18 @@ logic_queue = list()
 RemOrchestrator.set_packets_queue(packets_queue)
 RemOrchestrator.set_logic_queue(logic_queue)
 
-# RemOrchestrator.init_server_type_2(OSI4TcpServer, my_server_ip, server_port_tcp, OSI4TcpClient)
-RemOrchestrator.init_server_type_1(OSI4TcpServer, my_server_ip, server_port_tcp)
-RemOrchestrator.init_client_type_1(OSI4TcpClient, connect_to_ip, connect_port_tcp)
 
-# RemOrchestrator.init_server_type_1(OSI4UdpServer, my_server_ip, server_port_udp)
-# RemOrchestrator.init_client_type_1(OSI4UdpClient, connect_to_ip, connect_port_udp)
+client_data_tcp = RemOrchestrator.init_client_type_1(OSI4TcpClient, connect_to_ip, connect_port_tcp)
+server_data_tcp = RemOrchestrator.init_server_type_1(OSI4TcpServer, my_server_ip, server_port_tcp)
+RemOrchestrator.link_bidir_server_type_1(server_data_tcp, OSI4TcpClient)
+RemOrchestrator.link_bidir_client_type_1(server_data_tcp, client_data_tcp)
 
+client_data_udp = RemOrchestrator.init_client_type_1(OSI4UdpClient, connect_to_ip, connect_port_udp)
+server_data_udp = RemOrchestrator.init_server_type_1(OSI4UdpServer, my_server_ip, server_port_udp)
+RemOrchestrator.link_bidir_server_type_1(server_data_udp, OSI4UdpClient)
+RemOrchestrator.link_bidir_client_type_1(server_data_udp, client_data_udp)
 
 # print(f" 000 {os.getpid()=}  {device_id=}")
-
-
-
 
 def main():
     limiter=10000

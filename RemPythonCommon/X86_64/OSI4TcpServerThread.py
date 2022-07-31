@@ -17,15 +17,18 @@ import _thread
 
 ThreadCount = 0
 
+def set_data(server_data):
+    server_data.name = "TCP THREAD SERVER"
+    server_data.protocol = "ip_tcp"
 
 def start_auto(server_data):
     print(f" -X-  AMHERE OSI4TcpServerThread start_auto {os.getpid()=}")
-    server_data.name = "TCP THREAD SERVER"
     print(f" >>> {server_data.name} {server_data.server_ip} {server_data.server_port}")
 
 
     server_data.socket_obj = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+    server_data.status = "on"
 
     _thread.start_new_thread(server_listener, (server_data, ))
 
@@ -48,24 +51,6 @@ def stop_client(server_data, conn_obj):
     conn_obj.close()
 
 
-def make_client_connection(server_data, conn_obj):
-    client_data = server_data.RemOrchestrator.EasyDict()
-    client_data = server_data.RemOrchestrator.init_client_type_2(server_data.client_logic, server_data, conn_obj)
-    client_data.name = "OSI4TcpServerThread client"
-    client_data.socket_obj = conn_obj
-
-    message_ = f" !!!!!!!!!!!!! FROM {server_data.name} device_id:{server_data.RemOrchestrator.RemHardware.device_id()}".encode()
-    packet_ = server_data.RemOrchestrator.RemHeaderTypes.new_packet_message(message_)
-    client_data.client_logic.send_raw(client_data, packet_)
-
-
-    # TODO test client can send back to server !!!!!!!!!!!!!!!!!!!!!!!!!
-    # TODO test client can send back to server !!!!!!!!!!!!!!!!!!!!!!!!!
-    # TODO test client can send back to server !!!!!!!!!!!!!!!!!!!!!!!!!
-    # TODO test client can send back to server !!!!!!!!!!!!!!!!!!!!!!!!!
-    # TODO test client can send back to server !!!!!!!!!!!!!!!!!!!!!!!!!
-    # TODO test client can send back to server !!!!!!!!!!!!!!!!!!!!!!!!!
-    # TODO test client can send back to server !!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 
@@ -74,22 +59,57 @@ def clieant_listener(server_data, conn_obj):
     print(f" -X-  AMHERE OSI4TcpServerThread clieant_listener {os.getpid()=}")
     # print(f"{conn_obj=}")
     # conn_obj.settimeout(60)
-    if server_data.server_client_can_make:
-        make_client_connection(server_data, conn_obj)
 
     while(True):
-        data = conn_obj.recv(4096)
+        packet_ = conn_obj.recv(4096)
 
-        if len(data) == 0:
+        if len(packet_) == 0:
             # print(f"{conn_obj=}")
             break
 
-        server_data.packets_queue.append(data)
+        packet_size_ = server_data.RemOrchestrator.RemHeaderTypes.get_size(packet_)
+        data_size = len(packet_)
+        if packet_size_ != data_size :
+            tries=10
+            server_data.RemOrchestrator.RemHeaderTypes.print_packet_compact("[WARNING], combined packets: ",packet_)
+            while tries > 0: # WHILE !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                tries -= 1
 
-        # print(f"... server got {data=}")
-        # if "_PING_" in str(data):
+                top_pack_ = packet_[:packet_size_]
+                packet_ = packet_[packet_size_:]
+
+                # server_data.RemOrchestrator.RemHeaderTypes.print_packet_compact("\ntop_pack_ .........  : ",top_pack_)
+                # server_data.RemOrchestrator.RemHeaderTypes.print_packet_compact("packet_ .........  : ",packet_)
+
+                if top_pack_ == packet_ :
+                    # means there is only one packet left
+                    # we break before sending top_pack_, so the actual send runs
+                    break
+
+                server_data.RemOrchestrator.got_packet_type_1(top_pack_, server_data)
+
+                packet_size_ = server_data.RemOrchestrator.RemHeaderTypes.get_size(packet_)
+                data_size = len(packet_)
+
+                # print(f"{packet_size_=}")
+                # print(f"{data_size=}")
+                # print(f"{packet_=}")
+
+                if data_size == 0 :
+                    break
+                if packet_size_ == data_size :
+                    break
+            # print(f"FIXED !!!!!!! {packet_=}")
+
+
+        server_data.RemOrchestrator.got_packet_type_1(packet_, server_data)
+
+        # server_data.packets_queue.append(packet_)
+
+        # print(f"... server got {packet_=}")
+        # if "_PING_" in str(packet_):
         #     print(f"{conn_obj=}")
-        #     conn_obj.send(str(data).replace("_PING_", "_PONG_").encode())
+        #     conn_obj.send(str(packet_).replace("_PING_", "_PONG_").encode())
 
     stop_client(server_data, conn_obj)
 
@@ -111,7 +131,7 @@ def server_listener(server_data):
 
             _thread.start_new_thread(clieant_listener, (server_data, conn_obj, ))
             ThreadCount += 1
-            print(f"{ThreadCount=} {os.getpid()=}")
+            print(f"{ThreadCount=} os.getpid:{os.getpid()}")
 
     # except KeyboardInterrupt:
     #     print(f" *** OSI4TcpServer.py  KeyboardInterrupt")

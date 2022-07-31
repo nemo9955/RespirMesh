@@ -111,11 +111,13 @@ logic_queue = list()
 RemOrchestrator.set_packets_queue(packets_queue)
 RemOrchestrator.set_logic_queue(logic_queue)
 
-# RemOrchestrator.init_server_type_1(OSI4TcpServer, server_ip, server_port_tcp)
-# RemOrchestrator.init_server_type_1(OSI4UdpServer, server_ip, server_port_udp)
 
-RemOrchestrator.init_server_type_2(OSI4TcpServer, server_ip, server_port_tcp, OSI4TcpClient)
-# RemOrchestrator.init_server_type_2(OSI4UdpServer, server_ip, server_port_udp, OSI4UdpClient)
+server_data_tcp = RemOrchestrator.init_server_type_1(OSI4TcpServer, server_ip, server_port_tcp)
+RemOrchestrator.link_bidir_server_type_1(server_data_tcp, OSI4TcpClient)
+
+
+server_data_udp = RemOrchestrator.init_server_type_1(OSI4UdpServer, server_ip, server_port_udp)
+RemOrchestrator.link_bidir_server_type_1(server_data_udp, OSI4UdpClient)
 
 
 def main():

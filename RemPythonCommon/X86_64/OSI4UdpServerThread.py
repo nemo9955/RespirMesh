@@ -9,13 +9,17 @@ import traceback
 import _thread
 
 
+def set_data(server_data):
+    server_data.name = "UDP SERVER"
+    server_data.protocol = "ip_udp"
 
 def start_auto(server_data):
     print(f" -X-  AMHERE start_auto stop {os.getpid()=}")
-    server_data.name = "UDP SERVER"
     print(f" >>> {server_data.name} {server_data.server_ip} {server_data.server_port}")
 
     server_data.socket_obj = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+
+    server_data.status = "on"
 
     _thread.start_new_thread(server_listener, (server_data, ))
 
@@ -58,7 +62,9 @@ def server_listener(server_data):
                 continue
 
 
-            server_data.packets_queue.append(data)
+
+            server_data.RemOrchestrator.got_packet_type_1(data, server_data)
+            # server_data.packets_queue.append(data)
             # print(f"process udp recv {data=}")
 
             # Sending a reply to client
