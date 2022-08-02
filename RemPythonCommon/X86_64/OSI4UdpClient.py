@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import socket
+import traceback
 
 # RemOrchestrator = None
 
@@ -36,14 +37,15 @@ def send_raw(client_data, packet_):
 
     bytes_sent = -1
     try:
-        packet_ = client_data.RemOrchestrator.RemHeaderTypes.encode(packet_)
+        packet_ = client_data.RemOrchestrator.RemHeaderTypes.encode_send(packet_,client_data)
         # bytes_sent = client_data.socket_obj.sendall(packet_)
         # bytes_sent = client_data.socket_obj.sendto(packet_,(client_data.server_ip, client_data.server_port))
         bytes_sent = client_data.socket_obj.send(packet_)
     except:
         # client_data.socket_obj.close()
-        raise Exception(f"OSI4UdpClient ERROR {packet_=}")
-        # traceback.print_exc()
+        # raise Exception(f"OSI4UdpClient ERROR {packet_=}")
+        traceback.print_exc()
+        stop(client_data)
     # print(f"{bytes_sent=}")
     return bytes_sent
 

@@ -26,6 +26,7 @@ import RemRouter
 import RemHeaderTypes
 import RemChannel
 import utils
+import RemDebugger
 
 import OSI4TcpClient
 import OSI4UdpClient
@@ -98,6 +99,7 @@ RemOrchestrator.set_channel(RemChannel)
 RemOrchestrator.set_header(RemHeaderTypes)
 RemOrchestrator.set_utils(utils)
 RemOrchestrator.set_orchestrator(RemOrchestrator)
+RemOrchestrator.set_debugger(RemDebugger)
 
 
 
@@ -124,17 +126,17 @@ server_data_tcp = RemOrchestrator.init_server_type_1(OSI4TcpServer, my_server_ip
 RemOrchestrator.link_bidir_server_type_1(server_data_tcp, OSI4TcpClient)
 RemOrchestrator.link_bidir_client_type_1(server_data_tcp, client_data_tcp)
 
-client_data_udp = RemOrchestrator.init_client_type_1(OSI4UdpClient, connect_to_ip, connect_port_udp)
-server_data_udp = RemOrchestrator.init_server_type_1(OSI4UdpServer, my_server_ip, server_port_udp)
-RemOrchestrator.link_bidir_server_type_1(server_data_udp, OSI4UdpClient)
-RemOrchestrator.link_bidir_client_type_1(server_data_udp, client_data_udp)
+# client_data_udp = RemOrchestrator.init_client_type_1(OSI4UdpClient, connect_to_ip, connect_port_udp)
+# server_data_udp = RemOrchestrator.init_server_type_1(OSI4UdpServer, my_server_ip, server_port_udp)
+# RemOrchestrator.link_bidir_server_type_1(server_data_udp, OSI4UdpClient)
+# RemOrchestrator.link_bidir_client_type_1(server_data_udp, client_data_udp)
 
-# print(f" 000 {os.getpid()=}  {device_id=}")
+print(f" 000 {os.getpid()=}  {device_id=}")
 
 def main():
     limiter=10000
     RemOrchestrator.begin()
-    RemRouter.send_ping()
+    # RemRouter.send_ping()
     while limiter > 0:
         # print(f"   {limiter=}")
         limiter-=1

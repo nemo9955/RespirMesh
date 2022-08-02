@@ -28,6 +28,8 @@ import RemRouter
 import RemHeaderTypes
 import RemChannel
 import utils
+import RemDebugger
+import RemServer
 
 
 import OSI4TcpClient
@@ -71,7 +73,7 @@ if len(sys.argv) != 4:
 
 server_ip = sys.argv[1]
 server_port = int(sys.argv[2]) # not used directly !!!!!!!!!!
-device_id = int(sys.argv[3])
+device_id = sys.argv[3]
 
 
 if device_id == 0 :
@@ -97,6 +99,8 @@ RemOrchestrator.set_logger(log)
 RemOrchestrator.set_channel(RemChannel)
 RemOrchestrator.set_header(RemHeaderTypes)
 RemOrchestrator.set_utils(utils)
+RemOrchestrator.set_debugger(RemDebugger)
+RemOrchestrator.set_server(RemServer)
 
 RemOrchestrator.init() # needs to be done after linking modules
 RemOrchestrator.set_root()

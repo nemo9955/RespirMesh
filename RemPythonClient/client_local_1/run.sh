@@ -55,7 +55,6 @@ if [[ "${@}" == *"1"* ]] ; then
 fi
 
 
-
 if [[ "${@}" == *"2"* ]] ; then
     sleep 0.5
     python3 ${client_path} localhost 20000  120  localhost 20120 &

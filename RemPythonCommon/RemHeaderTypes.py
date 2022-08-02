@@ -17,155 +17,151 @@
 #         return (int)(PSize000) | (int)(PSize256)<<8 ;
 # }
 
-PacketHeaderType_Small = 11
-PacketHeaderType_Default = 20
 
 ForwardingType_Here = 11
 ForwardingType_ToRoot = 12
 ForwardingType_ToParent = 13
 ForwardingType_ToNeighbor = 14
 ForwardingType_ToNeighborToRoot = 15
+ForwardingType_ToNeighborAndBack = 16
+ForwardingType_Drop = 17
+ForwardingType_Back = 18
 
-HeaderType_Default = 11
+# TODO change ForwardingType to Destination1 and Destination2
+# packets that need to be processed in 2 nodes might be common enough to
+# justify 2 bytes and shift them as the target is reached
 
-PacketDataType_Default = 11
+
+_counter_ = 0
+
+HEADER_ForwardingType   = _counter_ ; _counter_+=1
+HEADER_PacketSize_1     = _counter_ ; _counter_+=1
+HEADER_PacketSize_2     = _counter_ ; _counter_+=1
+HEADER_HopsCounter      = _counter_ ; _counter_+=1
+# HEADER_SendChannelId    = _counter_ ; _counter_+=1
+# HEADER_RecvChannelId    = _counter_ ; _counter_+=1
+HEADER_SIZE             = _counter_ ; _counter_+=1
 
 
-HEADER_PacketHeaderType_FIRST = 0
-HEADER_ForwardingType_FIRST = 1
-HEADER_HeaderType_FIRST = 2
-HEADER_PacketDataType_FIRST = 3
-HEADER_SIZE_FIRST = 4
 
-HEADER_SIZE_SMALL = 5
-HEADER_SIZE_DEFAULT = 6
-
-def new_packet_small():
+def new_packet():
     # smaller simpler packet, with 1 byte for size so 256 max packet size
-    raw_packet = [
-        PacketHeaderType_Small ,
-        ForwardingType_ToNeighbor ,
-        HeaderType_Default ,
-        PacketDataType_Default ,
-        0 ,
-    ]
+    raw_packet = [0] * HEADER_SIZE
+    set_ForwardingType(raw_packet, ForwardingType_Drop)
     set_size(len(raw_packet), raw_packet)
     return raw_packet
-
-def new_packet_default():
-    # bigger packet, with 2 bytes for size so 256^2 max packet size
-    raw_packet = [
-        PacketHeaderType_Default ,
-        ForwardingType_ToNeighbor ,
-        HeaderType_Default ,
-        PacketDataType_Default ,
-        0 ,
-        0 ,
-    ]
-    set_size(len(raw_packet), raw_packet)
-    return raw_packet
-
 
 def new_packet_message(message_):
     if isinstance(message_, str):
         message_=message_.encode()
 
-    if len(message_) < 250:
-        packet_ = new_packet_small()
-    else:
-        packet_ = new_packet_default()
+    packet_ = new_packet()
     packet_.extend(message_)
     set_size(len(packet_), packet_)
     return packet_
 
-def print_packet_compact(details_, packet_):
-    header_, message_ = split_packet(packet_)
+def str_packet_compact(details_, packet_):
+    header_, message_ = split_packet_raw(packet_)
     # message_ = bytearray(message_).decode()
     # message_ = str(message_)
     message_ = str(bytearray(message_))
     size_ = get_size(packet_)
-    print(f"{details_}{size_}|{header_}|{message_}")
+    return f"{details_}{size_}|{header_}|{message_}"
 
-def print_packet(details_, packet_):
-    header_, message_ = split_packet(packet_)
+def str_packet(details_, packet_):
+    header_, message_ = split_packet_raw(packet_)
     message_ = bytearray(message_).decode()
     # message_ = str(message_)
     # message_ = str(bytearray(message_))
     size_ = get_size(packet_)
-    print(f"{details_}{size_}|{header_}|{message_}")
+    return f"{details_}{size_}|{header_}|{message_}"
 
-def split_packet(packet_):
+def print_packet_compact(details_, packet_):
+    print(str_packet_compact(details_, packet_))
+
+def print_packet(details_, packet_):
+    print(str_packet(details_, packet_))
+
+def split_packet_raw(packet_):
     header_ = get_header(packet_)
     message_ = packet_[len(header_):]
     return header_, message_
 
+def split_packet(packet_):
+    header_ = get_header(packet_)
+    message_ = packet_[len(header_):]
+    message_ = bytearray(message_).decode()
+    return header_, message_
+
 def get_header(packet_):
-    if packet_[0] == PacketHeaderType_Small :
-        return list(packet_[:HEADER_SIZE_SMALL])
-    else:
-        return list(packet_[:HEADER_SIZE_DEFAULT])
+    return list(packet_[:HEADER_SIZE])
 
 def get_message(packet_):
     header_ = get_header(packet_)
     message_ = packet_[len(header_):]
-    return message_
-    # return str(message_)
+    return bytearray(message_).decode()
 
-
-def encode(packet_):
+def normalize(packet_):
     set_size(len(packet_), packet_)
+    return packet_
+
+def packet_append(packet_, extra_):
+    packet_.extend( extra_ )
+    set_size(len(packet_), packet_)
+    return packet_
+
+
+def encode_send(packet_, chan_data):
+    normalize(packet_)
+    # set_SendChannelId(packet_, chan_data.channel_id)
     return bytearray(packet_)
 
-def decode(packet_):
-    # set_size(len(packet_), packet_)
-    header_, message_ = split_packet(packet_)
+def decode_recv(packet_, chan_data):
+    # normalize(packet_)
+    header_, message_ = split_packet_raw(packet_)
     dec_packet_ = []
     dec_packet_.extend(header_)
     dec_packet_.extend(message_)
+    # set_RecvChannelId(dec_packet_, chan_data.channel_id)
     # print(f"{header_=}")
     # print(f"{message_=}")
     # print(f"{dec_packet_=}")
     return dec_packet_
 
 
-def set_PacketHeaderType(packet_, value_):
-    packet_[HEADER_PacketHeaderType_FIRST] = value_
 
-def get_PacketHeaderType(packet_):
-    return packet_[HEADER_PacketHeaderType_FIRST]
-
-def set_ForwardingType(packet_, value_):
-    packet_[HEADER_ForwardingType_FIRST] = value_
-
-def get_ForwardingType(packet_):
-    return packet_[HEADER_ForwardingType_FIRST]
-
-def set_HeaderType(packet_, value_):
-    packet_[HEADER_HeaderType_FIRST] = value_
-
-def get_HeaderType(packet_):
-    return packet_[HEADER_HeaderType_FIRST]
-
-def set_PacketDataType(packet_, value_):
-    packet_[HEADER_PacketDataType_FIRST] = value_
-
-def get_PacketDataType(packet_):
-    return packet_[HEADER_PacketDataType_FIRST]
 
 def set_size(size, packet_):
-    if packet_[0] == PacketHeaderType_Small :
-        if size > 255:
-            raise Exception(f"Invalid size for the header type: {size=} {packet_=}")
-        else:
-            packet_[HEADER_SIZE_FIRST] = size
-    else :
-        packet_[HEADER_SIZE_FIRST] = (size >> (8 * 0)) & 0xff
-        packet_[HEADER_SIZE_FIRST+1] = (size >> (8 * 1)) & 0xff
+    packet_[HEADER_PacketSize_1] = (size >> (8 * 0)) & 0xff
+    packet_[HEADER_PacketSize_2] = (size >> (8 * 1)) & 0xff
 
 def get_size(packet_):
     if len(packet_) < 5:
         raise Exception(f"Invalid packet {packet_=}")
-    if packet_[0] == PacketHeaderType_Small :
-        return packet_[HEADER_SIZE_FIRST]
-    else:
-        return packet_[HEADER_SIZE_FIRST] | packet_[HEADER_SIZE_FIRST+1] << 8
+    return packet_[HEADER_PacketSize_1] | packet_[HEADER_PacketSize_2] << 8
+
+
+def set_ForwardingType(packet_, value_):
+    packet_[HEADER_ForwardingType] = value_
+
+def get_ForwardingType(packet_):
+    return packet_[HEADER_ForwardingType]
+
+def add_HopsCounter(packet_):
+    packet_[HEADER_HopsCounter] += 1
+
+def get_HopsCounter(packet_):
+    return packet_[HEADER_HopsCounter]
+
+# def set_SendChannelId(packet_, value_):
+#     packet_[HEADER_SendChannelId] = value_
+
+# def get_SendChannelId(packet_):
+#     return packet_[HEADER_SendChannelId]
+
+# def set_RecvChannelId(packet_, value_):
+#     packet_[HEADER_RecvChannelId] = value_
+
+# def get_RecvChannelId(packet_):
+#     return packet_[HEADER_RecvChannelId]
+

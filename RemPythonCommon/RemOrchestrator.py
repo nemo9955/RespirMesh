@@ -7,6 +7,8 @@ RemConnectionController = None
 RemHardware = None
 RemChannel = None
 RemHeaderTypes = None
+RemDebugger = None
+RemServer = None
 
 utils = None
 EasyDict = None
@@ -18,6 +20,14 @@ def set_orchestrator(remOrchestrator_):
     global RemOrchestrator
     RemOrchestrator = remOrchestrator_
 
+
+def set_server(RemServer_):
+    global RemServer
+    RemServer = RemServer_
+
+def set_debugger(RemDebugger_):
+    global RemDebugger
+    RemDebugger = RemDebugger_
 
 def set_hardware(remHardware_):
     global RemHardware
@@ -61,7 +71,17 @@ def set_logic_queue(logic_queue_):
 
 def set_root():
     orch_data.is_root = True
+    orch_data.linked_to_root = True
 
+
+def set_other_orchs():
+    # RemHardware.set_orchestrator(RemOrchestrator)
+    RemRouter.set_orchestrator(RemOrchestrator)
+    # RemConnectionController.set_orchestrator(RemOrchestrator)
+    # RemHeaderTypes.set_orchestrator(RemOrchestrator)
+    RemChannel.set_orchestrator(RemOrchestrator)
+    RemDebugger and RemDebugger.set_orchestrator(RemOrchestrator)
+    RemServer and RemServer.set_orchestrator(RemOrchestrator)
 
 def init():
     global RemHardware
@@ -69,35 +89,63 @@ def init():
     global RemConnectionController
     global RemHeaderTypes
     global RemChannel
-
-    # RemHardware.set_orchestrator(RemOrchestrator)
-    RemRouter.set_orchestrator(RemOrchestrator)
-    # RemConnectionController.set_orchestrator(RemOrchestrator)
-    # RemHeaderTypes.set_orchestrator(RemOrchestrator)
-    RemChannel.set_orchestrator(RemOrchestrator)
+    global RemDebugger
+    global RemServer
 
 
     global orch_data
     orch_data = EasyDict()
 
-    orch_data.server_data_list = []
-    orch_data.client_data_list = []
+
+    orch_data.conn_data = EasyDict()
+    orch_data.channels_list = EasyDict()
     orch_data.packets_queue = None
     orch_data.logic_queue = None
     orch_data.is_root = False
+    orch_data.linked_to_root = False
     orch_data.update_counter = 0
+    # orch_data.channels_counter = 1
+
+    set_other_orchs()
+
 
 
 def begin():
     update_logic()
+    RemDebugger and RemDebugger.begin()
+    RemServer and RemServer.begin()
+
+def get_ch_clients():
+    chlist=[]
+    for ch_uuid, ch_data in orch_data.channels_list.items():
+        if ch_data.get("is_here", False) != True: continue
+        # if ch_data.get("status", None) == None: continue
+        if ch_data.get("type", None) != "client": continue
+        chlist.append(ch_data)
+    return chlist
+
+def get_ch_servers():
+    chlist=[]
+    for ch_uuid, ch_data in orch_data.channels_list.items():
+        if ch_data.get("is_here", False) != True: continue
+        # if ch_data.get("status", None) == None: continue
+        if ch_data.get("type", None) != "server": continue
+        chlist.append(ch_data)
+    return chlist
+
+def get_ch_valid():
+    chlist=get_ch_servers()
+    chlist.extend(get_ch_clients())
+    return chlist
 
 def update_logic():
-    for server_data in orch_data.server_data_list:
-        if server_data.status == "off":
-            server_data.server_logic.start_auto(server_data)
-    for client_data in orch_data.client_data_list:
-        if client_data.status == "off":
-            client_data.client_logic.start_auto(client_data)
+    for ch_data in get_ch_servers():
+        if ch_data.status == "off":
+            ch_data.server_logic.start_auto(ch_data)
+    for ch_data in get_ch_clients():
+        if ch_data.status == "off" :
+            ch_data.client_logic.start_auto(ch_data)
+
 
     # print(f"{orch_data.logic_queue=}")
     while len(orch_data.logic_queue) > 0 :
@@ -110,32 +158,78 @@ def update_logic():
             log.error(f"Task type not handeled: {task_=}")
 
 
+def has_root_path():
+    if orch_data.is_root == True:
+        return True
+    if orch_data.linked_to_root == True:
+        return True
+    return False
+
+
+def channel_link_root(chan_uuid):
+    orch_data.linked_to_root = True
+    orch_data.channels_list.setdefault(chan_uuid, EasyDict())
+    orch_data.channels_list[chan_uuid].linked_to_root = True
+    orch_data.channels_list[chan_uuid].uuid = chan_uuid
+
+
+
+def channel_link_2_uuid(src_id_, dest_id_):
+    orch_data.conn_data.setdefault("channel_links", EasyDict())
+    orch_data.conn_data.channel_links.setdefault(src_id_, list())
+    if dest_id_ not in orch_data.conn_data.channel_links[src_id_]:
+        orch_data.conn_data.channel_links[src_id_].append(dest_id_)
+
+    orch_data.conn_data.setdefault("channel_data", EasyDict())
+    orch_data.conn_data.channel_data.setdefault(src_id_, EasyDict())
+    orch_data.conn_data.channel_data[src_id_].uuid = src_id_
+
+    orch_data.conn_data.channel_data.setdefault(dest_id_, EasyDict())
+    orch_data.conn_data.channel_data[dest_id_].uuid = dest_id_
+
+def channel_set_value(chan_uuid, chan_field, chan_val):
+    orch_data.conn_data.channel_data.setdefault(chan_uuid, EasyDict())
+    orch_data.conn_data.channel_data[chan_uuid].setdefault(chan_field, chan_val)
+
+
 def update():
     orch_data.update_counter += 1
 
     update_logic()
 
-    if orch_data.update_counter % 37 == 3:
+    if orch_data.update_counter < 10 and orch_data.update_counter % 2 == 1:
+        RemRouter.send_ping()
+        RemRouter.send_mesh_topo()
+
+    if orch_data.update_counter % 30 == 10:
         RemRouter.send_ping()
 
-    if orch_data.update_counter % 23 == 1:
+    if orch_data.update_counter % 30 == 1:
         RemRouter.send_mesh_topo()
+
+    # if orch_data.update_counter % 30 == 5:
+    # for ch_uuid, ch_data in orch_data.channels_list.items():
+    #         print(f"i am {RemHardware.device_id()} : {ch_data.name=}")
 
 
     while len(orch_data.packets_queue) > 0 :
         packet_ = orch_data.packets_queue.pop()
-        packet_ = RemHeaderTypes.decode(packet_)
-        RemHeaderTypes.print_packet("got raw pack:",packet_)
+
+        skip_this_packet_ = False # duplicate packets
+        for iter_pack_ in orch_data.packets_queue:
+            if iter_pack_ == packet_:
+                skip_this_packet_ = True
+        if skip_this_packet_ :
+            continue
+
+        # packet_ = RemHeaderTypes.decode(packet_)
+        # RemHeaderTypes.print_packet("got raw pack:",packet_)
         packet_ = RemRouter.process_packet(packet_)
+        # RemHeaderTypes.print_packet("procesed pack:",packet_)
         RemRouter.route_packet(packet_)
 
-
-    # if orch_data.update_counter % 15 == 5:
-    #     for server_data in orch_data.server_data_list:
-    #         print(f"i am {RemHardware.device_id()} : {server_data.name=}")
-    #     for client_data in orch_data.client_data_list:
-    #         print(f"i am {RemHardware.device_id()} : {client_data.name=}")
-
+    RemDebugger and RemDebugger.update() # update at the end of the call to have fresh data
+    RemServer and RemServer.update()
     rsleep = 400 + int(RemHardware.rand_float()*200) # about 0.5 secs between updates
     # log.info(f"{rsleep=} {RemHardware.device_id()} {RemHardware.time_milis()}")
     RemHardware.sleep_milis(rsleep)
@@ -145,24 +239,30 @@ def update():
 
 def stop():
     log.debug(f"RemOrchestrator.stop")
-    for server_data in orch_data.server_data_list:
-        server_data.server_logic.stop(server_data)
-    for client_data in orch_data.client_data_list:
-        client_data.client_logic.stop(client_data)
+    for ch_data in get_ch_servers():
+        ch_data.server_logic.stop(ch_data)
+    for ch_data in get_ch_clients():
+        ch_data.client_logic.stop(ch_data)
 
 
 def got_packet_type_1(packet_, server_data):
     # print(f" -X-  AMHERE RemOrchestrator got_packet_type_1 !!!!!!!!!!!!!!!!!!!")
     # RemHeaderTypes.print_packet("XXXXX got_packet_type_1 ... ",packet_)
-    packet_ = RemHeaderTypes.decode(packet_)
+    packet_ = RemHeaderTypes.decode_recv(packet_, server_data)
 
     if check_make_client(packet_, server_data):
         RemHeaderTypes.print_packet("made client",packet_)
         return
 
+    if RemRouter.append_mesh_topo(packet_, server_data):
+        RemHeaderTypes.print_packet("mesh topo",packet_)
+        return
+
+    if RemRouter.append_pong(packet_, server_data):
+        # RemHeaderTypes.print_packet("ping pong",packet_)
+        return
+
     orch_data.packets_queue.append(packet_)
-
-
 
 
 
@@ -195,17 +295,6 @@ def check_make_client(packet_, server_data):
 
 
 
-
-
-def send_logic_task(task_):
-    for client_data in orch_data.client_data_list:
-        if task_.match_protocol and client_data.protocol != task_.protocol:
-            continue
-        client_data.client_logic.send_raw(client_data, task_.packet)
-
-
-
-
 def link_bidir_client_type_1(server_data, client_data):
     # print(f" -X-  AMHERE RemOrchestrator link_bidir_client_type_1 ")
     if client_data.protocol != server_data.protocol:
@@ -232,6 +321,16 @@ def link_bidir_client_type_1(server_data, client_data):
 
 
 
+def send_logic_task(task_):
+    for ch_data in get_ch_clients():
+        if task_.match_protocol and ch_data.protocol != task_.protocol:
+            continue
+        ch_data.client_logic.send_raw(ch_data, task_.packet)
+
+
+
+
+
 def link_bidir_server_type_1(server_data, client_logic):
     # check_make_client
     global RemOrchestrator
@@ -242,8 +341,16 @@ def link_bidir_server_type_1(server_data, client_logic):
     # client_data.name = f"{server_data.name}>{client_data.name}"
 
 
+def uuid_small():
+    device_id = RemHardware.device_id()
+    rand_num = 1000 + int(RemHardware.rand_float()*10000)
+    uuid = f"{device_id}_{rand_num}"
+    return uuid
 
-
+# def get_channel_id():
+#     ret_id = orch_data.channels_counter
+#     orch_data.channels_counter += 1
+#     return ret_id
 
 def init_server_type_1(server_logic, server_ip, server_port):
     server_data = EasyDict()
@@ -257,8 +364,15 @@ def init_server_type_1(server_logic, server_ip, server_port):
     server_data.socket_obj = None
     server_data.RemOrchestrator = RemOrchestrator
     server_data.status = "off"
+    server_data.type = "server"
+    server_data.uuid = uuid_small()
+    # server_data.channel_id = get_channel_id()
+    server_data.device_id = RemHardware.device_id()
+    server_data.linked_to_root = False
+    server_data.is_here = True
 
-    orch_data.server_data_list.append(server_data)
+    # orch_data.server_data_list.append(server_data)
+    orch_data.channels_list[server_data.uuid] = server_data
     return server_data
 
 
@@ -274,8 +388,14 @@ def init_client_type_1(client_logic, server_ip, server_port):
     client_data.socket_obj = None
     client_data.RemOrchestrator = RemOrchestrator
     client_data.status = "off"
+    client_data.type = "client"
+    client_data.uuid = uuid_small()
+    # client_data.channel_id = get_channel_id()
+    client_data.device_id = RemHardware.device_id()
+    client_data.linked_to_root = False
+    client_data.is_here = True
 
-    orch_data.client_data_list.append(client_data)
+    orch_data.channels_list[client_data.uuid] = client_data
     return client_data
 
 

@@ -51,7 +51,7 @@ def send_raw(client_data, packet_):
 
     bytes_sent = -1
     try:
-        packet_ = client_data.RemOrchestrator.RemHeaderTypes.encode(packet_)
+        packet_ = client_data.RemOrchestrator.RemHeaderTypes.encode_send(packet_,client_data)
         # bytes_sent = client_data.socket_obj.sendall(packet_)
         bytes_sent = client_data.socket_obj.send(packet_)
     except:
