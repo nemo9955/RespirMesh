@@ -26,20 +26,36 @@ ForwardingType_ToNeighborToRoot = 15
 ForwardingType_ToNeighborAndBack = 16
 ForwardingType_Drop = 17
 ForwardingType_Back = 18
+ForwardingType_ToEdges = 19
 
 # TODO change ForwardingType to Destination1 and Destination2
 # packets that need to be processed in 2 nodes might be common enough to
 # justify 2 bytes and shift them as the target is reached
 
 
+PacketPriority_SuperLow  = 50
+PacketPriority_Low       = 70
+PacketPriority_Medium    = 100
+PacketPriority_High      = 110
+PacketPriority_Critical  = 130
+PacketPriority_Realtime  = 150
+
+ContentsType_RemInternal            = 20
+ContentsType_RemMeshTopo            = 50
+ContentsType_RemPingPong            = 51
+ContentsType_RemMakeClient          = 52
+ContentsType_RemMaintenance         = 100
+ContentsType_External               = 110
+
 _counter_ = 0
 
 HEADER_ForwardingType   = _counter_ ; _counter_+=1
+HEADER_PacketPriority   = _counter_ ; _counter_+=1
+HEADER_ContentsType     = _counter_ ; _counter_+=1
+HEADER_ContentsMeta     = _counter_ ; _counter_+=1
 HEADER_PacketSize_1     = _counter_ ; _counter_+=1
 HEADER_PacketSize_2     = _counter_ ; _counter_+=1
 HEADER_HopsCounter      = _counter_ ; _counter_+=1
-# HEADER_SendChannelId    = _counter_ ; _counter_+=1
-# HEADER_RecvChannelId    = _counter_ ; _counter_+=1
 HEADER_SIZE             = _counter_ ; _counter_+=1
 
 
@@ -48,6 +64,8 @@ def new_packet():
     # smaller simpler packet, with 1 byte for size so 256 max packet size
     raw_packet = [0] * HEADER_SIZE
     set_ForwardingType(raw_packet, ForwardingType_Drop)
+    set_PacketPriority(raw_packet, PacketPriority_Medium)
+    set_ContentsType(raw_packet, ContentsType_External)
     set_size(len(raw_packet), raw_packet)
     return raw_packet
 
@@ -106,10 +124,15 @@ def normalize(packet_):
     return packet_
 
 def packet_append(packet_, extra_):
+    if isinstance(extra_, str):
+        extra_ = extra_.encode()
     packet_.extend( extra_ )
-    set_size(len(packet_), packet_)
+    normalize(packet_)
     return packet_
 
+def clone(packet_):
+    # return packet_.copy()
+    return list(packet_)
 
 def encode_send(packet_, chan_data):
     normalize(packet_)
@@ -153,15 +176,22 @@ def add_HopsCounter(packet_):
 def get_HopsCounter(packet_):
     return packet_[HEADER_HopsCounter]
 
-# def set_SendChannelId(packet_, value_):
-#     packet_[HEADER_SendChannelId] = value_
+def set_PacketPriority(packet_, value_):
+    packet_[HEADER_PacketPriority] = value_
 
-# def get_SendChannelId(packet_):
-#     return packet_[HEADER_SendChannelId]
+def get_PacketPriority(packet_):
+    return packet_[HEADER_PacketPriority]
 
-# def set_RecvChannelId(packet_, value_):
-#     packet_[HEADER_RecvChannelId] = value_
+def set_ContentsType(packet_, value_):
+    packet_[HEADER_ContentsType] = value_
 
-# def get_RecvChannelId(packet_):
-#     return packet_[HEADER_RecvChannelId]
+def get_ContentsType(packet_):
+    return packet_[HEADER_ContentsType]
+
+def set_ContentsMeta(packet_, value_):
+    packet_[HEADER_ContentsMeta] = value_
+
+def get_ContentsMeta(packet_):
+    return packet_[HEADER_ContentsMeta]
+
 

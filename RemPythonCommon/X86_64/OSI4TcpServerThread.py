@@ -18,7 +18,7 @@ import _thread
 ThreadCount = 0
 
 def set_data(server_data):
-    server_data.name = "TCP THREAD SERVER"
+    server_data.name = "TCP SERVER"
     server_data.protocol = "ip_tcp"
 
 def start_auto(server_data):
@@ -106,10 +106,6 @@ def clieant_listener(server_data, conn_obj):
 
         # server_data.packets_queue.append(packet_)
 
-        # print(f"... server got {packet_=}")
-        # if "_PING_" in str(packet_):
-        #     print(f"{conn_obj=}")
-        #     conn_obj.send(str(packet_).replace("_PING_", "_PONG_").encode())
 
     stop_client(server_data, conn_obj)
 

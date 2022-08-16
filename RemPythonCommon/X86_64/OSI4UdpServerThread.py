@@ -75,7 +75,9 @@ def server_listener(server_data):
     #     traceback.print_exc()
     finally:
         print(f" *** OSI4UdpServerThread.py finally")
+        # traceback.print_exc()
         stop(server_data)
+
 
 
 

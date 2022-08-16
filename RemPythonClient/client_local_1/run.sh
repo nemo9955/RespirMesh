@@ -16,63 +16,44 @@ function ctrl_c() {
 }
 
 
-fuser -k -n tcp 20121
-fuser -k -n udp 20122
-fuser -k -n tcp 20111
-fuser -k -n udp 20112
-fuser -k -n tcp 20211
-fuser -k -n udp 20212
 
-# kill $(sudo lsof -t -i:20121)
-# kill $(sudo lsof -t -i:20122)
-# kill $(sudo lsof -t -i:20111)
-# kill $(sudo lsof -t -i:20112)
-# kill $(sudo lsof -t -i:20211)
-# kill $(sudo lsof -t -i:20212)
-
-
-
-
-# ufw deny 20121
-# ufw deny 20122
-# ufw deny 20111
-# ufw deny 20112
-# ufw deny 20211
-# ufw deny 20212
-
-sleep 0.3 # just so server has time to init in case both refresh
 
 client_path="${REPO_BASE}/RemPythonClient/client_local_1/main.py"
 pids=()
 
 
-if [[ "${@}" == *"1"* ]] ; then
-    sleep 0.2
-    python3 ${client_path} localhost 20000  110  localhost 20110 &
-    # { python3 -u ${client_path} localhost 20000  110  localhost 20110 & } &> ${REPO_BASE}/../110.log
-    echo "redirecting to ${REPO_BASE}/../110.log"
-    pids+=($!)
-fi
+function start_client(){
+    local sleep_=$1 ; shift
+    local device_id=$3
+    local client_port=$5
 
+    fuser -k -n tcp $((client_port+1))
+    fuser -k -n tcp $((client_port+2))
 
-if [[ "${@}" == *"2"* ]] ; then
-    sleep 0.5
-    python3 ${client_path} localhost 20000  120  localhost 20120 &
-    # { python3 -u ${client_path} localhost 20000  120  localhost 20120 & } &> ${REPO_BASE}/../120.log
-    echo "redirecting to ${REPO_BASE}/../120.log"
+    sleep ${sleep_}
+    python3 ${client_path} "${@}" &
+    # echo "redirecting to ${REPO_BASE}/../${device_id}.log"
+    # { python3 -u ${client_path} "${@}" & } &> ${REPO_BASE}/../${device_id}.log
     pids+=($!)
-fi
+}
 
-if [[ "${@}" == *"3"* ]] ; then
-    sleep 1
-    python3 ${client_path} localhost 20110  210  localhost 20210 &
-    # { python3 -u ${client_path} localhost 20110  210  localhost 20210 & } &> ${REPO_BASE}/../210.log
-    echo "redirecting to ${REPO_BASE}/../210.log"
-    pids+=($!)
-fi
 
 
 sleep 0.5
+start_client 0.6 localhost 20000  110  localhost 20110
+start_client 0.6 localhost 20000  120  localhost 20120
+start_client 0.6 localhost 20000  130  localhost 20130
+start_client 0.6 localhost 20000  140  localhost 20140
+sleep 1
+start_client 0.6 localhost 20110  210  localhost 20210
+start_client 0.6 localhost 20120  220  localhost 20220
+start_client 0.6 localhost 20130  230  localhost 20230
+start_client 0.6 localhost 20120  240  localhost 20240
+sleep 1
+start_client 0.6 localhost 20240  310  localhost 20310
+start_client 0.6 localhost 20240  320  localhost 20320
+
+sleep 1
 echo "pids = ${pids[*]}"
 for pid_ in ${pids[*]}; do
     wait $pid_
