@@ -105,7 +105,10 @@ def init():
     orch_data.startup_time = -1
     orch_data.update_discrete_last_time = -1
     orch_data.update_continous_last_time = -1
-    orch_data.update_discrete_interval = 1000
+
+    orch_data.update_discrete_interval_fast = 300
+    orch_data.update_discrete_interval_norm = 1000
+    orch_data.update_discrete_interval_slow = 2000
 
     set_other_orchs()
 
@@ -132,10 +135,39 @@ def update():
     orch_data.update_continous_last_time = now_time
     update_continous(delta_cont)
 
-    if now_time - orch_data.update_discrete_last_time > orch_data.update_discrete_interval:
+    if orch_data.update_counter < 10:
+        discr_interval = orch_data.update_discrete_interval_fast
+    else:
+        discr_interval = orch_data.update_discrete_interval_norm
+
+    if now_time - orch_data.update_discrete_last_time > discr_interval:
         orch_data.update_discrete_last_time = now_time
         update_discrete(orch_data.update_counter)
         orch_data.update_counter += 1
+
+
+
+def update_discrete(counter):
+    # function called every time interval
+    # used to simplify internal mesh checks
+    # print(f"{counter=}")
+
+    update_logic()
+
+
+    if counter % 30 == 1:
+        # send_ping needs to be called first
+        RemRouter.send_ping()
+
+    if orch_data.is_root == True and counter % 10 == 3:
+        RemRouter.send_mesh_topo()
+
+    # if counter % 30 == 5:
+    # for ch_uuid, ch_data in orch_data.channels_list.items():
+    #         print(f"i am {RemHardware.device_id()} : {ch_data.name=}")
+
+    RemDebugger and RemDebugger.update_discrete(counter) # update at the end of the call to have fresh data
+    RemServer and RemServer.update_discrete(counter)
 
 
 
@@ -163,31 +195,6 @@ def update_continous(delta):
     RemDebugger and RemDebugger.update_continous(delta) # update at the end of the call to have fresh data
     RemServer and RemServer.update_continous(delta)
 
-def update_discrete(counter):
-    # function called every time interval
-    # used to simplify internal mesh checks
-
-    update_logic()
-
-    if counter < 10 and counter % 2 == 1:
-        RemRouter.send_ping()
-    elif counter % 30 == 10:
-        RemRouter.send_ping()
-
-    if orch_data.is_root == True and counter < 10 and counter % 3 == 1:
-        RemRouter.send_mesh_topo()
-    elif orch_data.is_root == True and counter % 10 == 1:
-        RemRouter.send_mesh_topo()
-
-    # if counter % 30 == 5:
-    # for ch_uuid, ch_data in orch_data.channels_list.items():
-    #         print(f"i am {RemHardware.device_id()} : {ch_data.name=}")
-
-    RemDebugger and RemDebugger.update_discrete(counter) # update at the end of the call to have fresh data
-    RemServer and RemServer.update_discrete(counter)
-
-
-
 
 def update_logic():
     for ch_data in get_ch_servers():
@@ -214,6 +221,11 @@ def begin():
     RemDebugger and RemDebugger.begin()
     RemServer and RemServer.begin()
     update_logic()
+
+    rsleep = int(RemHardware.rand_float()*500) # about 0.5 secs between updates
+    RemHardware.sleep_milis(rsleep)
+
+
 
 def get_ch_clients():
     chlist=[]

@@ -42,16 +42,26 @@ function start_client(){
 sleep 0.5
 start_client 0.6 localhost 20000  110  localhost 20110
 start_client 0.6 localhost 20000  120  localhost 20120
-start_client 0.6 localhost 20000  130  localhost 20130
-start_client 0.6 localhost 20000  140  localhost 20140
-sleep 1
+sleep 0.5
 start_client 0.6 localhost 20110  210  localhost 20210
-start_client 0.6 localhost 20120  220  localhost 20220
-start_client 0.6 localhost 20130  230  localhost 20230
-start_client 0.6 localhost 20120  240  localhost 20240
-sleep 1
-start_client 0.6 localhost 20240  310  localhost 20310
-start_client 0.6 localhost 20240  320  localhost 20320
+sleep 0.5
+start_client 0.6 localhost 20210  310  localhost 20310
+sleep 0.5
+start_client 0.6 localhost 20310  310  localhost 20410
+
+# sleep 0.5
+# start_client 0.6 localhost 20000  110  localhost 20110
+# start_client 0.6 localhost 20000  120  localhost 20120
+# start_client 0.6 localhost 20000  130  localhost 20130
+# start_client 0.6 localhost 20000  140  localhost 20140
+# sleep 1
+# start_client 0.6 localhost 20110  210  localhost 20210
+# start_client 0.6 localhost 20120  220  localhost 20220
+# start_client 0.6 localhost 20120  230  localhost 20230
+# start_client 0.6 localhost 20130  240  localhost 20240
+# sleep 1
+# start_client 0.6 localhost 20240  310  localhost 20310
+# start_client 0.6 localhost 20240  320  localhost 20320
 
 sleep 1
 echo "pids = ${pids[*]}"
