@@ -248,7 +248,12 @@ def get_str_uml_3(jdata):
     uml = f"@startuml {device_id}\n\n{uml}\n\n@enduml"
     return uml
 
-def update():
+
+
+def update_continous(delta):
+    pass
+
+def update_discrete(counter):
     jdata = get_data_pack()
 
     write_file_json(jdata)

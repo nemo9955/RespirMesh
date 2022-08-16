@@ -175,8 +175,6 @@ ContentsMeta_SendPing     = 1
 ContentsMeta_RecvPing     = 2
 ContentsMeta_SendPong     = 3
 ContentsMeta_RecvPong     = 4
-ContentsMeta_SendPingPong = 5
-ContentsMeta_RecvPingPong = 6
 
 def send_ping():
     # print(f" -X-  AMHERE RemRouter send_ping    {RemOrchestrator.RemHardware.time_milis()} ")
@@ -195,8 +193,6 @@ def send_ping():
 
 def recv_ping(packet_, server_data):
     RemHeaderTypes.set_ContentsMeta(packet_, ContentsMeta_RecvPing)
-
-    # RemHeaderTypes.print_packet("before recv_ping ", packet_)
 
     device_id = RemOrchestrator.RemHardware.device_id()
     now_milis_ = RemOrchestrator.RemHardware.time_milis()
@@ -219,11 +215,6 @@ def recv_ping(packet_, server_data):
         RemHeaderTypes.normalize(copy_packet_)
         ch_data.client_logic.send_raw(ch_data, copy_packet_)
 
-        # RemHeaderTypes.print_packet("after  recv_ping ", copy_packet_)
-
-
-    # RemOrchestrator.orch_data.packets_queue.append(packet_)
-    # route_packet(packet_)
     return True
 
 def recv_pong(packet_, server_data):
@@ -233,28 +224,15 @@ def recv_pong(packet_, server_data):
     now_milis_ = RemOrchestrator.RemHardware.time_milis()
 
     RemHeaderTypes.set_ContentsMeta(packet_, ContentsMeta_RecvPong)
-
     pong_recv_data = f"{device_id}:{server_data.uuid}:{server_data.protocol}:{now_milis_}:"
-    pong_recv_data = pong_recv_data.encode()
-
-    # RemHeaderTypes.print_packet("before recv_pong ", packet_)
     packet_ = RemHeaderTypes.packet_append(packet_, pong_recv_data)
-    # RemHeaderTypes.print_packet("after recv_pong ", packet_)
-
-    # RemOrchestrator.orch_data.packets_queue.append(packet_)
     process_ping_pong(packet_)
-
 
     return True
 
 
 def check_ping_pong(packet_, server_data):
     if RemHeaderTypes.get_ContentsType(packet_) != RemHeaderTypes.ContentsType_RemPingPong:
-        return False
-
-    # RemHeaderTypes.print_packet("before check_ping_pong ", packet_)
-
-    if RemHeaderTypes.get_ContentsMeta(packet_) == ContentsMeta_RecvPingPong:
         return False
 
     if RemHeaderTypes.get_ContentsMeta(packet_) == ContentsMeta_SendPing:
@@ -270,14 +248,8 @@ def check_ping_pong(packet_, server_data):
 
 def process_ping_pong(packet_):
     # log.info(RemHeaderTypes.str_packet("ping pong: ", packet_))
-
-
-    # RemHeaderTypes.print_packet("before process_ping_pong ", packet_)
-
     message_ = RemHeaderTypes.get_message(packet_)
     raw_pp_data = message_.split(":")
-    # print(f"len(raw_pp_data) = {len(raw_pp_data)}")
-    # print(f"{raw_pp_data=}")
 
     pp_data = EasyDict()
     pp_data.send_ping = EasyDict()
@@ -307,8 +279,6 @@ def process_ping_pong(packet_):
     pp_data.recv_pong.protocol  = raw_pp_data[2 + pp_size * 3]
     pp_data.recv_pong.milis     = raw_pp_data[3 + pp_size * 3]
 
-    # print(f"\n\n {pp_data=}")
-
 
     # TODO store link as tuple and have a dict for it to save things like ping deltas
     RemOrchestrator.channel_link_2_uuid(pp_data.send_ping.uuid, pp_data.recv_ping.uuid)
@@ -325,10 +295,6 @@ def process_ping_pong(packet_):
 
     RemOrchestrator.channel_set_value(pp_data.recv_pong.uuid, "device_id", pp_data.recv_pong.device_id)
     RemOrchestrator.channel_set_value(pp_data.recv_pong.uuid, "protocol", pp_data.recv_pong.protocol)
-
-
-    # print(f"{ping_=}")
-    # print(f"{pong_=}")
 
 
 def handle_ping(packet_):

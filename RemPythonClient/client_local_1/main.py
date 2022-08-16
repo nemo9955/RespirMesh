@@ -48,7 +48,7 @@ def close_all(num=None, frame=None):
     print(f"{did_close=} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     if did_close : return
     did_close=True
-    print(f"server close_all() {os.getpid()=}  {device_id=} ")
+    print(f"client close_all() {os.getpid()=}  {device_id=} ")
     RemOrchestrator.stop()
     sys.exit(0)
 
@@ -141,11 +141,9 @@ print(f" 000 {os.getpid()=}  {device_id=}")
 
 def main():
     limiter=10000
-    RemOrchestrator.begin()
-    # RemRouter.send_ping()
+    # RemOrchestrator.begin()
     while limiter > 0:
-        # print(f"   {limiter=}")
-        limiter-=1
+        # limiter-=1
         RemOrchestrator.update()
 
 
@@ -158,5 +156,6 @@ except KeyboardInterrupt:
 except:
     traceback.print_exc()
 finally:
+    traceback.print_exc()
     print("Finally closing things")
     close_all()

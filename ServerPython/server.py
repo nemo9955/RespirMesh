@@ -126,9 +126,9 @@ RemOrchestrator.link_bidir_server_type_1(server_data_udp, OSI4UdpClient)
 
 def main():
     limiter=3333333
-    RemOrchestrator.begin()
+    # RemOrchestrator.begin()
     while limiter > 0:
-        limiter-=1
+        # limiter-=1
         RemOrchestrator.update()
 
 
@@ -141,6 +141,7 @@ except KeyboardInterrupt:
 except:
     traceback.print_exc()
 finally:
+    traceback.print_exc()
     print("Finally closing things")
     close_all()
 

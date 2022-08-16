@@ -16,7 +16,7 @@ ls \
     ${REPO_BASE}/ServerPython/**/*.sh \
     ${REPO_BASE}/RemPythonCommon/**/*.py \
     \
-    | entr -r \
+    | entr -cr \
     \
     bash ${REPO_BASE}/ServerPython/run.sh
 

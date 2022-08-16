@@ -5,9 +5,9 @@ REPO_BASE="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd
 # echo "REPO_BASE ${REPO_BASE}"
 
 
-echo -e " \n\n\n===============================\n"
+# echo -e " \n\n\n===============================\n"
 
-sleep 0.1
+# sleep 0.1
 
 fuser -k -n tcp 20001
 fuser -k -n udp 20002

@@ -25,22 +25,21 @@ def start_auto(server_data):
     print(f" -X-  AMHERE OSI4TcpServerThread start_auto {os.getpid()=}")
     print(f" >>> {server_data.name} {server_data.server_ip} {server_data.server_port}")
 
-
     server_data.socket_obj = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    server_data.status = "on"
 
     _thread.start_new_thread(server_listener, (server_data, ))
 
+    server_data.status = "on"
 
     return server_data
 
 
 
 
-
 def stop(server_data):
     print(f" -X-  AMHERE OSI4TcpServerThread stop {os.getpid()=}")
+    if server_data.status != "on" :
+        return
     server_data.socket_obj.close()
 
 

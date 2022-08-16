@@ -54,7 +54,8 @@ def send_raw(client_data, packet_):
 
 
 def stop(client_data):
-    pass
+    if client_data.status != "on":
+        return
     # client_data.socket_obj.close()
     # print(f"********************** {os.getpid()=} {client_data.subprocess=}")
 

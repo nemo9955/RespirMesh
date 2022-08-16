@@ -102,14 +102,118 @@ def init():
     orch_data.update_counter = 0
     # orch_data.channels_counter = 1
 
+    orch_data.startup_time = -1
+    orch_data.update_discrete_last_time = -1
+    orch_data.update_continous_last_time = -1
+    orch_data.update_discrete_interval = 1000
+
     set_other_orchs()
 
 
 
-def begin():
+
+##     ## ########  ########     ###    ######## ########
+##     ## ##     ## ##     ##   ## ##      ##    ##
+##     ## ##     ## ##     ##  ##   ##     ##    ##
+##     ## ########  ##     ## ##     ##    ##    ######
+##     ## ##        ##     ## #########    ##    ##
+##     ## ##        ##     ## ##     ##    ##    ##
+ #######  ##        ########  ##     ##    ##    ########
+
+
+
+def update():
+    if orch_data.startup_time <= 0 :
+        begin()
+
+    now_time = RemHardware.time_milis()
+
+    delta_cont = now_time - orch_data.update_continous_last_time
+    orch_data.update_continous_last_time = now_time
+    update_continous(delta_cont)
+
+    if now_time - orch_data.update_discrete_last_time > orch_data.update_discrete_interval:
+        orch_data.update_discrete_last_time = now_time
+        update_discrete(orch_data.update_counter)
+        orch_data.update_counter += 1
+
+
+
+def update_continous(delta):
+    # function called every update frame
+    # used for precise actions
+
+
+    while len(orch_data.packets_queue) > 0 :
+        packet_ = orch_data.packets_queue.pop()
+
+        skip_this_packet_ = False # duplicate packets
+        for iter_pack_ in orch_data.packets_queue:
+            if iter_pack_ == packet_:
+                skip_this_packet_ = True
+        if skip_this_packet_ :
+            continue
+
+        # packet_ = RemHeaderTypes.decode(packet_)
+        # RemHeaderTypes.print_packet("got raw pack:",packet_)
+        packet_ = RemRouter.process_packet(packet_)
+        # RemHeaderTypes.print_packet("procesed pack:",packet_)
+        RemRouter.route_packet(packet_)
+
+    RemDebugger and RemDebugger.update_continous(delta) # update at the end of the call to have fresh data
+    RemServer and RemServer.update_continous(delta)
+
+def update_discrete(counter):
+    # function called every time interval
+    # used to simplify internal mesh checks
+
     update_logic()
+
+    if counter < 10 and counter % 2 == 1:
+        RemRouter.send_ping()
+    elif counter % 30 == 10:
+        RemRouter.send_ping()
+
+    if orch_data.is_root == True and counter < 10 and counter % 3 == 1:
+        RemRouter.send_mesh_topo()
+    elif orch_data.is_root == True and counter % 10 == 1:
+        RemRouter.send_mesh_topo()
+
+    # if counter % 30 == 5:
+    # for ch_uuid, ch_data in orch_data.channels_list.items():
+    #         print(f"i am {RemHardware.device_id()} : {ch_data.name=}")
+
+    RemDebugger and RemDebugger.update_discrete(counter) # update at the end of the call to have fresh data
+    RemServer and RemServer.update_discrete(counter)
+
+
+
+
+def update_logic():
+    for ch_data in get_ch_servers():
+        if ch_data.status == "off":
+            ch_data.server_logic.start_auto(ch_data)
+    for ch_data in get_ch_clients():
+        if ch_data.status == "off" :
+            ch_data.client_logic.start_auto(ch_data)
+
+
+    # print(f"{orch_data.logic_queue=}")
+    while len(orch_data.logic_queue) > 0 :
+        task_ = orch_data.logic_queue.pop()
+        # print(f"{task_=}")
+
+        if task_.type == "send_server_make_client":
+            send_logic_task(task_)
+        else:
+            log.error(f"Task type not handeled: {task_=}")
+
+
+def begin():
+    orch_data.startup_time = RemHardware.time_milis()
     RemDebugger and RemDebugger.begin()
     RemServer and RemServer.begin()
+    update_logic()
 
 def get_ch_clients():
     chlist=[]
@@ -133,25 +237,6 @@ def get_ch_valid():
     chlist=get_ch_servers()
     chlist.extend(get_ch_clients())
     return chlist
-
-def update_logic():
-    for ch_data in get_ch_servers():
-        if ch_data.status == "off":
-            ch_data.server_logic.start_auto(ch_data)
-    for ch_data in get_ch_clients():
-        if ch_data.status == "off" :
-            ch_data.client_logic.start_auto(ch_data)
-
-
-    # print(f"{orch_data.logic_queue=}")
-    while len(orch_data.logic_queue) > 0 :
-        task_ = orch_data.logic_queue.pop()
-        # print(f"{task_=}")
-
-        if task_.type == "send_server_make_client":
-            send_logic_task(task_)
-        else:
-            log.error(f"Task type not handeled: {task_=}")
 
 
 def channel_link_root(chan_uuid):
@@ -234,52 +319,6 @@ def updated_conn_data():
     #     for dest_uuid_ in dest_list_:
     #         src_dev_id_  = orch_data.channels_list[src_uuid_].device_id
     #         dest_dev_id_ = orch_data.channels_list[dest_uuid_].device_id
-
-
-
-
-def update():
-    orch_data.update_counter += 1
-
-    update_logic()
-
-    if orch_data.update_counter < 10 and orch_data.update_counter % 2 == 1:
-        RemRouter.send_ping()
-    elif orch_data.update_counter % 30 == 10:
-        RemRouter.send_ping()
-
-    if orch_data.is_root == True and orch_data.update_counter < 10 and orch_data.update_counter % 3 == 1:
-        RemRouter.send_mesh_topo()
-    elif orch_data.is_root == True and orch_data.update_counter % 10 == 1:
-        RemRouter.send_mesh_topo()
-
-    # if orch_data.update_counter % 30 == 5:
-    # for ch_uuid, ch_data in orch_data.channels_list.items():
-    #         print(f"i am {RemHardware.device_id()} : {ch_data.name=}")
-
-
-
-    while len(orch_data.packets_queue) > 0 :
-        packet_ = orch_data.packets_queue.pop()
-
-        skip_this_packet_ = False # duplicate packets
-        for iter_pack_ in orch_data.packets_queue:
-            if iter_pack_ == packet_:
-                skip_this_packet_ = True
-        if skip_this_packet_ :
-            continue
-
-        # packet_ = RemHeaderTypes.decode(packet_)
-        # RemHeaderTypes.print_packet("got raw pack:",packet_)
-        packet_ = RemRouter.process_packet(packet_)
-        # RemHeaderTypes.print_packet("procesed pack:",packet_)
-        RemRouter.route_packet(packet_)
-
-    RemDebugger and RemDebugger.update() # update at the end of the call to have fresh data
-    RemServer and RemServer.update()
-    rsleep = 400 + int(RemHardware.rand_float()*200) # about 0.5 secs between updates
-    # log.info(f"{rsleep=} {RemHardware.device_id()} {RemHardware.time_milis()}")
-    RemHardware.sleep_milis(rsleep)
 
 
 

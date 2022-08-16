@@ -41,6 +41,8 @@ def begin():
     pass
 
 
-def update():
+def update_continous(delta):
+    pass
+def update_discrete(counter):
     pass
 

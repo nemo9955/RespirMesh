@@ -29,9 +29,10 @@ def start_auto(server_data):
 
 def stop(server_data):
     print(f" -X-  AMHERE OSI4UdpServerThread stop {os.getpid()=}")
+    if server_data.status != "on" :
+        return
     # server_data.socket_obj.shutdown(socket.SHUT_WR)
     # server_data.socket_obj.close()
-    pass
 
     # server_data.socket_obj.close()
     # # print(f"********************** {os.getpid()=} {server_data.subprocess=}")

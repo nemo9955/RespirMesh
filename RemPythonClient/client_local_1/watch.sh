@@ -15,7 +15,7 @@ ls \
     ${REPO_BASE}/ServerPython/**/*.sh \
     ${REPO_BASE}/RemPythonCommon/**/*.py \
     \
-    | entr -crz \
+    | entr -cr \
     \
     bash ${REPO_BASE}/RemPythonClient/client_local_1/run.sh "${@}"
 
