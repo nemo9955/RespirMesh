@@ -26,7 +26,7 @@ import RemLogger as log
 import RemOrchestrator
 import RemRouter
 import RemHeaderTypes
-import RemChannel
+# import RemScanner
 import utils
 import RemDebugger
 import RemServer
@@ -95,8 +95,6 @@ RemOrchestrator.set_orchestrator(RemOrchestrator)
 RemOrchestrator.set_hardware(RemHardware)
 RemOrchestrator.set_router(RemRouter)
 RemOrchestrator.set_logger(log)
-# RemOrchestrator.set_scanner(____)
-RemOrchestrator.set_channel(RemChannel)
 RemOrchestrator.set_header(RemHeaderTypes)
 RemOrchestrator.set_utils(utils)
 RemOrchestrator.set_debugger(RemDebugger)

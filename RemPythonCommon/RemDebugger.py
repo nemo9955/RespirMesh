@@ -10,7 +10,7 @@ RemRouter = None
 log = None
 RemConnectionController = None
 RemHardware = None
-RemChannel = None
+RemScanner = None
 RemHeaderTypes = None
 RemDebugger = None
 RemServer = None
@@ -18,13 +18,13 @@ utils = None
 EasyDict = None
 orch_data = None
 
-def set_orchestrator(remOrchestrator_):
+def set_orchestrator(set_value_):
     global RemOrchestrator
     global RemRouter
     global log
     global RemConnectionController
     global RemHardware
-    global RemChannel
+    global RemScanner
     global RemHeaderTypes
     global RemDebugger
     global RemServer
@@ -32,17 +32,17 @@ def set_orchestrator(remOrchestrator_):
     global EasyDict
     global orch_data
 
-    RemOrchestrator = remOrchestrator_.RemOrchestrator
+    RemOrchestrator = set_value_.RemOrchestrator
     orch_data = RemOrchestrator.orch_data
-    RemRouter = remOrchestrator_.RemRouter
-    log = remOrchestrator_.log
-    RemConnectionController = remOrchestrator_.RemConnectionController
-    RemHardware = remOrchestrator_.RemHardware
-    RemChannel = remOrchestrator_.RemChannel
-    RemHeaderTypes = remOrchestrator_.RemHeaderTypes
-    RemDebugger = remOrchestrator_.RemDebugger
-    RemServer = remOrchestrator_.RemServer
-    utils = remOrchestrator_.utils
+    RemRouter = set_value_.RemRouter
+    log = set_value_.log
+    RemConnectionController = set_value_.RemConnectionController
+    RemHardware = set_value_.RemHardware
+    RemScanner = set_value_.RemScanner
+    RemHeaderTypes = set_value_.RemHeaderTypes
+    RemDebugger = set_value_.RemDebugger
+    RemServer = set_value_.RemServer
+    utils = set_value_.utils
     EasyDict = utils.EasyDict
 
 DATA_DIR = None
@@ -93,7 +93,10 @@ def pop_unwanted(tmp_):
     tmp_.pop("logic_queue",None)
     tmp_.pop("conn_data",None)
     tmp_.pop("channels_list",None)
+    tmp_.pop("scanners_list",None)
     tmp_.pop("update_counter",None)
+    tmp_.pop("update_discrete_last_time",None)
+    tmp_.pop("update_continous_last_time",None)
 
 def get_data_pack():
     # jdata = EasyDict()

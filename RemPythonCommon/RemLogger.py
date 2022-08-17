@@ -17,8 +17,8 @@ Severity_trace   = 8
 
 RemOrchestrator = None
 
-def set_orchestrator(remOrchestrator_):
-    RemOrchestrator = remOrchestrator_
+def set_orchestrator(set_value_):
+    RemOrchestrator = set_value_
 
 def emerg(message_):
     logger(Severity_emerg, "[EMERG]", message_);

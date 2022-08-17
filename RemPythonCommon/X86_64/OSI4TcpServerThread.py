@@ -70,7 +70,7 @@ def clieant_listener(server_data, conn_obj):
         data_size = len(packet_)
         if packet_size_ != data_size :
             tries=10
-            server_data.RemOrchestrator.RemHeaderTypes.print_packet_compact("[WARNING], combined packets: ",packet_)
+            server_data.RemOrchestrator.RemHeaderTypes.print_packet_compact(f"[WARNING], {packet_size_} {data_size} combined packets: ",packet_)
             while tries > 0: # WHILE !!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 tries -= 1
 
@@ -103,7 +103,6 @@ def clieant_listener(server_data, conn_obj):
 
         server_data.RemOrchestrator.got_packet_type_1(packet_, server_data)
 
-        # server_data.packets_queue.append(packet_)
 
 
     stop_client(server_data, conn_obj)

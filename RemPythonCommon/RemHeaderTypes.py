@@ -43,7 +43,7 @@ PacketPriority_Realtime  = 150
 ContentsType_RemInternal            = 20
 ContentsType_RemMeshTopo            = 50
 ContentsType_RemPingPong            = 51
-ContentsType_RemMakeClient          = 52
+ContentsType_RemMakeClient1         = 52
 ContentsType_RemMaintenance         = 100
 ContentsType_External               = 110
 

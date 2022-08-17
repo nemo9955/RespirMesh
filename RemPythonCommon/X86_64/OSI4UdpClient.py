@@ -5,8 +5,8 @@ import traceback
 
 # RemOrchestrator = None
 
-# def set_orchestrator(remOrchestrator_):
-#     RemOrchestrator = remOrchestrator_
+# def set_orchestrator(set_value_):
+#     RemOrchestrator = set_value_
 
 
 def set_data(client_data):
@@ -44,6 +44,8 @@ def send_raw(client_data, packet_):
     except:
         # client_data.socket_obj.close()
         # raise Exception(f"OSI4UdpClient ERROR {packet_=}")
+        print(f"{packet_=}")
+        client_data.RemOrchestrator.RemHeaderTypes.print_packet(f"send_raw~udp~  ",packet_)
         traceback.print_exc()
         stop(client_data)
     # print(f"{bytes_sent=}")

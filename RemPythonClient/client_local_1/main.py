@@ -24,7 +24,7 @@ import RemLogger as log
 import RemOrchestrator
 import RemRouter
 import RemHeaderTypes
-import RemChannel
+import RemScanner
 import utils
 import RemDebugger
 
@@ -94,8 +94,7 @@ RemHardware.set_device_id(device_id)
 RemOrchestrator.set_hardware(RemHardware)
 RemOrchestrator.set_router(RemRouter)
 RemOrchestrator.set_logger(log)
-# RemOrchestrator.set_scanner(____)
-RemOrchestrator.set_channel(RemChannel)
+RemOrchestrator.set_scanner(RemScanner)
 RemOrchestrator.set_header(RemHeaderTypes)
 RemOrchestrator.set_utils(utils)
 RemOrchestrator.set_orchestrator(RemOrchestrator)
@@ -122,14 +121,14 @@ RemOrchestrator.set_logic_queue(logic_queue)
 
 # randomly we try to create a client with tcp or udp or both
 chance = random()
-# chance = 0.5
+chance = 0.5
 
 
 server_data_tcp = RemOrchestrator.init_server_type_1(OSI4TcpServer, my_server_ip, server_port_tcp)
-if chance > 0.3 :
-    client_data_tcp = RemOrchestrator.init_client_type_1(OSI4TcpClient, connect_to_ip, connect_port_tcp)
-    RemOrchestrator.link_bidir_server_type_1(server_data_tcp, OSI4TcpClient)
-    RemOrchestrator.link_bidir_client_type_1(server_data_tcp, client_data_tcp)
+# if chance > 0.3 :
+#     client_data_tcp = RemOrchestrator.init_client_type_1(OSI4TcpClient, connect_to_ip, connect_port_tcp)
+#     RemOrchestrator.link_bidir_server_type_1(server_data_tcp, OSI4TcpClient)
+#     RemOrchestrator.link_bidir_client_type_1(server_data_tcp, client_data_tcp)
 
 server_data_udp = RemOrchestrator.init_server_type_1(OSI4UdpServer, my_server_ip, server_port_udp)
 if chance < 0.6 :
