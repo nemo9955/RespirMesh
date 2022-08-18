@@ -4,7 +4,6 @@
 RemOrchestrator = None
 RemRouter = None
 log = None
-RemConnectionController = None
 RemHardware = None
 RemScanner = None
 RemHeaderTypes = None
@@ -16,7 +15,6 @@ def set_orchestrator(set_value_):
     global RemOrchestrator
     global RemRouter
     global log
-    global RemConnectionController
     global RemHardware
     global RemScanner
     global RemHeaderTypes
@@ -27,7 +25,6 @@ def set_orchestrator(set_value_):
     RemOrchestrator = set_value_.RemOrchestrator
     RemRouter = set_value_.RemRouter
     log = set_value_.log
-    RemConnectionController = set_value_.RemConnectionController
     RemHardware = set_value_.RemHardware
     RemScanner = set_value_.RemScanner
     RemHeaderTypes = set_value_.RemHeaderTypes

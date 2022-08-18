@@ -37,7 +37,7 @@ function start_client(){
     pids+=($!)
 }
 
-sleep 1
+sleep 2
 
 echo -e "\n"
 python3 ${client_path} generate_mesh $1 localhost 30000 localhost 20000
@@ -48,8 +48,9 @@ stop=$(cat ${1} | jq -r ".stop")
 
 echo "start:${start} stop:${stop}"
 
+sleep 3
 for i in $(seq ${start} ${stop});do
-    start_client 0.1 run_node $1 $i
+    start_client 0.5 run_node $1 $i
 done
 
 sleep 1

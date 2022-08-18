@@ -3,7 +3,6 @@
 RemOrchestrator = None
 RemRouter = None
 log = None
-RemConnectionController = None
 RemHardware = None
 RemScanner = None
 RemHeaderTypes = None
@@ -36,10 +35,6 @@ def set_router(set_value_):
     global RemRouter
     RemRouter = set_value_
 
-def set_scanner(set_value_):
-    global RemConnectionController
-    RemConnectionController = set_value_
-
 def set_logger(set_value_):
     global log
     log = set_value_
@@ -71,7 +66,6 @@ def set_root():
 def set_other_orchs():
     # RemHardware.set_orchestrator(RemOrchestrator)
     RemRouter.set_orchestrator(RemOrchestrator)
-    # RemConnectionController.set_orchestrator(RemOrchestrator)
     # RemHeaderTypes.set_orchestrator(RemOrchestrator)
     RemScanner and RemScanner.set_orchestrator(RemOrchestrator)
     RemDebugger and RemDebugger.set_orchestrator(RemOrchestrator)
@@ -80,7 +74,6 @@ def set_other_orchs():
 def init():
     global RemHardware
     global RemRouter
-    global RemConnectionController
     global RemHeaderTypes
     global RemScanner
     global RemDebugger
@@ -135,8 +128,10 @@ def update():
 
     if orch_data.update_counter < 60:
         discr_interval = orch_data.update_discrete_interval_fast
-    else:
+    elif orch_data.update_counter < 300:
         discr_interval = orch_data.update_discrete_interval_norm
+    else:
+        discr_interval = orch_data.update_discrete_interval_slow
 
     if now_time - orch_data.update_discrete_last_time > discr_interval:
         orch_data.update_discrete_last_time = now_time
@@ -165,12 +160,12 @@ def update_discrete(counter):
 
 
     # send_ping needs to be called first
-    if counter > 35 and counter % 40 == 1:
+    if counter > 60 and counter % 65 == 1:
         RemRouter.send_ping(return_to_root = True)
-    elif counter % 14 == 1:
+    elif counter % 35 == 1:
         RemRouter.send_ping()
 
-    if orch_data.is_root == True and counter % 20 == 2:
+    if orch_data.is_root == True and counter % 45 == 5:
         RemRouter.send_mesh_topo()
 
     # if counter % 30 == 5:
@@ -441,6 +436,7 @@ def uuid_small(extra="_"):
 def init_server_type_1(server_logic, server_ip, server_port):
     server_data = EasyDict()
     server_logic.set_data(server_data)
+    server_logic.set_orchestrator(RemOrchestrator)
     server_data.server_client_can_make = False
     server_data.server_ip = server_ip
     server_data.server_port = server_port
@@ -466,6 +462,7 @@ def init_server_type_1(server_logic, server_ip, server_port):
 def init_client_type_1(client_logic, server_ip, server_port):
     client_data = EasyDict()
     client_logic.set_data(client_data)
+    client_logic.set_orchestrator(RemOrchestrator)
     client_data.server_ip = server_ip
     client_data.server_port = server_port
     client_data.client_logic = client_logic
@@ -499,7 +496,6 @@ def init_scanner_type_1(scanner_logic):
 
     orch_data.scanners_list[scanner_data.uuid] = scanner_data
     return scanner_data
-
 
 
 

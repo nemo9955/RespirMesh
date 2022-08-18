@@ -3,12 +3,12 @@
 import os
 import sys
 import json
+import shutil
 from copy import deepcopy
 
 RemOrchestrator = None
 RemRouter = None
 log = None
-RemConnectionController = None
 RemHardware = None
 RemScanner = None
 RemHeaderTypes = None
@@ -22,7 +22,6 @@ def set_orchestrator(set_value_):
     global RemOrchestrator
     global RemRouter
     global log
-    global RemConnectionController
     global RemHardware
     global RemScanner
     global RemHeaderTypes
@@ -36,7 +35,6 @@ def set_orchestrator(set_value_):
     orch_data = RemOrchestrator.orch_data
     RemRouter = set_value_.RemRouter
     log = set_value_.log
-    RemConnectionController = set_value_.RemConnectionController
     RemHardware = set_value_.RemHardware
     RemScanner = set_value_.RemScanner
     RemHeaderTypes = set_value_.RemHeaderTypes
@@ -56,6 +54,10 @@ def begin():
     if not os.path.exists(DATA_DIR):
         os.mkdir(DATA_DIR)
 
+    print(f"{RemOrchestrator.orch_data.is_root=}")
+    print(f"{RemOrchestrator.orch_data.is_root=}")
+    print(f"{RemOrchestrator.orch_data.is_root=}")
+    print(f"{RemOrchestrator.orch_data.is_root=}")
     if RemOrchestrator.orch_data.is_root != True :
         return
 
@@ -64,7 +66,9 @@ def begin():
         if os.path.isfile(debug_file):
             print('Deleting file:', debug_file)
             os.remove(debug_file)
-
+        if os.path.isdir(debug_file):
+            print('Deleting dir:', debug_file)
+            shutil.rmtree(debug_file)
 
 
 
@@ -228,20 +232,29 @@ def get_str_uml_3(jdata):
     # uml += "'default \n"
     # uml += "top to bottom direction \n"
 
-    devices=set()
+    devices=list()
 
     for key_, val_ in jdata.channels_list.items():
-        devices.add(val_.device_id)
+        if val_.device_id not in devices:
+            devices.append(val_.device_id)
 
+    devices.sort(reverse=True)
 
-    # for did_ in devices:
-    #     uml += f"actor {did_} \n"
+    for did_ in devices:
+        uml += f"({did_})\n"
+        # uml += f"actor {did_} \n"
 
+    dup_check=[]
     uml += f"\n"
     for src_, dests_ in jdata.conn_data.items():
         for dest_ in dests_ :
             dev_src_  = jdata.channels_list[src_].device_id
             dev_dest_ = jdata.channels_list[dest_].device_id
+
+            if (dev_src_,dev_dest_) in dup_check:
+                continue
+            dup_check.append((dev_src_,dev_dest_))
+
             # uml += f"{dev_src_} --> {dev_dest_} : {src_} > {dest_}  \n"
             uml += f"{dev_src_} --> {dev_dest_} \n"
 

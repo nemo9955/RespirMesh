@@ -27,7 +27,7 @@ def route_packet(packet):
     # print(f" -X-  AMHERE RemRouter route_packet {RemOrchestrator.RemHardware.time_milis()}")
     # process_packet needs to be called before to ensure packet is updated for current node
     message_ = RemHeaderTypes.get_message(packet)
-
+    device_id = RemOrchestrator.RemHardware.device_id()
 
     if RemHeaderTypes.get_ForwardingType(packet) == RemHeaderTypes.ForwardingType_ToRoot:
         if RemOrchestrator.orch_data.is_root == True:
@@ -36,6 +36,14 @@ def route_packet(packet):
         for ch_data in RemOrchestrator.get_ch_closer_to_root():
             ch_data.client_logic.send_raw(ch_data, packet)
             return # TODO get the closest to root not just the first closest
+        log.warn(f"Could not fing path to root {device_id}: {RemHeaderTypes.str_packet(packet)}")
+        return
+
+
+    if RemHeaderTypes.get_ForwardingType(packet) == RemHeaderTypes.ForwardingType_ToEdges:
+        for ch_data in RemOrchestrator.get_ch_farther_from_root():
+            ch_data.client_logic.send_raw(ch_data, packet)
+        return
 
     if RemHeaderTypes.get_ForwardingType(packet) == RemHeaderTypes.ForwardingType_Here:
         return
@@ -43,14 +51,14 @@ def route_packet(packet):
     if RemHeaderTypes.get_ForwardingType(packet) == RemHeaderTypes.ForwardingType_Drop:
         return
 
-    if RemHeaderTypes.get_ForwardingType(packet) == RemHeaderTypes.ForwardingType_ToEdges:
-        for ch_data in RemOrchestrator.get_ch_farther_from_root():
+    if RemHeaderTypes.get_ForwardingType(packet) == RemHeaderTypes.ForwardingType_ToNeighbor:
+        for ch_data in RemOrchestrator.get_ch_clients():
+            # TODO check if linked to ROOT !!!!!!!!!!!
             ch_data.client_logic.send_raw(ch_data, packet)
         return
 
-    for ch_data in RemOrchestrator.get_ch_clients():
-        # TODO check if linked to ROOT !!!!!!!!!!!
-        ch_data.client_logic.send_raw(ch_data, packet)
+    log.error(f"Untreated route_packet case in {device_id}: {RemHeaderTypes.str_packet(packet)}")
+
 
 
 
@@ -180,9 +188,9 @@ def check_mesh_topo(packet, server_data):
         raise Exception(f"check_mesh_topo needs ContentsType_RemMeshTopo: {packet=} {server_data=} ")
 
     if RemHeaderTypes.get_ContentsMeta(packet) == ContentsMeta_ReturnMeshTopo:
-        if RemHeaderTypes.get_HopsCounter(packet) > 200 :
+        if RemHeaderTypes.get_HopsCounter(packet) > 50 :
             RemHeaderTypes.print_packet(f"check_mesh_topo~ReturnMeshTopo~ {server_data.device_id} {server_data.uuid} ",packet)
-        if RemHeaderTypes.get_HopsCounter(packet) > 220 :
+        if RemHeaderTypes.get_HopsCounter(packet) > 70 :
             return ####################################### FIXME !!!!!!!!!!!!!!!!!
 
         if RemOrchestrator.orch_data.is_root == True:
@@ -196,7 +204,7 @@ def check_mesh_topo(packet, server_data):
         return_mesh_topo(packet)
         return
 
-    log.warn(RemHeaderTypes.str_packet("Mesh Topo case not trated ", packet))
+    log.warn(f"Mesh Topo case not trated {RemHeaderTypes.str_packet(packet)}")
 
 def process_mesh_topo(packet, server_data):
     if RemHeaderTypes.get_ContentsType(packet) != RemHeaderTypes.ContentsType_RemMeshTopo:
@@ -221,6 +229,47 @@ ContentsMeta_SendPong     = 3
 ContentsMeta_RecvPong     = 4
 ContentsMeta_PingPongRoot = 5
 
+def encode_ping_packet(device_id, ch_data):
+    now_milis_ = RemOrchestrator.RemHardware.time_milis()
+    return f"{device_id}:{ch_data.uuid}:{ch_data.protocol}:"
+    # return f"{device_id}:{ch_data.uuid}:{ch_data.protocol}:{now_milis_}:"
+
+def decode_ping_packet(packet):
+    message_ = RemHeaderTypes.get_message(packet)
+    all_pp_data = message_.split(":")
+    pp_flags = all_pp_data[0]
+    raw_pp_data = all_pp_data[1:]
+
+    pp_data = EasyDict()
+    pp_data.send_ping = EasyDict()
+    pp_data.recv_ping = EasyDict()
+    pp_data.send_pong = EasyDict()
+    pp_data.recv_pong = EasyDict()
+
+    pp_size = 3
+
+    pp_data.send_ping.device_id = raw_pp_data[0 + pp_size * 0]
+    pp_data.send_ping.uuid      = raw_pp_data[1 + pp_size * 0]
+    pp_data.send_ping.protocol  = raw_pp_data[2 + pp_size * 0]
+    # pp_data.send_ping.milis     = raw_pp_data[3 + pp_size * 0]
+
+    pp_data.recv_ping.device_id = raw_pp_data[0 + pp_size * 1]
+    pp_data.recv_ping.uuid      = raw_pp_data[1 + pp_size * 1]
+    pp_data.recv_ping.protocol  = raw_pp_data[2 + pp_size * 1]
+    # pp_data.recv_ping.milis     = raw_pp_data[3 + pp_size * 1]
+
+    pp_data.send_pong.device_id = raw_pp_data[0 + pp_size * 2]
+    pp_data.send_pong.uuid      = raw_pp_data[1 + pp_size * 2]
+    pp_data.send_pong.protocol  = raw_pp_data[2 + pp_size * 2]
+    # pp_data.send_pong.milis     = raw_pp_data[3 + pp_size * 2]
+
+    pp_data.recv_pong.device_id = raw_pp_data[0 + pp_size * 3]
+    pp_data.recv_pong.uuid      = raw_pp_data[1 + pp_size * 3]
+    pp_data.recv_pong.protocol  = raw_pp_data[2 + pp_size * 3]
+    # pp_data.recv_pong.milis     = raw_pp_data[3 + pp_size * 3]
+
+    return pp_flags, pp_data
+
 def send_ping(return_to_root = False):
     # print(f" -X-  AMHERE RemRouter send_ping    {RemOrchestrator.RemHardware.time_milis()} ")
     device_id = RemOrchestrator.RemHardware.device_id()
@@ -231,8 +280,7 @@ def send_ping(return_to_root = False):
         send_flags+=";return_to_root"
 
     for ch_data in RemOrchestrator.get_ch_clients():
-        now_milis_ = RemOrchestrator.RemHardware.time_milis()
-        message_ = f"{send_flags}:{device_id}:{ch_data.uuid}:{ch_data.protocol}:{now_milis_}:"
+        message_ = f"{send_flags}:{encode_ping_packet(device_id, ch_data)}"
         packet = RemHeaderTypes.new_packet_message(message_)
         # RemHeaderTypes.print_packet("from send_ping", packet)
         RemHeaderTypes.set_ForwardingType(packet, RemHeaderTypes.ForwardingType_ToNeighbor)
@@ -247,9 +295,8 @@ def recv_ping(packet, server_data):
     RemHeaderTypes.set_ContentsMeta(packet, ContentsMeta_RecvPing)
 
     device_id = RemOrchestrator.RemHardware.device_id()
-    now_milis_ = RemOrchestrator.RemHardware.time_milis()
 
-    ping_recv_data = f"{device_id}:{server_data.uuid}:{server_data.protocol}:{now_milis_}:"
+    ping_recv_data = f"{encode_ping_packet(device_id, server_data)}"
     ping_recv_data = ping_recv_data.encode()
 
     RemHeaderTypes.packet_append(packet, ping_recv_data)
@@ -264,8 +311,7 @@ def recv_ping(packet, server_data):
     for ch_data in RemOrchestrator.get_ch_clients():
         copy_packet_ = RemHeaderTypes.clone(packet)
 
-        now_milis_ = RemOrchestrator.RemHardware.time_milis()
-        pong_send_data = f"{device_id}:{ch_data.uuid}:{ch_data.protocol}:{now_milis_}:"
+        pong_send_data = f"{encode_ping_packet(device_id, ch_data)}"
         pong_send_data = pong_send_data.encode()
         RemHeaderTypes.packet_append(copy_packet_, pong_send_data)
         RemHeaderTypes.normalize(copy_packet_)
@@ -277,10 +323,9 @@ def recv_pong(packet, server_data):
     # print(f"! AMHERE RemRouter recv_pong ")
 
     device_id = RemOrchestrator.RemHardware.device_id()
-    now_milis_ = RemOrchestrator.RemHardware.time_milis()
 
     RemHeaderTypes.set_ContentsMeta(packet, ContentsMeta_RecvPong)
-    pong_recv_data = f"{device_id}:{server_data.uuid}:{server_data.protocol}:{now_milis_}:"
+    pong_recv_data = f"{encode_ping_packet(device_id, server_data)}"
     packet = RemHeaderTypes.packet_append(packet, pong_recv_data)
     # RemHeaderTypes.print_packet(f"recv_pong~ {server_data.uuid}\t",packet)
 
@@ -316,46 +361,12 @@ def check_ping_pong(packet, server_data):
             route_packet(packet)
         return
 
-    log.warn(RemHeaderTypes.str_packet("PING PONG case not trated ", packet))
-
+    log.warn(f"PING PONG case not trated {RemHeaderTypes.str_packet(packet)}")
 
 
 
 def process_ping_pong(packet, server_data):
-    # log.info(RemHeaderTypes.str_packet("ping pong: ", packet))
-    message_ = RemHeaderTypes.get_message(packet)
-    all_pp_data = message_.split(":")
-    pp_flags = all_pp_data[0]
-    raw_pp_data = all_pp_data[1:]
-
-    pp_data = EasyDict()
-    pp_data.send_ping = EasyDict()
-    pp_data.recv_ping = EasyDict()
-    pp_data.send_pong = EasyDict()
-    pp_data.recv_pong = EasyDict()
-
-    pp_size = 4
-
-    pp_data.send_ping.device_id = raw_pp_data[0 + pp_size * 0]
-    pp_data.send_ping.uuid      = raw_pp_data[1 + pp_size * 0]
-    pp_data.send_ping.protocol  = raw_pp_data[2 + pp_size * 0]
-    pp_data.send_ping.milis     = raw_pp_data[3 + pp_size * 0]
-
-    pp_data.recv_ping.device_id = raw_pp_data[0 + pp_size * 1]
-    pp_data.recv_ping.uuid      = raw_pp_data[1 + pp_size * 1]
-    pp_data.recv_ping.protocol  = raw_pp_data[2 + pp_size * 1]
-    pp_data.recv_ping.milis     = raw_pp_data[3 + pp_size * 1]
-
-    pp_data.send_pong.device_id = raw_pp_data[0 + pp_size * 2]
-    pp_data.send_pong.uuid      = raw_pp_data[1 + pp_size * 2]
-    pp_data.send_pong.protocol  = raw_pp_data[2 + pp_size * 2]
-    pp_data.send_pong.milis     = raw_pp_data[3 + pp_size * 2]
-
-    pp_data.recv_pong.device_id = raw_pp_data[0 + pp_size * 3]
-    pp_data.recv_pong.uuid      = raw_pp_data[1 + pp_size * 3]
-    pp_data.recv_pong.protocol  = raw_pp_data[2 + pp_size * 3]
-    pp_data.recv_pong.milis     = raw_pp_data[3 + pp_size * 3]
-
+    pp_flags, pp_data = decode_ping_packet(packet)
 
     # TODO store link as tuple and have a dict for it to save things like ping deltas
     RemOrchestrator.channel_link_2_uuid(pp_data.send_ping.uuid, pp_data.recv_ping.uuid)

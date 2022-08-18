@@ -76,11 +76,11 @@ if device_id == 0 :
     device_id = 1000 + int(random() * 1000)
 
 
-log.info(f"{connect_to_ip=}")
-log.info(f"{my_server_ip=}")
-log.info(f"{connect_to_port=}")
-log.info(f"{my_server_port=}")
-log.info(f"{device_id=}")
+# log.info(f"{connect_to_ip=}")
+# log.info(f"{my_server_ip=}")
+# log.info(f"{connect_to_port=}")
+# log.info(f"{my_server_port=}")
+# log.info(f"{device_id=}")
 
 RemHardware.set_device_id(device_id)
 
@@ -125,10 +125,10 @@ chance = 0.5
 
 
 server_data_tcp = RemOrchestrator.init_server_type_1(OSI4TcpServer, my_server_ip, server_port_tcp)
-# if chance > 0.3 :
-#     client_data_tcp = RemOrchestrator.init_client_type_1(OSI4TcpClient, connect_to_ip, connect_port_tcp)
-#     RemOrchestrator.link_bidir_server_type_1(server_data_tcp, OSI4TcpClient)
-#     RemOrchestrator.link_bidir_client_type_1(server_data_tcp, client_data_tcp)
+if chance > 0.3 :
+    client_data_tcp = RemOrchestrator.init_client_type_1(OSI4TcpClient, connect_to_ip, connect_port_tcp)
+    RemOrchestrator.link_bidir_server_type_1(server_data_tcp, OSI4TcpClient)
+    RemOrchestrator.link_bidir_client_type_1(server_data_tcp, client_data_tcp)
 
 server_data_udp = RemOrchestrator.init_server_type_1(OSI4UdpServer, my_server_ip, server_port_udp)
 if chance < 0.6 :

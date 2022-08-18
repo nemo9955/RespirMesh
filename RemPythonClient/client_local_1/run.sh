@@ -45,10 +45,11 @@ start_client 0.6 localhost 20000  110  localhost 20110
 start_client 0.6 localhost 20000  120  localhost 20120
 sleep 0.5
 start_client 0.6 localhost 20110  210  localhost 20210
+# start_client 0.6 localhost 20110  220  localhost 20220
+sleep 0.5
+start_client 0.6 localhost 20210  310  localhost 20310
 # sleep 0.5
-# start_client 0.6 localhost 20210  310  localhost 20310
-# sleep 0.5
-# start_client 0.6 localhost 20310  310  localhost 20410
+# start_client 0.6 localhost 20310  410  localhost 20410
 
 # sleep 0.5
 # start_client 0.6 localhost 20000  110  localhost 20110

@@ -51,7 +51,7 @@ def close_all(num=None, frame=None):
     if did_close : return
     did_close=True
     print(f"client close_all() {os.getpid()=}  {device_id=} ")
-    RemOrchestrator.stop()
+    # RemOrchestrator.stop()
     sys.exit(0)
 
 
@@ -60,26 +60,41 @@ def close_all(num=None, frame=None):
 
 
 
+def randomize_distances(mesh_node_data, node_data, wiggle):
+    dists = list()
+    for n2, pt2 in mesh_node_data.coords.items():
+        if n2 == node_data.k:
+            continue
+        distance = math.dist(node_data.coord, pt2)
+        distance *= random.uniform(1-wiggle,1+wiggle)
+        dists.append((distance, n2))
+    dists.sort(reverse=False)
+    node_data.dists = dists
+
+
 
 def generate_mesh(mesh_path, ip, port, server_ip, server_port):
     mesh_data = EasyDict()
 
     # grid_size_x = 50
     # grid_size_y = 10
-    # points_count = 5
+    # points_count = 3
 
-    grid_size_x = 140
+    grid_size_x = 130
     grid_size_y = 35
-    points_count = 10
+    points_count = 20
 
     mesh_data.max_dist = (grid_size_x ** 2 - grid_size_y ** 2) ** 0.5
     mesh_data.min_dist = ((grid_size_x * grid_size_y) / points_count) * 0.05
     mesh_data.avg_dist = mesh_data.max_dist / 2
 
+    rx = int(grid_size_x / 4)
+    ry = int(grid_size_y / 4)
+
     coords = []
-    coords.append((1, 1, "root", 0, "R"))
+    coords.append((rx, ry, "root", 0, "R"))
     check_coords = []
-    check_coords.append((1, 1))
+    check_coords.append((rx,ry ))
 
     print(f"{mesh_data.max_dist=}")
     print(f"{mesh_data.min_dist=}")
@@ -116,32 +131,31 @@ def generate_mesh(mesh_path, ip, port, server_ip, server_port):
         matr.append(x_fill)
 
     mesh_data.coords = EasyDict()
-    # mesh_data.matr = matr
+    mesh_data.nodes = EasyDict()
+    mesh_data.node_paths = list()
+    mesh_data.node_paths.append(mesh_path)
     for x,y,k,n,v in coords:
         # print(x,y,n)
         matr[y][x] = v
-        mesh_data.coords[k] = EasyDict()
-        mesh_data.coords[k].connected_to_root = False
-        mesh_data.coords[k].y = y
-        mesh_data.coords[k].n = n
-        mesh_data.coords[k].k = k
-        mesh_data.coords[k].v = v
-        mesh_data.coords[k].coord = [x,y]
-        mesh_data.coords[k].server_ip = ip
-        mesh_data.coords[k].server_port = port + n*100 + 0
-        mesh_data.coords[k].client_ip = ip
-        mesh_data.coords[k].client_port = port + n*100 + 10
+        mesh_data.coords[k] = [x,y]
+        mesh_data.nodes[k] = EasyDict()
+        mesh_data.nodes[k].connected_to_root = False
+        mesh_data.nodes[k].n = n
+        mesh_data.nodes[k].k = k
+        mesh_data.nodes[k].v = v
+        mesh_data.nodes[k].coord = [x,y]
+        mesh_data.nodes[k].server_ip = ip
+        mesh_data.nodes[k].server_port = port + n*10 + 0
+        if k != "root":
+            node_path = mesh_path.replace(".",f".{k}.")
+            mesh_data.node_paths.append(node_path)
 
-    mesh_data.coords.root.server_ip = server_ip
-    mesh_data.coords.root.server_port = server_port
-    mesh_data.coords.root.client_ip = None
-    mesh_data.coords.root.client_port = None
-    mesh_data.coords.root.connected_to_root = True
+    for _, node_data in mesh_data.nodes.items():
+        randomize_distances(mesh_data, node_data, 0)
 
-    # for n1, pt1 in mesh_data.coords.items():
-    #     pt1.dists = EasyDict()
-    #     for n2, pt2 in mesh_data.coords.items():
-    #         pt1.dists[n2] = math.dist(pt1.coord, pt2.coord)
+    mesh_data.nodes.root.server_ip = server_ip
+    mesh_data.nodes.root.server_port = server_port
+    mesh_data.nodes.root.connected_to_root = True
 
     mesh_data.a=list()
     for col in matr:
@@ -151,48 +165,20 @@ def generate_mesh(mesh_path, ip, port, server_ip, server_port):
         mesh_data.a.append(line)
 
 
+    print(f"{mesh_path=}")
+    print(f"{mesh_path=}")
+    print(f"{mesh_path=}")
+    print(f"{mesh_path=}")
+    print(f"{mesh_path=}")
     with open(mesh_path, 'w') as file_:
         json.dump(mesh_data, file_, indent=4, sort_keys=True)
-
-
-
-
-def update_json_data(mesh_data):
-    node_copy = mesh_data.coords[device_id].copy()
-
-    with open(mesh_path, "r") as file_:
-        mesh_data = json.load(file_, object_pairs_hook=EasyDict)
-
-    mesh_data.coords[device_id] = node_copy
-
-    with open(mesh_path, 'w') as file_:
-        json.dump(mesh_data, file_, indent=4, sort_keys=True)
-
-    node_data = mesh_data.coords[device_id]
-
-    return mesh_data, node_data
 
 
 def start(mesh_data, device_id):
-    node_data = mesh_data.coords[device_id]
-
-    connect_to_ip = node_data.client_ip
-    connect_to_port = node_data.client_port
-    my_server_ip = node_data.server_ip
-    my_server_port = node_data.server_port
-
-    # mesh_data, node_data = update_json_data(mesh_data) #########################
+    node_data = mesh_data.nodes[device_id]
 
     if device_id == 0 :
         device_id = 1000 + int(random.random() * 1000)
-
-    # device_id = f"msh_{device_id}"
-
-    # log.info(f"{connect_to_ip=}")
-    # log.info(f"{my_server_ip=}")
-    # log.info(f"{connect_to_port=}")
-    # log.info(f"{my_server_port=}")
-    # log.info(f"{device_id=}")
 
     RemHardware.set_device_id(device_id)
 
@@ -207,10 +193,15 @@ def start(mesh_data, device_id):
 
     RemOrchestrator.init() # needs to be done after linking modules
 
-    connect_port_tcp = connect_to_port + 1
+    my_server_ip = node_data.server_ip
+    my_server_port = node_data.server_port
     server_port_tcp = my_server_port + 1
-    connect_port_udp = connect_to_port + 2
     server_port_udp = my_server_port + 2
+
+
+    # print(f"{my_server_ip=}")
+    # print(f"{server_port_tcp=}")
+    # print(f"{server_port_udp=}")
 
     packets_queue = list()
     logic_queue = list()
@@ -218,26 +209,16 @@ def start(mesh_data, device_id):
     RemOrchestrator.set_packets_queue(packets_queue)
     RemOrchestrator.set_logic_queue(logic_queue)
 
-    # randomly we try to create a client with tcp or udp or both
-    chance = random.random()
-    chance = 0.5
 
-
-    # server_data_tcp = RemOrchestrator.init_server_type_1(OSI4TcpServer, my_server_ip, server_port_tcp)
-    # if chance > 0.3 :
-    #     client_data_tcp = RemOrchestrator.init_client_type_1(OSI4TcpClient, connect_to_ip, connect_port_tcp)
-    #     RemOrchestrator.link_bidir_server_type_1(server_data_tcp, OSI4TcpClient)
-    #     RemOrchestrator.link_bidir_client_type_1(server_data_tcp, client_data_tcp)
-
-    # server_data_udp = RemOrchestrator.init_server_type_1(OSI4UdpServer, my_server_ip, server_port_udp)
-    # if chance < 0.6 :
-    #     client_data_udp = RemOrchestrator.init_client_type_1(OSI4UdpClient, connect_to_ip, connect_port_udp)
-    #     RemOrchestrator.link_bidir_server_type_1(server_data_udp, OSI4UdpClient)
-    #     RemOrchestrator.link_bidir_client_type_1(server_data_udp, client_data_udp)
-
+    server_data_tcp = RemOrchestrator.init_server_type_1(OSI4TcpServer, my_server_ip, server_port_tcp)
+    server_data_udp = RemOrchestrator.init_server_type_1(OSI4UdpServer, my_server_ip, server_port_udp)
 
     scanner_fake_data = RemOrchestrator.init_scanner_type_1(OSI2FileScanner)
     scanner_fake_data.mesh_path = mesh_path
+    scanner_fake_data.node_path = node_path
+    scanner_fake_data.randomize_distances = randomize_distances
+    scanner_fake_data.server_data_tcp = server_data_tcp
+    scanner_fake_data.server_data_udp = server_data_udp
 
     limiter=10000
     # RemOrchestrator.begin()
@@ -255,12 +236,24 @@ if sys.argv[1] == "generate_mesh":
 if sys.argv[1] == "run_node":
     mesh_path = sys.argv[2]
     device_id = sys.argv[3]
+    node_path = mesh_path.replace(".",f".{device_id}.")
 
     # print(f"{mesh_path=}")
     # print(f"{device_id=}")
     mesh_data = None
+    # while not os.path.exists(mesh_path):
+    #     time.sleep(1)
     with open(mesh_path, "r") as file_:
         mesh_data = json.load(file_,object_pairs_hook=EasyDict)
+
+
+    node_data = mesh_data.nodes[device_id]
+    mesh_data.nodes = EasyDict()
+    mesh_data.nodes[device_id] = node_data
+    mesh_data.device_id = device_id
+
+    with open(node_path, 'w') as file_:
+        json.dump(mesh_data, file_, indent=4, sort_keys=True)
 
     try:
         start(mesh_data, device_id)
@@ -274,3 +267,4 @@ if sys.argv[1] == "run_node":
         traceback.print_exc()
         print("Finally closing things")
         close_all()
+

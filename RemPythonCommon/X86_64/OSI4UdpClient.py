@@ -3,10 +3,18 @@
 import socket
 import traceback
 
-# RemOrchestrator = None
 
-# def set_orchestrator(set_value_):
-#     RemOrchestrator = set_value_
+RemOrchestrator = None
+EasyDict = None
+log = None
+def set_orchestrator(set_value_):
+    global RemOrchestrator
+    global EasyDict
+    global log
+    RemOrchestrator = set_value_
+    EasyDict = RemOrchestrator.EasyDict
+    log = set_value_.log
+
 
 
 def set_data(client_data):

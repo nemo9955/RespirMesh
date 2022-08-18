@@ -78,27 +78,27 @@ def new_packet_message(message_):
     set_size(len(packet_), packet_)
     return packet_
 
-def str_packet_compact(details_, packet_):
+def str_packet_compact(packet_):
     header_, message_ = split_packet_raw(packet_)
     # message_ = bytearray(message_).decode()
     # message_ = str(message_)
     message_ = str(bytearray(message_))
     size_ = get_size(packet_)
-    return f"{details_}{size_}|{header_}|{message_}"
+    return f"{size_}|{header_}|{message_}"
 
-def str_packet(details_, packet_):
+def str_packet( packet_):
     header_, message_ = split_packet_raw(packet_)
     message_ = bytearray(message_).decode()
     # message_ = str(message_)
     # message_ = str(bytearray(message_))
     size_ = get_size(packet_)
-    return f"{details_}{size_}|{header_}|{message_}"
+    return f"{size_}|{header_}|{message_}"
 
 def print_packet_compact(details_, packet_):
-    print(str_packet_compact(details_, packet_))
+    print(f"{details_}{str_packet_compact(details_, packet_)}")
 
 def print_packet(details_, packet_):
-    print(str_packet(details_, packet_))
+    print(f"{details_}{str_packet(details_, packet_)}")
 
 def split_packet_raw(packet_):
     header_ = get_header(packet_)

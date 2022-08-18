@@ -7,10 +7,18 @@ from contextlib import closing
 
 # https://stackoverflow.com/questions/19196105/how-to-check-if-a-network-port-is-open
 
+
 RemOrchestrator = None
+EasyDict = None
+log = None
 def set_orchestrator(set_value_):
     global RemOrchestrator
+    global EasyDict
+    global log
     RemOrchestrator = set_value_
+    EasyDict = RemOrchestrator.EasyDict
+    log = set_value_.log
+
 
 # def wait_port_ok(client_data):
 #     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:

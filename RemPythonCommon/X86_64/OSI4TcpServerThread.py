@@ -15,6 +15,28 @@ import _thread
 # https://stackoverflow.com/questions/6380057/python-binding-socket-address-already-in-use
 
 
+
+
+
+
+RemOrchestrator = None
+RemHeaderTypes = None
+EasyDict = None
+log = None
+def set_orchestrator(set_value_):
+    global RemOrchestrator
+    global RemHeaderTypes
+    global EasyDict
+    global log
+    RemOrchestrator = set_value_
+    EasyDict = RemOrchestrator.EasyDict
+    RemHeaderTypes = RemOrchestrator.RemHeaderTypes
+    log = set_value_.log
+
+
+
+
+
 ThreadCount = 0
 
 def set_data(server_data):
@@ -60,48 +82,46 @@ def clieant_listener(server_data, conn_obj):
     # conn_obj.settimeout(60)
 
     while(True):
-        packet_ = conn_obj.recv(4096)
+        packet = conn_obj.recv(4096)
 
-        if len(packet_) == 0:
+        if len(packet) == 0:
             # print(f"{conn_obj=}")
             break
 
-        packet_size_ = server_data.RemOrchestrator.RemHeaderTypes.get_size(packet_)
-        data_size = len(packet_)
+        packet_size_ = RemHeaderTypes.get_size(packet)
+        data_size = len(packet)
+
         if packet_size_ != data_size :
-            tries=10
-            server_data.RemOrchestrator.RemHeaderTypes.print_packet_compact(f"[WARNING], {packet_size_} {data_size} combined packets: ",packet_)
-            while tries > 0: # WHILE !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            log.trace(f"Combined packets detected in TCP client {packet_size_=} {data_size=} :")
+
+            tries=20
+            splited_packets=[]
+
+            while tries > 0:
                 tries -= 1
 
-                top_pack_ = packet_[:packet_size_]
-                packet_ = packet_[packet_size_:]
+                top_pack_ = packet[:packet_size_]
+                packet = packet[packet_size_:]
 
-                # server_data.RemOrchestrator.RemHeaderTypes.print_packet_compact("\ntop_pack_ .........  : ",top_pack_)
-                # server_data.RemOrchestrator.RemHeaderTypes.print_packet_compact("packet_ .........  : ",packet_)
+                if top_pack_ in splited_packets:
+                    log.trace(f"    skip {RemHeaderTypes.str_packet(top_pack_)}")
+                else:
+                    log.trace(f"    prep {RemHeaderTypes.str_packet(top_pack_)}")
+                    splited_packets.append(top_pack_)
 
-                if top_pack_ == packet_ :
-                    # means there is only one packet left
-                    # we break before sending top_pack_, so the actual send runs
-                    break
-
-                server_data.RemOrchestrator.got_packet_type_1(top_pack_, server_data)
-
-                packet_size_ = server_data.RemOrchestrator.RemHeaderTypes.get_size(packet_)
-                data_size = len(packet_)
-
-                # print(f"{packet_size_=}")
-                # print(f"{data_size=}")
-                # print(f"{packet_=}")
+                packet_size_ = RemHeaderTypes.get_size(packet)
+                data_size = len(packet)
 
                 if data_size == 0 :
                     break
                 if packet_size_ == data_size :
                     break
-            # print(f"FIXED !!!!!!! {packet_=}")
 
+            for packet in splited_packets:
+                RemOrchestrator.got_packet_type_1(packet, server_data)
 
-        server_data.RemOrchestrator.got_packet_type_1(packet_, server_data)
+        else :
+            RemOrchestrator.got_packet_type_1(packet, server_data)
 
 
 
@@ -122,6 +142,8 @@ def server_listener(server_data):
     try:
         while(True):
             conn_obj, client_address = server_data.socket_obj.accept()
+
+            # TODO use this conn_obj to instantly create the client for that node !!!!
 
             _thread.start_new_thread(clieant_listener, (server_data, conn_obj, ))
             ThreadCount += 1

@@ -9,6 +9,20 @@ import traceback
 import _thread
 
 
+
+RemOrchestrator = None
+EasyDict = None
+log = None
+def set_orchestrator(set_value_):
+    global RemOrchestrator
+    global EasyDict
+    global log
+    RemOrchestrator = set_value_
+    EasyDict = RemOrchestrator.EasyDict
+    log = set_value_.log
+
+
+
 def set_data(server_data):
     server_data.name = "UDP SERVER"
     server_data.protocol = "ip_udp"
